@@ -8,9 +8,7 @@
     <meta name="description" content="Poker meets Scrabble. Play the Daily Hand and compete for the high score.">
     <meta property="og:title" content="Oxford Hold 'Em">
     <meta property="og:description" content="Draft cards, build words, and beat the daily high score.">
-    <meta property="og:image" content="https://placehold.co/1200x630/1b5e20/gold?text=Oxford+Hold+'Em"> <meta property="og:url" content="https://your-game-url.com">
-    <meta name="twitter:card" content="summary_large_image">
-
+    
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
@@ -120,6 +118,7 @@
         .mode-btn:hover { transform: scale(1.02); }
         .mode-daily { background: var(--mode-daily); box-shadow: 0 5px 0 #1b5e20; }
         .mode-free { background: var(--mode-free); box-shadow: 0 5px 0 #0d47a1; }
+        .mode-score { background: #444; border: 1px solid #666; } /* Style for Leaderboard btn */
         .mode-desc { font-size: 0.8rem; font-weight: normal; opacity: 0.9; margin-top: 5px; display: block; }
 
         /* Leaderboard Table */
@@ -247,12 +246,20 @@
                 </div>
                 <div>🎲</div>
             </button>
+
+            <button class="mode-btn mode-score" onclick="LeaderboardManager.show()">
+                <div>
+                    <div>View Leaderboard</div>
+                    <span class="mode-desc">See today's top players.</span>
+                </div>
+                <div>📊</div>
+            </button>
             
             <div id="loading-dict-text" style="margin-top:20px; color:#888; font-size:0.8rem;">Connecting to Oracle...</div>
         </div>
     </div>
 
-    <div id="lb-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) this.style.display='none'">
+    <div id="lb-modal" class="modal-overlay" style="display:none; z-index:300;" onclick="if(event.target===this) this.style.display='none'">
         <div class="modal-box" style="text-align: center;">
             <h2 style="color: var(--mode-daily); margin-top: 0;">Today's Top Scores</h2>
             <div id="lb-content" style="min-height: 200px;">
@@ -262,7 +269,7 @@
         </div>
     </div>
 
-    <div id="username-modal" class="modal-overlay" style="display:none;">
+    <div id="username-modal" class="modal-overlay" style="display:none; z-index:250;">
         <div class="modal-box">
             <h2 style="color: #333; margin-top: 0;">Who are you?</h2>
             <p style="color: #666; font-size: 0.9rem;">Enter a handle for the leaderboard.</p>
@@ -290,7 +297,7 @@
         </div>
     </div>
 
-    <div id="result-modal" class="modal-overlay" style="display:none;">
+    <div id="result-modal" class="modal-overlay" style="display:none; z-index:200;">
         <div class="modal-box">
             <h2 style="text-transform: uppercase; color: #888; font-size: 0.9rem;">Word Score</h2>
             <h1 id="modal-word" style="font-size: 3rem; margin: 0; color: #222;">WORD</h1>
@@ -323,9 +330,7 @@
             pendingStart: false,
             
             init() {
-                // ============================================================
-                // TODO: PASTE YOUR FIREBASE CONFIG HERE
-                // ============================================================
+                // Config Provided by User
                 const firebaseConfig = {
                   apiKey: "AIzaSyDk0sQmVHlXM8_b6Q6ka1VzCr4hwIpdCf4",
                   authDomain: "oxfordholdem.firebaseapp.com",
@@ -540,8 +545,10 @@
             if (mode === 'daily') {
                 const today = new Date().toISOString().split('T')[0];
                 const lastPlayed = localStorage.getItem('oxford_last_daily_played');
+                
                 if (lastPlayed === today) {
-                    alert("You've already played the Daily Hand today! Come back tomorrow.");
+                    // FIX: If already played, show Leaderboard instead of alerting
+                    LeaderboardManager.show();
                     return;
                 }
                 LeaderboardManager.checkName(); 
@@ -560,7 +567,7 @@
 
         function returnToMenu() {
             if(confirm("Quit current game and return to menu?")) {
-                location.reload(); // Simple reload is cleanest way to reset everything
+                location.reload(); 
             }
         }
 
@@ -766,7 +773,12 @@
                 localStorage.setItem('oxford_last_daily_played', today);
                 LeaderboardManager.submitScore(userScore, word);
                 document.getElementById('next-hand-btn').innerText = "See Leaderboard";
-                document.getElementById('next-hand-btn').onclick = function() { LeaderboardManager.show(); };
+                
+                // FIX: Close result modal BEFORE opening Leaderboard
+                document.getElementById('next-hand-btn').onclick = function() { 
+                    document.getElementById('result-modal').style.display = 'none';
+                    LeaderboardManager.show(); 
+                };
             } else {
                 document.getElementById('next-hand-btn').innerText = "Next Hand";
                 document.getElementById('next-hand-btn').onclick = softReset;
@@ -785,7 +797,6 @@
         }
 
         function softReset() {
-            // Reset Game State for FREE PLAY
             document.getElementById('result-modal').style.display = 'none';
             document.getElementById('word-input').value = "";
             document.getElementById('word-input').style.display = "none";
@@ -802,13 +813,11 @@
             const word = document.getElementById('modal-word').innerText;
             const date = new Date().toISOString().split('T')[0];
             
-            // Generate visual grid of icons
             let icons = "";
-            for (let char of word) {
-                icons += ICONS[char] || "❓";
-            }
+            for (let char of word) { icons += ICONS[char] || "❓"; }
             
-            const text = `🃏 Oxford Hold 'Em ${date}\n🏆 Score: ${score}\n📝 Word: ${word}\n${icons}\n\nPlay here: https://your-game-url.com`;
+            // FIX: Removed word, clean URL
+            const text = `🃏 Oxford Hold 'Em ${date}\n🏆 Score: ${score}\n${icons}\n\n${window.location.href}`;
             
             navigator.clipboard.writeText(text).then(() => {
                 const btn = document.getElementById('share-btn');
