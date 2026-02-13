@@ -389,8 +389,26 @@
             pendingStart: false,
             
             init() {
-                const firebaseConfig = { apiKey: "AIzaSyDk0sQmVHlXM8_b6Q6ka1VzCr4hwIpdCf4", authDomain: "oxfordholdem.firebaseapp.com", projectId: "oxfordholdem", storageBucket: "oxfordholdem.firebasestorage.app", messagingSenderId: "153258290630", appId: "1:153258290630:web:5cc1b215681d2ea3dd96c7", measurementId: "G-ZT6CV3FVVY" };
-                try { firebase.initializeApp(firebaseConfig); this.db = firebase.firestore(); console.log("Firebase initialized"); } catch(e) { console.warn("Firebase not configured."); }
+                const firebaseConfig = {
+                  apiKey: "AIzaSyDk0sQmVHlXM8_b6Q6ka1VzCr4hwIpdCf4",
+                  authDomain: "oxfordholdem.firebaseapp.com",
+                  projectId: "oxfordholdem",
+                  storageBucket: "oxfordholdem.firebasestorage.app",
+                  messagingSenderId: "153258290630",
+                  appId: "1:153258290630:web:5cc1b215681d2ea3dd96c7",
+                  measurementId: "G-ZT6CV3FVVY"
+                };
+                
+                try {
+                    // Check if Firebase is already running before initializing
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(firebaseConfig);
+                    }
+                    this.db = firebase.firestore();
+                    console.log("Firebase initialized successfully");
+                } catch(e) { 
+                    console.error("Firebase config error:", e); 
+                }
             },
             checkName() {
                 if (!this.username) { this.pendingStart = true; document.getElementById('start-overlay').style.display = 'none'; document.getElementById('username-modal').style.display = 'flex'; } 
