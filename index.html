@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oxford Hold 'Em - Daily Edition</title>
+    <title>Oxford Hold 'Em - Global Legends</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <style>
         /* --- THEME VARIABLES --- */
         :root { 
@@ -33,14 +37,13 @@
             flex-wrap: wrap; 
         }
 
-        /* SIDEBAR (Desktop) */
+        /* SIDEBAR */
         #distribution-sidebar { 
             background: var(--ui-dark); padding: 15px; border-radius: 15px; 
             border: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; min-width: 180px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         #distribution-sidebar h4 { margin-top: 0; color: var(--gold); text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; }
-        
         .dist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 20px;}
         .dist-item { display: flex; justify-content: space-between; padding: 2px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
@@ -71,7 +74,6 @@
 
         /* HEADER UI */
         .header-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; }
-        
         .stats-group { display: flex; gap: 10px; }
         .score-pill { 
             background: rgba(0,0,0,0.4); padding: 5px 12px; border-radius: 20px; 
@@ -80,7 +82,6 @@
         .gold-text { color: var(--gold); }
         .mode-badge { font-size: 0.7rem; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
 
-        /* BUTTONS */
         .icon-btn { 
             background: none; border: 2px solid rgba(255,255,255,0.3); color: white; 
             width: 36px; height: 36px; border-radius: 50%; cursor: pointer; 
@@ -109,14 +110,19 @@
         
         .best-word-box { background: #f5f5f5; padding: 15px; border-radius: 15px; margin-top: 20px; border-left: 5px solid var(--gold); text-align: left; }
         
-        /* Start Screen Specifics */
         .mode-btn { width: 100%; padding: 20px; margin: 10px 0; border-radius: 12px; border: none; font-size: 1.2rem; font-weight: bold; cursor: pointer; color: white; transition: transform 0.2s; text-align: left; display: flex; justify-content: space-between; align-items: center; }
         .mode-btn:hover { transform: scale(1.02); }
         .mode-daily { background: var(--mode-daily); box-shadow: 0 5px 0 #1b5e20; }
         .mode-free { background: var(--mode-free); box-shadow: 0 5px 0 #0d47a1; }
         .mode-desc { font-size: 0.8rem; font-weight: normal; opacity: 0.9; margin-top: 5px; display: block; }
 
-        /* Rules Table */
+        /* Leaderboard Table */
+        .lb-table { width: 100%; text-align: left; border-collapse: collapse; margin-top:10px; }
+        .lb-table th { background: #eee; padding: 8px; font-size: 0.8rem; color: #666; }
+        .lb-table td { padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; }
+        .lb-rank { color: var(--gold); width: 30px; }
+        .lb-score { text-align: right; color: var(--mode-daily); }
+
         .rules-table { width: 100%; text-align: left; font-size: 0.9rem; border-collapse: collapse; margin-top: 10px; }
         .rules-table th { border-bottom: 2px solid #ddd; padding: 5px; color: #666; }
         .rules-table td { border-bottom: 1px solid #eee; padding: 5px; }
@@ -127,10 +133,8 @@
         .card-row { display: flex; justify-content: center; gap: 12px; margin-bottom: 30px; min-height: 140px; perspective: 1000px; flex-wrap: wrap; }
         .card-slot { width: 90px; height: 130px; border: 3px dashed rgba(255,255,255,0.2); border-radius: 12px; background: rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center; position: relative; }
         .river-slot-text { color: var(--bonus-purple); font-size: 0.6rem; font-weight: 900; text-transform: uppercase; position: absolute; bottom: 10px; filter: brightness(1.5); letter-spacing: 1px;}
-
         @keyframes dealIn { 0% { opacity: 0; transform: translateY(50px) rotateX(-90deg); } 100% { opacity: 1; transform: translateY(0) rotateX(0); } }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
-
         .card { width: 90px; height: 130px; background: var(--card-bg); color: black; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: pointer; border: 1px solid #ccc; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s; box-shadow: 3px 3px 8px var(--card-shadow); user-select: none; backface-visibility: hidden; z-index: 5; }
         .animate-deal { animation: dealIn 0.5s ease-out forwards; }
         .card.bumped { transform: translateY(-25px) scale(1.1) !important; border: 3px solid var(--gold); box-shadow: 0 15px 30px rgba(0,0,0,0.5); z-index: 100; }
@@ -144,8 +148,7 @@
         .card .bottom-right { bottom: 6px; right: 6px; } 
         .card .animal-icon { font-size: 2rem; margin-top: 5px; }
         .card .main-letter { font-size: 2.2rem; font-weight: 900; color: #000; line-height: 1; margin-bottom: 8px; }
-
-        /* --- MOBILE TWEAKS --- */
+        
         @media (max-width: 768px) {
             #main-container { flex-direction: column-reverse; align-items: center; }
             #distribution-sidebar { width: 90%; display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 10px 20px; }
@@ -194,6 +197,7 @@
                 </div>
                 
                 <div style="display:flex; gap:10px;">
+                    <button id="leaderboard-btn" class="icon-btn" onclick="LeaderboardManager.show()" title="Daily Leaderboard">🏆</button>
                     <button id="music-btn" class="icon-btn" onclick="toggleMute()" title="Toggle Sound" style="opacity: 0.5;">🔇</button>
                     <button class="icon-btn" onclick="confirmReset()" title="Reset Scores">↻</button>
                     <button class="icon-btn" onclick="showRules()">?</button>
@@ -225,15 +229,15 @@
             <button class="mode-btn mode-daily" onclick="startGame('daily')">
                 <div>
                     <div>Daily Draw</div>
-                    <span class="mode-desc">Same cards for everyone, every day.</span>
+                    <span class="mode-desc">Compete on the global leaderboard.</span>
                 </div>
-                <div>📅</div>
+                <div>🏆</div>
             </button>
 
             <button class="mode-btn mode-free" onclick="startGame('free')">
                 <div>
                     <div>Free Play</div>
-                    <span class="mode-desc">Pure randomness. Infinite hands.</span>
+                    <span class="mode-desc">Pure randomness. Practice mode.</span>
                 </div>
                 <div>🎲</div>
             </button>
@@ -242,22 +246,38 @@
         </div>
     </div>
 
+    <div id="lb-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) this.style.display='none'">
+        <div class="modal-box" style="text-align: center;">
+            <h2 style="color: var(--mode-daily); margin-top: 0;">Today's Top Scores</h2>
+            <div id="lb-content" style="min-height: 200px;">
+                <p>Loading...</p>
+            </div>
+            <button class="action-btn" onclick="document.getElementById('lb-modal').style.display='none'" style="width:100%; margin-top: 20px; background: var(--wood); color: white;">Close</button>
+        </div>
+    </div>
+
+    <div id="username-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <h2 style="color: #333; margin-top: 0;">Who are you?</h2>
+            <p style="color: #666; font-size: 0.9rem;">Enter a handle for the leaderboard.</p>
+            <input type="text" id="username-input" maxlength="12" placeholder="e.g. Maverick" style="padding: 10px; font-size: 1.2rem; width: 80%; text-align: center; border: 2px solid #ccc; border-radius: 8px;">
+            <br>
+            <button class="action-btn" onclick="LeaderboardManager.saveName()" style="width:100%; margin-top: 20px;">Start Playing</button>
+        </div>
+    </div>
+
     <div id="rules-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) this.style.display='none'">
         <div class="modal-box" style="text-align: left;">
             <h2 style="color: var(--bonus-purple); margin-top: 0; text-align: center;">How to Play</h2>
             <ul style="font-size: 0.9rem; padding-left: 20px; color: #555;">
                 <li><strong>Draft:</strong> Pick the best 3 cards from 5 options.</li>
-                <li><strong>The Flop:</strong> 3 community cards are dealt.</li>
                 <li><strong>Swap:</strong> Discard up to 2 cards to draw new ones.</li>
-                <li><strong>The River:</strong> <strong style="color: var(--bonus-purple)">2x SCORE</strong> for the letter in this slot!</li>
+                <li><strong>River:</strong> <strong style="color: var(--bonus-purple)">2x SCORE</strong> for this letter!</li>
             </ul>
             <h3 style="font-size: 1rem; border-bottom: 2px solid #ddd; margin-top: 20px;">Scoring</h3>
             <table class="rules-table">
                 <tr><th>Letters</th><th>Points</th></tr>
                 <tr><td>E, T, A, O, I, N</td><td>1 pt</td></tr>
-                <tr><td>R, S, H</td><td>3 pts</td></tr>
-                <tr><td>D, L, C, U, M, W</td><td>4 - 5 pts</td></tr>
-                <tr><td>F, G, Y, P, B, V</td><td>6 - 7 pts</td></tr>
                 <tr><td>J, K, Q, X, Z</td><td>8 - 9 pts</td></tr>
             </table>
             <button class="action-btn" onclick="document.getElementById('rules-modal').style.display='none'" style="width:100%; margin: 20px 0 0 0; background: var(--wood); color: white;">Close</button>
@@ -281,31 +301,138 @@
 
     <script>
         /* --- GLOBAL AUDIO STATE --- */
-        let isMuted = true; // Default to muted
-
-        function toggleMute() {
-            isMuted = !isMuted;
-            updateMuteUI();
-        }
-
+        let isMuted = true;
+        function toggleMute() { isMuted = !isMuted; updateMuteUI(); }
         function updateMuteUI() {
             const btn = document.getElementById('music-btn');
-            if (isMuted) {
-                MusicManager.pause();
-                btn.innerText = "🔇";
-                btn.style.opacity = "0.5";
-            } else {
-                MusicManager.play();
-                btn.innerText = "🎵";
-                btn.style.opacity = "1";
-            }
+            if (isMuted) { MusicManager.pause(); btn.innerText = "🔇"; btn.style.opacity = "0.5"; } 
+            else { MusicManager.play(); btn.innerText = "🎵"; btn.style.opacity = "1"; }
         }
+
+        /* --- FIREBASE LEADERBOARD MANAGER --- */
+        const LeaderboardManager = {
+            db: null,
+            username: localStorage.getItem('oxford_username'),
+            
+            init() {
+                // ============================================================
+                // TODO: PASTE YOUR FIREBASE CONFIG HERE
+                // ============================================================
+                const firebaseConfig = {
+                  apiKey: "AIzaSyDk0sQmVHlXM8_b6Q6ka1VzCr4hwIpdCf4",
+                  authDomain: "oxfordholdem.firebaseapp.com",
+                  projectId: "oxfordholdem",
+                  storageBucket: "oxfordholdem.firebasestorage.app",
+                  messagingSenderId: "153258290630",
+                  appId: "1:153258290630:web:5cc1b215681d2ea3dd96c7",
+                  measurementId: "G-ZT6CV3FVVY"
+                };
+                
+                try {
+                    firebase.initializeApp(firebaseConfig);
+                    this.db = firebase.firestore();
+                    console.log("Firebase initialized");
+                } catch(e) {
+                    console.warn("Firebase not configured. Leaderboard disabled.");
+                }
+            },
+
+            checkName() {
+                if (!this.username) {
+                    document.getElementById('start-overlay').style.display = 'none'; // Hide start temporarily
+                    document.getElementById('username-modal').style.display = 'flex';
+                } else {
+                    startGame('daily');
+                }
+            },
+
+            saveName() {
+                const input = document.getElementById('username-input');
+                const name = input.value.trim().toUpperCase().substring(0, 12);
+                if (name.length < 3) return alert("Name too short!");
+                this.username = name;
+                localStorage.setItem('oxford_username', name);
+                document.getElementById('username-modal').style.display = 'none';
+                startGame('daily');
+            },
+
+            async submitScore(score, word) {
+                if (!this.db || gameMode !== 'daily') return;
+                
+                // We track "Highest Single Word" per user per day
+                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                const docId = `${today}_${this.username}`;
+                const docRef = this.db.collection('leaderboard').doc(docId);
+
+                try {
+                    const doc = await docRef.get();
+                    // Only update if new score is higher
+                    if (!doc.exists || score > doc.data().score) {
+                        await docRef.set({
+                            name: this.username,
+                            score: score,
+                            word: word,
+                            date: today,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        console.log("New high score submitted!");
+                    }
+                } catch (e) { console.error("Score submit failed", e); }
+            },
+
+            async show() {
+                document.getElementById('lb-modal').style.display = 'flex';
+                const container = document.getElementById('lb-content');
+                
+                if (!this.db) {
+                    container.innerHTML = "<p>Leaderboard requires Firebase config.</p>";
+                    return;
+                }
+
+                container.innerHTML = "Loading...";
+                const today = new Date().toISOString().split('T')[0];
+
+                try {
+                    // Requires a Composite Index in Firestore usually, but for low traffic 
+                    // we can fetch daily items and sort in JS if needed. 
+                    // Let's try direct query:
+                    const q = await this.db.collection('leaderboard')
+                        .where('date', '==', today)
+                        .orderBy('score', 'desc')
+                        .limit(10)
+                        .get();
+
+                    if (q.empty) {
+                        container.innerHTML = "<p>No scores yet today. Be the first!</p>";
+                        return;
+                    }
+
+                    let html = `<table class="lb-table"><tr><th>#</th><th>Player</th><th>Word</th><th>Score</th></tr>`;
+                    let rank = 1;
+                    q.forEach(doc => {
+                        const d = doc.data();
+                        html += `<tr>
+                            <td class="lb-rank">${rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank}</td>
+                            <td>${d.name}</td>
+                            <td style="color:#666; font-size:0.8rem;">${d.word}</td>
+                            <td class="lb-score">${d.score}</td>
+                        </tr>`;
+                        rank++;
+                    });
+                    html += "</table>";
+                    container.innerHTML = html;
+
+                } catch (e) {
+                    console.error(e);
+                    container.innerHTML = "<p>Error loading scores. (Check Console)</p>";
+                }
+            }
+        };
 
         /* --- RANDOM NUMBER GENERATOR (SEEDED) --- */
         let currentSeed = 1;
         let gameMode = 'free';
 
-        // Simple Mulberry32 Seeded RNG
         function mulberry32(a) {
             return function() {
               var t = a += 0x6D2B79F5;
@@ -328,10 +455,12 @@
                 
                 document.getElementById('mode-indicator').innerText = "DAILY: " + seedStr;
                 document.getElementById('mode-indicator').style.background = "var(--mode-daily)";
+                document.getElementById('leaderboard-btn').style.display = "inline-block";
             } else {
                 randomFunc = Math.random;
                 document.getElementById('mode-indicator').innerText = "FREE PLAY";
                 document.getElementById('mode-indicator').style.background = "var(--mode-free)";
+                document.getElementById('leaderboard-btn').style.display = "none";
             }
         }
 
@@ -339,8 +468,7 @@
         const SoundManager = {
             init() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
             play(type) {
-                if (isMuted) return; // Silent if global mute is on
-                
+                if (isMuted) return;
                 if (!this.ctx) this.init();
                 const t = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
@@ -370,22 +498,9 @@
 
         const MusicManager = {
             audio: new Audio('gambler_8bit.mp3'), 
-            
-            init() { 
-                this.audio.loop = true; 
-                this.audio.volume = 0.3; 
-            },
-
-            play() {
-                // Only try to play if global mute is OFF
-                if (!isMuted) {
-                    this.audio.play().catch(e => console.log("Audio play blocked until interaction"));
-                }
-            },
-
-            pause() {
-                this.audio.pause();
-            }
+            init() { this.audio.loop = true; this.audio.volume = 0.3; },
+            play() { if (!isMuted) this.audio.play().catch(e => {}); },
+            pause() { this.audio.pause(); }
         };
         MusicManager.init();
 
@@ -402,6 +517,7 @@
 
         window.onload = async () => {
             loadStats();
+            LeaderboardManager.init();
             renderDistGrid();
             await initDictionary();
         };
@@ -446,16 +562,25 @@
             loadingText.innerText = `Oracle Online: ${dictionary.length} words. Ready.`;
         }
 
-        // ENTRY POINT FROM START SCREEN
+        // ENTRY POINT
+        function handleStartClick(mode) {
+            if (mode === 'daily') {
+                LeaderboardManager.checkName(); // Flows to startGame('daily')
+            } else {
+                startGame('free');
+            }
+        }
+
         function startGame(mode) {
             initSeed(mode);
             document.getElementById('start-overlay').style.display = 'none';
-            // Try start music logic (checks mute state inside)
             updateMuteUI();
-            
             document.getElementById('main-btn').disabled = false;
             nextPhase();
         }
+
+        // Override the buttons in HTML to use new handler
+        // See HTML section updates below
 
         function initDeck() {
             deck = [];
@@ -651,6 +776,10 @@
             if (!dictionary.includes(word)) { markInvalid("Not in dictionary!"); return; }
             let userScore = scoreSpecificWord(word, pool);
             SoundManager.play('success');
+            
+            // SUBMIT TO LEADERBOARD
+            LeaderboardManager.submitScore(userScore, word);
+
             document.getElementById('modal-word').innerText = word;
             document.getElementById('modal-score').innerText = userScore;
             const best = findBestPossibleScore();
@@ -686,6 +815,9 @@
                 }
             });
         }
+        
+        // Update Buttons to use new handler
+        document.querySelector('.mode-daily').onclick = function() { handleStartClick('daily'); };
     </script>
 </body>
 </html>
