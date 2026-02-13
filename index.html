@@ -177,13 +177,10 @@
 <body>
 
     <div id="main-container">
-        <div id="distribution-sidebar">
-            <h4 style="margin-bottom: 10px;">Deck Stats</h4>
-            <div id="dist-grid" class="dist-grid"></div>
-            
+    <div id="distribution-sidebar">
             <div class="pile-container">
-                <div>
-                    <div style="font-size:0.6rem; color:#aaa; margin-bottom:3px; text-align:center;">DECK</div>
+                <div onclick="DeckStatsManager.show()" style="cursor: pointer;" title="View Deck Stats">
+                    <div style="font-size:0.6rem; color:#aaa; margin-bottom:3px; text-align:center;">DECK (Tap)</div>
                     <div class="mini-card deck-back" id="deck-count-display">100</div>
                 </div>
                 <div>
@@ -191,7 +188,6 @@
                     <div class="mini-card discard-pile" id="discard-display">0</div>
                 </div>
             </div>
-            <div id="discard-list" style="margin-top:10px; font-size:0.7rem; color:#888; text-align:center; word-wrap:break-word;"></div>
         </div>
 
         <div id="game-table">
@@ -321,6 +317,19 @@
         </div>
     </div>
 
+    <div id="deck-modal" class="modal-overlay" style="display:none; z-index: 350; align-items: flex-start; padding-top: 50px; overflow-y: auto;" onclick="if(event.target===this) DeckStatsManager.hide()">
+        <div class="modal-box" style="position: relative; margin-bottom: 50px;">
+            <span class="modal-close-x" onclick="DeckStatsManager.hide()" style="font-size: 2rem; padding: 10px; position:absolute; right:15px; top:10px; cursor:pointer;">&times;</span>
+            <h2 style="color: #333; margin-top: 0;">Deck Counts</h2>
+            <p style="color:#666; font-size:0.9rem; margin-bottom: 15px;">Cards remaining in the draw pile.</p>
+            
+            <div id="deck-stats-content" style="max-height: 50vh; overflow-y: auto; margin-bottom: 15px;">
+                </div>
+
+            <button class="action-btn" onclick="DeckStatsManager.hide()" style="width:100%; background: var(--wood); color: white; padding: 15px;">Close</button>
+        </div>
+    </div>
+
     <div id="result-modal" class="modal-overlay" style="display:none; z-index:200;">
         <div class="modal-box">
             <h2 style="text-transform: uppercase; color: #888; font-size: 0.9rem;">Word Score</h2>
@@ -347,6 +356,56 @@
             else { MusicManager.play(); btn.innerText = "🎵"; btn.style.opacity = "1"; }
         }
 
+
+    /* --- DECK STATS MANAGER --- */
+        const DeckStatsManager = {
+            show() {
+                const container = document.getElementById('deck-stats-content');
+                let html = '<table class="data-table" style="text-align:center; width:100%;"><tr><th>Card</th><th>Orig</th><th>Left</th></tr>';
+                
+                // 1. Start with a fresh count of all original cards
+                let remaining = {}; 
+                Object.keys(FREQUENCIES).forEach(k => remaining[k] = FREQUENCIES[k]);
+                
+                // 2. Subtract everything that is NOT in the deck (Hand, Board, Discards)
+                // Note: We filter out 'undefined' or empty slots just in case
+                const visibleCards = [...discards, ...hand, ...board].filter(c => c);
+                
+                visibleCards.forEach(c => { 
+                    if (remaining[c] !== undefined) {
+                        remaining[c]--;
+                    }
+                });
+                
+                // 3. Build the table rows
+                Object.keys(FREQUENCIES).sort().forEach(l => {
+                    const rem = remaining[l];
+                    // Highlight logic: Gray out if 0 left, Bold Green if plenty left
+                    const rowStyle = rem === 0 ? 'color:#ccc; font-weight:normal;' : 'color:#333; font-weight:bold;';
+                    const remStyle = rem > 0 ? 'color:var(--mode-daily)' : '';
+                    
+                    html += `<tr style="${rowStyle}">
+                        <td>${l==='*'?'?':l}</td>
+                        <td>${FREQUENCIES[l]}</td>
+                        <td style="${remStyle}">${Math.max(0, rem)}</td>
+                    </tr>`;
+                });
+                html += '</table>';
+                
+                container.innerHTML = html;
+                
+                // Lock background scrolling
+                document.body.style.overflow = 'hidden'; 
+                document.getElementById('deck-modal').style.display = 'flex';
+            },
+
+            hide() {
+                // Restore background scrolling
+                document.body.style.overflow = '';
+                document.getElementById('deck-modal').style.display = 'none';
+            }
+        };
+        
         /* --- FIREBASE LEADERBOARD MANAGER --- */
         const LeaderboardManager = {
             db: null,
