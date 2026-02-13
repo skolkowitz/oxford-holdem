@@ -113,8 +113,7 @@
 
         /* --- MODALS --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(8px); }
-        .modal-box { background: white; color: #333; padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; position: relative; }
-        .modal-close-x { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #999; }
+        .modal-box { background: white; color: #333; padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; }
         
         .best-word-box { background: #f5f5f5; padding: 15px; border-radius: 15px; margin-top: 20px; border-left: 5px solid var(--gold); text-align: left; }
         
@@ -125,15 +124,17 @@
         .mode-score { background: #444; border: 1px solid #666; } 
         .mode-desc { font-size: 0.8rem; font-weight: normal; opacity: 0.9; margin-top: 5px; display: block; }
 
-        /* Data Tables */
-        .data-table { width: 100%; text-align: left; border-collapse: collapse; margin-top:10px; font-size: 0.9rem; }
-        .data-table th { background: #eee; padding: 8px; color: #666; }
-        .data-table td { padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; }
+        /* Leaderboard Table */
+        .lb-table { width: 100%; text-align: left; border-collapse: collapse; margin-top:10px; }
+        .lb-table th { background: #eee; padding: 8px; font-size: 0.8rem; color: #666; }
+        .lb-table td { padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; }
         .lb-rank { color: var(--gold); width: 30px; }
         .lb-score { text-align: right; color: var(--mode-daily); }
         .hidden-word { color: #aaa; font-style: italic; letter-spacing: 2px; }
-        .stat-rem { color: var(--mode-daily); }
-        .stat-out { color: #ccc; font-weight: normal; }
+
+        .rules-table { width: 100%; text-align: left; font-size: 0.9rem; border-collapse: collapse; margin-top: 10px; }
+        .rules-table th { border-bottom: 2px solid #ddd; padding: 5px; color: #666; }
+        .rules-table td { border-bottom: 1px solid #eee; padding: 5px; }
 
         #loading-msg { position: fixed; bottom: 10px; right: 10px; color: rgba(255,255,255,0.3); font-size: 0.7rem; }
 
@@ -177,9 +178,12 @@
 
     <div id="main-container">
         <div id="distribution-sidebar">
+            <h4 style="margin-bottom: 10px;">Deck Stats</h4>
+            <div id="dist-grid" class="dist-grid"></div>
+            
             <div class="pile-container">
-                <div onclick="DeckStatsManager.show()" style="cursor: pointer;" title="View Deck Stats">
-                    <div style="font-size:0.6rem; color:#aaa; margin-bottom:3px; text-align:center;">DECK (Tap)</div>
+                <div>
+                    <div style="font-size:0.6rem; color:#aaa; margin-bottom:3px; text-align:center;">DECK</div>
                     <div class="mini-card deck-back" id="deck-count-display">100</div>
                 </div>
                 <div>
@@ -264,21 +268,8 @@
         </div>
     </div>
 
-    <div id="deck-modal" class="modal-overlay" style="display:none; z-index: 350; align-items: flex-start; padding-top: 50px; overflow-y: auto;" onclick="if(event.target===this) DeckStatsManager.hide()">
-        <div class="modal-box" style="position: relative; margin-bottom: 50px;">
-            <span class="modal-close-x" onclick="DeckStatsManager.hide()" style="font-size: 2rem; padding: 10px; position:absolute; right:15px; top:10px; cursor:pointer;">&times;</span>
-            <h2 style="color: #333; margin-top: 0;">Deck Counts</h2>
-            <p style="color:#666; font-size:0.9rem; margin-bottom: 15px;">Cards remaining in the draw pile.</p>
-            
-            <div id="deck-stats-content" style="max-height: 50vh; overflow-y: auto; margin-bottom: 15px;"></div>
-
-            <button class="action-btn" onclick="DeckStatsManager.hide()" style="width:100%; background: var(--wood); color: white; padding: 15px;">Close</button>
-        </div>
-    </div>
-
     <div id="lb-modal" class="modal-overlay" style="display:none; z-index:300;" onclick="if(event.target===this) this.style.display='none'">
         <div class="modal-box" style="text-align: center;">
-            <span class="modal-close-x" onclick="document.getElementById('lb-modal').style.display='none'">&times;</span>
             <h2 style="color: var(--mode-daily); margin-top: 0;">Today's Top Scores</h2>
             <div id="lb-content" style="min-height: 200px;">
                 <p>Loading...</p>
@@ -297,21 +288,36 @@
         </div>
     </div>
 
-    <div id="rules-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) this.style.display='none'">
+<div id="rules-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) this.style.display='none'">
         <div class="modal-box" style="text-align: left;">
             <h2 style="color: var(--bonus-purple); margin-top: 0; text-align: center;">How to Play</h2>
+            <p style="font-size: 0.9rem; line-height: 1.5; color: #555;">Build the best word using your <strong>Hand</strong> and the <strong>Board</strong>.</p>
+            
             <ul style="font-size: 0.9rem; padding-left: 20px; color: #555;">
                 <li><strong>Draft:</strong> Pick the best 3 cards from 5 options.</li>
+                <li><strong>The Flop:</strong> 3 community cards are dealt.</li>
                 <li><strong>Swap:</strong> Discard up to 2 cards to draw new ones.</li>
-                <li><strong>River:</strong> <strong style="color: var(--bonus-purple)">2x SCORE</strong> for this letter!</li>
+                <li><strong>The River:</strong> The final card. <strong style="color: var(--bonus-purple)">2x SCORE</strong> for the letter in this slot!</li>
             </ul>
+
             <h3 style="font-size: 1rem; border-bottom: 2px solid #ddd; margin-top: 20px;">Scoring</h3>
-            <table class="data-table">
+            <table class="rules-table">
                 <tr><th>Letters</th><th>Points</th></tr>
                 <tr><td>E, T, A, O, I, N</td><td>1 pt</td></tr>
+                <tr><td>R, S, H</td><td>3 pts</td></tr>
+                <tr><td>D, L, C, U, M, W</td><td>4 - 5 pts</td></tr>
+                <tr><td>F, G, Y, P, B, V</td><td>6 - 7 pts</td></tr>
                 <tr><td>J, K, Q, X, Z</td><td>8 - 9 pts</td></tr>
             </table>
-            <button class="action-btn" onclick="document.getElementById('rules-modal').style.display='none'" style="width:100%; margin: 20px 0 0 0; background: var(--wood); color: white;">Close</button>
+
+            <h3 style="font-size: 1rem; border-bottom: 2px solid #ddd; margin-top: 20px;">Length Multipliers</h3>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold; margin-top: 5px;">
+                <span>5+ Letters: <span style="color:#2e7d32">1.5x</span></span>
+                <span>7+ Letters: <span style="color:#1565c0">2.0x</span></span>
+                <span>8 Letters: <span style="color:#d32f2f">3.0x</span></span>
+            </div>
+
+            <button class="action-btn" onclick="document.getElementById('rules-modal').style.display='none'" style="width:100%; margin: 20px 0 0 0; background: var(--wood); color: white;">Got it</button>
         </div>
     </div>
 
@@ -348,6 +354,7 @@
             pendingStart: false,
             
             init() {
+                // CONFIG FROM USER PROMPT
                 const firebaseConfig = {
                   apiKey: "AIzaSyDk0sQmVHlXM8_b6Q6ka1VzCr4hwIpdCf4",
                   authDomain: "oxfordholdem.firebaseapp.com",
@@ -428,7 +435,7 @@
                     const q = await this.db.collection('leaderboard').where('date', '==', today).orderBy('score', 'desc').limit(10).get();
                     if (q.empty) { container.innerHTML = "<p>No scores yet today. Be the first!</p>"; return; }
 
-                    let html = `<table class="data-table"><tr><th>#</th><th>Player</th><th>Word</th><th>Score</th></tr>`;
+                    let html = `<table class="lb-table"><tr><th>#</th><th>Player</th><th>Word</th><th>Score</th></tr>`;
                     let rank = 1;
                     q.forEach(doc => {
                         const d = doc.data();
@@ -444,31 +451,6 @@
                     container.innerHTML = html;
                 } catch (e) { container.innerHTML = "<p>Error loading scores. Check Console.</p>"; }
             }
-        };
-
-        /* --- DECK STATS MANAGER --- */
-        const DeckStatsManager = {
-            show() {
-                const container = document.getElementById('deck-stats-content');
-                let html = '<table class="data-table" style="text-align:center; width:100%;"><tr><th>Card</th><th>Orig</th><th>Left</th></tr>';
-                let remaining = {}; 
-                Object.keys(FREQUENCIES).forEach(k => remaining[k] = FREQUENCIES[k]);
-                // Subtract visible cards
-                [...discards, ...hand, ...board].filter(c => c).forEach(c => { 
-                    if (remaining[c] !== undefined) remaining[c]--;
-                });
-                
-                Object.keys(FREQUENCIES).sort().forEach(l => {
-                    const rem = remaining[l];
-                    const rowClass = rem <= 0 ? 'stat-out' : 'stat-rem';
-                    const rowStyle = rem <= 0 ? 'opacity:0.5' : '';
-                    html += `<tr style="${rowStyle}"><td>${l==='*'?'?':l}</td><td>${FREQUENCIES[l]}</td><td class="${rowClass}">${Math.max(0, rem)}</td></tr>`;
-                });
-                html += '</table>';
-                container.innerHTML = html;
-                document.getElementById('deck-modal').style.display = 'flex';
-            },
-            hide() { document.getElementById('deck-modal').style.display = 'none'; }
         };
 
         /* --- RNG --- */
@@ -631,14 +613,9 @@
         }
 
         function updatePileCounts() {
-            // SAFETY CHECK: Ensure elements exist before updating to prevent crash
-            const deckEl = document.getElementById('deck-count-display');
-            const discardEl = document.getElementById('discard-display');
-            const listEl = document.getElementById('discard-list');
-            
-            if(deckEl) deckEl.innerText = deck.length;
-            if(discardEl) discardEl.innerText = discards.length;
-            if(listEl) listEl.innerText = discards.join(', ');
+            document.getElementById('deck-count-display').innerText = deck.length;
+            document.getElementById('discard-display').innerText = discards.length;
+            document.getElementById('discard-list').innerText = discards.join(', ');
         }
 
         function nextPhase() {
@@ -649,13 +626,10 @@
 
             if (phaseIndex === 0) {
                 const vowels = ['A','E','I','O','U','Y'];
-                let attempts = 0;
                 do {
-                    initDeck();
-                    discards = [];
+                    initDeck(); discards = [];
                     draftPool = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
-                    attempts++;
-                } while (attempts < 100 && !draftPool.some(card => vowels.includes(card) || card === '*'));
+                } while (!draftPool.some(card => vowels.includes(card) || card === '*'));
                 
                 handAnims = [0,1,2,3,4];
                 status.innerText = "Draft Phase: Keep 3 Cards";
@@ -783,64 +757,26 @@
         function canFormWord(word, pool) { let tempPool = [...pool]; for (let char of word) { let idx = tempPool.indexOf(char); if (idx === -1) idx = tempPool.indexOf('*'); if (idx === -1) return false; tempPool.splice(idx, 1); } return true; }
         
         function scoreSpecificWord(word, letterPool) {
-            // Create a copy so we don't mutate the original array
-            let tempPool = [...letterPool];
-
-            // The River is the LAST card in the combined pool (Hand + Board)
-            // We act as if it is separate to prioritize it
-            let riverCard = tempPool.pop(); 
-            let riverUsed = false;
-            let baseScore = 0;
-
+            const riverIndex = letterPool.length - 1; const riverCard = letterPool[riverIndex];
+            let availableRegular = [...letterPool]; availableRegular.pop(); 
+            let base = 0; let riverUsed = false;
             for (let char of word) {
-                let found = false;
-                let val = 0;
-
-                // PRIORITY 1: Exact Match on River
-                if (!riverUsed && riverCard === char) {
-                    val = SCORES[char] * 2; // River Bonus
-                    riverUsed = true;
-                    found = true;
+                let val = 0; let found = false;
+                if (!riverUsed && (riverCard === char || riverCard === '*')) {
+                    val = (riverCard === '*') ? 0 : SCORES[char]; if (riverCard !== '*') val = SCORES[char]; 
+                    val *= 2; riverUsed = true; found = true;
                 }
-
-                // PRIORITY 2: Exact Match in Hand/Board (excluding River)
                 if (!found) {
-                    let idx = tempPool.indexOf(char);
+                    let idx = availableRegular.indexOf(char); if (idx === -1) idx = availableRegular.indexOf('*'); 
                     if (idx !== -1) {
-                        val = SCORES[char];
-                        tempPool.splice(idx, 1); // Remove used card
-                        found = true;
+                        const usedCard = availableRegular[idx]; val = (usedCard === '*') ? 0 : SCORES[char];
+                        availableRegular.splice(idx, 1); found = true;
                     }
                 }
-
-                // PRIORITY 3: Wildcard on River
-                if (!found && !riverUsed && riverCard === '*') {
-                    val = 0;
-                    riverUsed = true;
-                    found = true;
-                }
-
-                // PRIORITY 4: Wildcard in Hand/Board
-                if (!found) {
-                    let idx = tempPool.indexOf('*');
-                    if (idx !== -1) {
-                        val = 0;
-                        tempPool.splice(idx, 1);
-                        found = true;
-                    }
-                }
-
-                if (!found) return -1; // Impossible word
-                baseScore += val;
+                if (!found) return -1; base += val;
             }
-
-            // Apply Length Multipliers
-            let mult = 1;
-            if (word.length >= 8) mult = 3;
-            else if (word.length >= 7) mult = 2;
-            else if (word.length >= 5) mult = 1.5;
-
-            return Math.floor(baseScore * mult);
+            let mult = word.length >= 8 ? 3 : word.length >= 7 ? 2 : word.length >= 5 ? 1.5 : 1;
+            return Math.floor(base * mult);
         }
 
         function findBestPossibleScore() {
@@ -921,69 +857,20 @@
         }
 
         function handleTyping() {
-            const input = document.getElementById('word-input');
-            if(input.style.display === 'none') return;
-            
-            input.classList.remove('invalid');
-            const text = input.value.toUpperCase().split('');
-            const allCards = document.querySelectorAll('.card');
-            
-            // Reset bumps
-            allCards.forEach(c => c.classList.remove('bumped'));
-            
-            let usedIds = [];
-
+            const input = document.getElementById('word-input'); if(input.style.display === 'none') return;
+            input.classList.remove('invalid'); const text = input.value.toUpperCase().split('');
+            const allCards = document.querySelectorAll('.card'); allCards.forEach(c => c.classList.remove('bumped'));
+            let usedIndices = [];
             text.forEach(char => {
                 let found = false;
-                
-                // 1. Check River Exact Match
-                const riverEl = document.getElementById('card-board-4');
-                if (riverEl && !usedIds.includes('card-board-4')) {
-                    if (riverEl.getAttribute('data-letter') === char) {
-                        riverEl.classList.add('bumped');
-                        usedIds.push('card-board-4');
-                        found = true;
-                    }
+                for(let i=0; i<allCards.length; i++) {
+                    if (usedIndices.includes(i)) continue;
+                    if (allCards[i].getAttribute('data-letter') === char) { allCards[i].classList.add('bumped'); usedIndices.push(i); found = true; break; }
                 }
-
-                // 2. Check Other Exact Matches
                 if (!found) {
                     for(let i=0; i<allCards.length; i++) {
-                        const c = allCards[i];
-                        if (usedIds.includes(c.id)) continue;
-                        if (c.id === 'card-board-4') continue; // Skip River
-
-                        if (c.getAttribute('data-letter') === char) {
-                            c.classList.add('bumped');
-                            usedIds.push(c.id);
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-
-                // 3. Check River Wildcard
-                if (!found && riverEl && !usedIds.includes('card-board-4')) {
-                    if (riverEl.getAttribute('data-letter') === '*') {
-                        riverEl.classList.add('bumped');
-                        usedIds.push('card-board-4');
-                        found = true;
-                    }
-                }
-
-                // 4. Check Other Wildcards
-                if (!found) {
-                    for(let i=0; i<allCards.length; i++) {
-                        const c = allCards[i];
-                        if (usedIds.includes(c.id)) continue;
-                        if (c.id === 'card-board-4') continue;
-
-                        if (c.getAttribute('data-letter') === '*') {
-                            c.classList.add('bumped');
-                            usedIds.push(c.id);
-                            found = true;
-                            break;
-                        }
+                        if (usedIndices.includes(i)) continue;
+                        if (allCards[i].getAttribute('data-letter') === '*') { allCards[i].classList.add('bumped'); usedIndices.push(i); break; }
                     }
                 }
             });
