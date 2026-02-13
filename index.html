@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <title>Oxford Hold 'Em - Daily Word Game</title>
     <meta name="description" content="Poker meets Scrabble. Play the Daily Hand and compete for the high score.">
@@ -25,47 +25,48 @@
             --ui-dark: rgba(0,0,0,0.85);
             --mode-daily: #2e7d32;
             --mode-free: #1565c0;
+            --bg-dark: #121212;
         }
 
         body { 
-            background: #121212; color: white; 
+            background: var(--bg-dark); color: white; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             display: flex; flex-direction: column; align-items: center; 
             padding: 20px; margin: 0; min-height: 100vh;
+            box-sizing: border-box;
         }
 
         /* --- LAYOUT --- */
         #main-container { 
             display: flex; gap: 30px; align-items: flex-start; justify-content: center; 
             width: 100%; max-width: 1250px; 
-            flex-wrap: wrap; 
+            flex-wrap: wrap; margin-bottom: 40px;
         }
 
-        /* SIDEBAR */
+        /* SIDEBAR (Desktop) */
         #distribution-sidebar { 
             background: var(--ui-dark); padding: 15px; border-radius: 15px; 
             border: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; min-width: 180px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; align-items: center;
         }
-        #distribution-sidebar h4 { margin-top: 0; color: var(--gold); text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; }
-        .dist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 20px;}
-        .dist-item { display: flex; justify-content: space-between; padding: 2px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
-        .pile-container { display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
+        .pile-container { display: flex; flex-direction: column; gap: 15px; align-items: center; padding-top: 10px; }
         .mini-card {
             width: 60px; height: 85px; border-radius: 6px; 
             display: flex; justify-content: center; align-items: center;
-            font-weight: bold; font-size: 1.2rem;
+            font-weight: bold; font-size: 1.2rem; cursor: pointer;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.5); position: relative;
         }
         .deck-back {
             background: #b71c1c;
             background-image: repeating-linear-gradient(45deg, #c62828 0, #c62828 5px, #b71c1c 5px, #b71c1c 10px);
-            border: 2px solid white; color: white;
+            border: 2px solid white; color: white; transition: transform 0.1s;
         }
+        .deck-back:active { transform: scale(0.95); }
         .discard-pile {
             background: rgba(255,255,255,0.1); border: 2px dashed rgba(255,255,255,0.3);
-            color: rgba(255,255,255,0.5); font-size: 0.8rem; text-align: center;
+            color: rgba(255,255,255,0.5); font-size: 0.8rem; text-align: center; cursor: default;
         }
 
         /* --- GAME TABLE --- */
@@ -73,15 +74,15 @@
             background: var(--felt); border: 12px solid var(--wood); border-radius: 40px; 
             padding: 30px; width: 100%; max-width: 850px; text-align: center; 
             box-shadow: 0 25px 60px rgba(0,0,0,0.7), inset 0 0 100px rgba(0,0,0,0.3); 
-            position: relative;
+            position: relative; display: flex; flex-direction: column; align-items: center;
         }
 
         /* HEADER UI */
         .header-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; }
-        .stats-group { display: flex; gap: 10px; }
+        .stats-group { display: flex; gap: 10px; flex-wrap: wrap; }
         .score-pill { 
             background: rgba(0,0,0,0.4); padding: 5px 12px; border-radius: 20px; 
-            font-weight: bold; border: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;
+            font-weight: bold; border: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; white-space: nowrap;
         }
         .gold-text { color: var(--gold); }
         .mode-badge { font-size: 0.7rem; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
@@ -101,76 +102,107 @@
         button.action-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #bbb; }
         button.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+        /* INPUT AREA & SCORE PREVIEW */
+        #input-area { position: relative; margin-bottom: 20px; width: 100%; max-width: 300px; }
         #word-input { 
-            padding: 12px; border-radius: 8px; border: 2px solid var(--gold); width: 220px; 
-            font-size: 1.4rem; text-transform: uppercase; text-align: center; display: none; 
-            background: #222; color: white; margin-bottom: 10px;
+            padding: 12px; border-radius: 8px; border: 3px solid var(--gold); width: 100%; box-sizing: border-box;
+            font-size: 1.5rem; font-weight: bold; text-transform: uppercase; text-align: center; display: none; 
+            background: #222; color: white; 
         }
         #word-input.invalid { animation: shake 0.4s ease-in-out; border-color: var(--error-red); color: var(--error-red); }
+        
+        #score-preview {
+            display: none; /* Hidden until final phase */
+            background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px;
+            margin-top: 10px; font-size: 0.9rem; text-align: left; animation: fadeIn 0.3s;
+        }
+        .preview-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .preview-total { border-top: 1px solid #555; padding-top: 5px; margin-top: 5px; font-weight: bold; color: var(--gold); font-size: 1.1rem; }
 
         /* --- CREDITS FOOTER --- */
-        #credits { margin-top: 30px; font-size: 0.75rem; color: rgba(255,255,255,0.3); text-align: center; line-height: 1.6; }
+        #credits { position: fixed; bottom: 0; left: 0; width: 100%; padding: 10px; background: var(--bg-dark); font-size: 0.75rem; color: rgba(255,255,255,0.4); text-align: center; z-index: 10; }
 
         /* --- MODALS --- */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(8px); }
-        .modal-box { background: white; color: #333; padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(8px); padding: 20px; box-sizing: border-box; }
+        .modal-box { background: white; color: #333; padding: 25px; border-radius: 20px; text-align: center; width: 100%; max-width: 450px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-close-x { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #999; }
         
         .best-word-box { background: #f5f5f5; padding: 15px; border-radius: 15px; margin-top: 20px; border-left: 5px solid var(--gold); text-align: left; }
         
-        .mode-btn { width: 100%; padding: 20px; margin: 10px 0; border-radius: 12px; border: none; font-size: 1.2rem; font-weight: bold; cursor: pointer; color: white; transition: transform 0.2s; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+        .mode-btn { width: 100%; padding: 15px; margin: 8px 0; border-radius: 12px; border: none; font-size: 1.1rem; font-weight: bold; cursor: pointer; color: white; transition: transform 0.2s; text-align: left; display: flex; justify-content: space-between; align-items: center; }
         .mode-btn:hover { transform: scale(1.02); }
         .mode-daily { background: var(--mode-daily); box-shadow: 0 5px 0 #1b5e20; }
         .mode-free { background: var(--mode-free); box-shadow: 0 5px 0 #0d47a1; }
         .mode-score { background: #444; border: 1px solid #666; } 
-        .mode-desc { font-size: 0.8rem; font-weight: normal; opacity: 0.9; margin-top: 5px; display: block; }
+        .mode-desc { font-size: 0.8rem; font-weight: normal; opacity: 0.9; margin-top: 3px; display: block; }
 
-        /* Leaderboard Table */
-        .lb-table { width: 100%; text-align: left; border-collapse: collapse; margin-top:10px; }
-        .lb-table th { background: #eee; padding: 8px; font-size: 0.8rem; color: #666; }
-        .lb-table td { padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; }
-        .lb-rank { color: var(--gold); width: 30px; }
-        .lb-score { text-align: right; color: var(--mode-daily); }
-        .hidden-word { color: #aaa; font-style: italic; letter-spacing: 2px; }
-
-        .rules-table { width: 100%; text-align: left; font-size: 0.9rem; border-collapse: collapse; margin-top: 10px; }
-        .rules-table th { border-bottom: 2px solid #ddd; padding: 5px; color: #666; }
-        .rules-table td { border-bottom: 1px solid #eee; padding: 5px; }
+        /* TABLES (Leaderboard, Rules, Deck Stats) */
+        .data-table { width: 100%; text-align: left; border-collapse: collapse; margin-top:10px; font-size: 0.9rem; }
+        .data-table th { background: #eee; padding: 8px; color: #666; font-weight: 600; }
+        .data-table td { padding: 8px; border-bottom: 1px solid #eee; }
+        .lb-rank { color: var(--gold); width: 30px; font-weight: bold; }
+        .lb-score { text-align: right; color: var(--mode-daily); font-weight: bold; }
+        .hidden-word { color: #aaa; font-style: italic; letter-spacing: 1px; }
+        .stat-rem { font-weight: bold; color: var(--mode-daily); }
+        .stat-out { color: #aaa; }
 
         #loading-msg { position: fixed; bottom: 10px; right: 10px; color: rgba(255,255,255,0.3); font-size: 0.7rem; }
 
         /* --- CARDS --- */
-        .card-row { display: flex; justify-content: center; gap: 12px; margin-bottom: 30px; min-height: 140px; perspective: 1000px; flex-wrap: wrap; }
-        .card-slot { width: 90px; height: 130px; border: 3px dashed rgba(255,255,255,0.2); border-radius: 12px; background: rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center; position: relative; }
-        .river-slot-text { color: var(--bonus-purple); font-size: 0.6rem; font-weight: 900; text-transform: uppercase; position: absolute; bottom: 10px; filter: brightness(1.5); letter-spacing: 1px;}
+        /* Mobile-first approach for card rows: single row, scrollable */
+        .card-row { 
+            display: flex; justify-content: flex-start; gap: 8px; margin-bottom: 20px; 
+            min-height: 100px; perspective: 1000px; 
+            width: 100%; overflow-x: auto; padding: 10px 5px; /* Padding for bump animation space */
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; /* Firefox */
+        }
+        .card-row::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+
+        .card-slot { flex: 0 0 auto; width: 65px; height: 95px; border: 2px dashed rgba(255,255,255,0.2); border-radius: 8px; background: rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center; position: relative; }
+        .river-slot-text { color: var(--bonus-purple); font-size: 0.5rem; font-weight: 900; text-transform: uppercase; position: absolute; bottom: 5px; filter: brightness(1.5); letter-spacing: 1px; text-align: center; width: 100%;}
+        
         @keyframes dealIn { 0% { opacity: 0; transform: translateY(50px) rotateX(-90deg); } 100% { opacity: 1; transform: translateY(0) rotateX(0); } }
-        .card { width: 90px; height: 130px; background: var(--card-bg); color: black; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: pointer; border: 1px solid #ccc; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s; box-shadow: 3px 3px 8px var(--card-shadow); user-select: none; backface-visibility: hidden; z-index: 5; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { flex: 0 0 auto; width: 65px; height: 95px; background: var(--card-bg); color: black; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: pointer; border: 1px solid #ccc; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s; box-shadow: 2px 2px 5px var(--card-shadow); user-select: none; backface-visibility: hidden; z-index: 5; }
         .animate-deal { animation: dealIn 0.5s ease-out forwards; }
-        .card.bumped { transform: translateY(-25px) scale(1.1) !important; border: 3px solid var(--gold); box-shadow: 0 15px 30px rgba(0,0,0,0.5); z-index: 100; }
-        .card.selected { transform: translateY(-15px); border: 4px solid var(--gold); box-shadow: 0 0 15px var(--gold); }
+        .card.bumped { transform: translateY(-15px) scale(1.05) !important; border: 2px solid var(--gold); box-shadow: 0 10px 20px rgba(0,0,0,0.4); z-index: 100; }
+        .card.selected { transform: translateY(-10px); border: 3px solid var(--gold); box-shadow: 0 0 10px var(--gold); }
         .card.communal { background: #f0f7ff; border: 2px solid #2196f3; cursor: default; }
         .card.face-card { background: #fff8e1; border: 2px solid #ffb300; }
-        .card.river-bonus { border: 4px solid var(--bonus-purple); box-shadow: 0 0 15px var(--bonus-purple); }
-        .card.river-bonus::before { content: "RIVER (2x)"; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); color: white; background: var(--bonus-purple); padding: 3px 8px; border-radius: 12px; font-size: 0.6rem; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.5); pointer-events: none; }
-        .card .corner { position: absolute; font-size: 0.9rem; font-weight: 900; }
-        .card .top-left { top: 6px; left: 6px; }
-        .card .bottom-right { bottom: 6px; right: 6px; } 
-        .card .animal-icon { font-size: 2rem; margin-top: 5px; }
-        .card .main-letter { font-size: 2.2rem; font-weight: 900; color: #000; line-height: 1; margin-bottom: 8px; }
+        .card.river-bonus { border: 3px solid var(--bonus-purple); box-shadow: 0 0 10px var(--bonus-purple); }
+        .card.river-bonus::before { content: "2x"; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); color: white; background: var(--bonus-purple); padding: 2px 6px; border-radius: 10px; font-size: 0.6rem; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.4); pointer-events: none; z-index: 10; }
+        .card .corner { position: absolute; font-size: 0.7rem; font-weight: 900; }
+        .card .top-left { top: 4px; left: 4px; }
+        .card .bottom-right { bottom: 4px; right: 4px; } 
+        .card .animal-icon { font-size: 1.5rem; margin-top: 2px; }
+        .card .main-letter { font-size: 1.6rem; font-weight: 900; color: #000; line-height: 1; margin-bottom: 4px; }
         
+        /* Desktop overrides */
+        @media (min-width: 769px) {
+            #main-container { flex-wrap: nowrap; align-items: flex-start; }
+            #game-table { padding: 40px; border-width: 15px; }
+            .card-row { justify-content: center; overflow-x: visible; gap: 15px; padding: 0; }
+            .card { width: 90px; height: 130px; border-radius: 10px; box-shadow: 3px 3px 8px var(--card-shadow); }
+            .card-slot { width: 90px; height: 130px; border-width: 3px; border-radius: 12px; }
+            .card .main-letter { font-size: 2.2rem; margin-bottom: 8px; }
+            .card .animal-icon { font-size: 2rem; margin-top: 5px; }
+            .card .corner { font-size: 0.9rem; }
+            .card.bumped { transform: translateY(-25px) scale(1.1) !important; border-width: 3px; }
+            .card.selected { transform: translateY(-15px); border-width: 4px; }
+            .card.river-bonus { border-width: 4px; }
+            .river-slot-text { font-size: 0.7rem; bottom: 10px; }
+        }
+
         @media (max-width: 768px) {
-            #main-container { flex-direction: column-reverse; align-items: center; }
-            #distribution-sidebar { width: 90%; display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 10px 20px; }
-            #distribution-sidebar h4, .dist-grid, #discard-list { display: none; } 
-            .pile-container { flex-direction: row; border-top: none; padding-top: 0; margin-top: 0; width: 100%; justify-content: space-around; }
-            #game-table { padding: 15px; border-width: 6px; }
-            .card { width: 65px; height: 95px; border-radius: 6px; }
-            .card-slot { width: 65px; height: 95px; }
-            .card .main-letter { font-size: 1.6rem; }
-            .card .animal-icon { font-size: 1.4rem; }
-            .card .corner { font-size: 0.7rem; }
-            #status-msg { font-size: 1rem; }
-            .score-pill { padding: 3px 8px; font-size: 0.75rem; }
-            .stats-group { gap: 5px; }
+             /* Move sidebar to bottom on mobile and change layout */
+            #distribution-sidebar { width: 100%; flex-direction: row; justify-content: center; padding: 10px; order: 2; }
+            .pile-container { flex-direction: row; padding-top: 0; width: auto; gap: 30px; }
+            #game-table { order: 1; }
+            .stats-group { justify-content: center; }
+            /* Ensure input doesn't get hidden by keyboard */
+            #game-table { padding-bottom: 20px; } 
         }
     </style>
 </head>
@@ -178,12 +210,9 @@
 
     <div id="main-container">
         <div id="distribution-sidebar">
-            <h4 style="margin-bottom: 10px;">Deck Stats</h4>
-            <div id="dist-grid" class="dist-grid"></div>
-            
             <div class="pile-container">
-                <div>
-                    <div style="font-size:0.6rem; color:#aaa; margin-bottom:3px; text-align:center;">DECK</div>
+                <div onclick="DeckStatsManager.show()" style="cursor: pointer;" title="View Deck Stats">
+                    <div style="font-size:0.6rem; color:#aaa; margin-bottom:3px; text-align:center;">DECK (Tap)</div>
                     <div class="mini-card deck-back" id="deck-count-display">100</div>
                 </div>
                 <div>
@@ -191,7 +220,6 @@
                     <div class="mini-card discard-pile" id="discard-display">0</div>
                 </div>
             </div>
-            <div id="discard-list" style="margin-top:10px; font-size:0.7rem; color:#888; text-align:center; word-wrap:break-word;"></div>
         </div>
 
         <div id="game-table">
@@ -200,30 +228,32 @@
                 <div class="stats-group">
                     <div class="score-pill">Last: <span id="last-score" class="gold-text">0</span></div>
                     <div class="score-pill">Best: <span id="high-score" class="gold-text">0</span></div>
-                    <div class="score-pill">Total: <span id="daily-total" class="gold-text">0</span></div>
                     <div id="mode-indicator" class="mode-badge" style="background:#555;">Waiting</div>
                 </div>
                 
-                <div style="display:flex; gap:8px;">
+                <div style="display:flex; gap:5px;">
                     <button id="home-btn" class="icon-btn" onclick="returnToMenu()" title="Main Menu">🏠</button>
                     <button id="profile-btn" class="icon-btn" onclick="LeaderboardManager.editName()" title="Edit Profile">👤</button>
-                    <button id="leaderboard-btn" class="icon-btn" onclick="LeaderboardManager.show()" title="Daily Leaderboard">🏆</button>
                     <button id="music-btn" class="icon-btn" onclick="toggleMute()" title="Toggle Sound" style="opacity: 0.5;">🔇</button>
+                    <button class="icon-btn" onclick="confirmReset()" title="Reset Scores">↻</button>
                     <button class="icon-btn" onclick="showRules()">?</button>
                 </div>
             </div>
             
-            <div id="status-msg">Select Game Mode</div>
+            <div id="status-msg" style="font-weight: bold; margin-bottom: 15px;">Select Game Mode</div>
             
-            <h3 style="color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 2px; margin: 0 0 10px 0;">THE BOARD</h3>
+            <h3 style="color: rgba(255,255,255,0.4); font-size: 0.7rem; letter-spacing: 1px; margin: 0 0 5px 0; align-self: flex-start;">THE BOARD</h3>
             <div id="board" class="card-row"></div>
 
-            <h3 id="hand-label" style="color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 2px; margin: 0 0 10px 0;">YOUR HAND</h3>
+            <h3 id="hand-label" style="color: rgba(255,255,255,0.4); font-size: 0.7rem; letter-spacing: 1px; margin: 0 0 5px 0; align-self: flex-start;">YOUR HAND</h3>
             <div id="hand" class="card-row"></div>
 
+            <div id="input-area">
+                <input type="text" id="word-input" placeholder="Type word..." autocomplete="off" spellcheck="false" oninput="handleTyping()" onkeydown="if(event.key === 'Enter') calculateFinalScore()">
+                <div id="score-preview"></div>
+            </div>
+            
             <div id="controls">
-                <input type="text" id="word-input" placeholder="Type word..." oninput="handleTyping()" onkeydown="if(event.key === 'Enter') calculateFinalScore()">
-                <br>
                 <button id="main-btn" class="action-btn" onclick="nextPhase()" disabled>Start</button>
                 <button id="swap-btn" class="action-btn" onclick="executeSwap()" style="display:none">Confirm Swap</button>
             </div>
@@ -238,7 +268,7 @@
     <div id="start-overlay" class="modal-overlay">
         <div class="modal-box">
             <h1 style="margin:0 0 20px 0; color:#333;">Oxford Hold 'Em</h1>
-            <p style="color:#666; margin-bottom:30px;">Choose your game mode:</p>
+            <p style="color:#666; margin-bottom:20px;">Choose your game mode:</p>
             
             <button class="mode-btn mode-daily" onclick="handleStartClick('daily')">
                 <div>
@@ -256,25 +286,35 @@
                 <div>🎲</div>
             </button>
 
-            <button class="mode-btn mode-score" onclick="LeaderboardManager.show()">
-                <div>
-                    <div>View Leaderboard</div>
-                    <span class="mode-desc">See today's top players.</span>
-                </div>
-                <div>📊</div>
-            </button>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="mode-btn mode-score" style="flex:1; font-size: 0.9rem; padding: 10px;" onclick="LeaderboardManager.show()">
+                    <div style="text-align: center; width: 100%;">📊 Leaderboard</div>
+                </button>
+                <button id="menu-share-btn" class="mode-btn mode-score" style="flex:1; font-size: 0.9rem; padding: 10px; display:none;" onclick="shareResult(true)">
+                    <div style="text-align: center; width: 100%;">📤 Share Score</div>
+                </button>
+            </div>
             
-            <div id="loading-dict-text" style="margin-top:20px; color:#888; font-size:0.8rem;">Connecting to Oracle...</div>
+            <div id="loading-dict-text" style="margin-top:25px; color:#888; font-size:0.8rem;">Connecting to Oracle...</div>
+        </div>
+    </div>
+
+    <div id="deck-modal" class="modal-overlay" style="display:none; z-index: 350;" onclick="if(event.target===this) document.getElementById('deck-modal').style.display='none'">
+        <div class="modal-box">
+            <span class="modal-close-x" onclick="document.getElementById('deck-modal').style.display='none'">&times;</span>
+            <h2 style="color: #333; margin-top: 0;">Deck Statistics</h2>
+            <p style="color:#666; font-size:0.9rem;">Cards remaining in deck vs original count.</p>
+            <div id="deck-stats-content"></div>
         </div>
     </div>
 
     <div id="lb-modal" class="modal-overlay" style="display:none; z-index:300;" onclick="if(event.target===this) this.style.display='none'">
         <div class="modal-box" style="text-align: center;">
+            <span class="modal-close-x" onclick="document.getElementById('lb-modal').style.display='none'">&times;</span>
             <h2 style="color: var(--mode-daily); margin-top: 0;">Today's Top Scores</h2>
             <div id="lb-content" style="min-height: 200px;">
                 <p>Loading...</p>
             </div>
-            <button class="action-btn" onclick="document.getElementById('lb-modal').style.display='none'" style="width:100%; margin-top: 20px; background: var(--wood); color: white;">Close</button>
         </div>
     </div>
 
@@ -282,58 +322,53 @@
         <div class="modal-box">
             <h2 style="color: #333; margin-top: 0;">Who are you?</h2>
             <p style="color: #666; font-size: 0.9rem;">Enter a handle for the leaderboard.</p>
-            <input type="text" id="username-input" maxlength="12" placeholder="e.g. Maverick" style="padding: 10px; font-size: 1.2rem; width: 80%; text-align: center; border: 2px solid #ccc; border-radius: 8px;">
+            <input type="text" id="username-input" maxlength="12" placeholder="e.g. Maverick" style="padding: 10px; font-size: 1.2rem; width: 80%; text-align: center; border: 2px solid #ccc; border-radius: 8px; text-transform: uppercase;">
             <br>
             <button class="action-btn" onclick="LeaderboardManager.saveName()" style="width:100%; margin-top: 20px;">Save Handle</button>
         </div>
     </div>
 
-<div id="rules-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) this.style.display='none'">
+    <div id="rules-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) this.style.display='none'">
         <div class="modal-box" style="text-align: left;">
+            <span class="modal-close-x" onclick="document.getElementById('rules-modal').style.display='none'">&times;</span>
             <h2 style="color: var(--bonus-purple); margin-top: 0; text-align: center;">How to Play</h2>
-            <p style="font-size: 0.9rem; line-height: 1.5; color: #555;">Build the best word using your <strong>Hand</strong> and the <strong>Board</strong>.</p>
-            
-            <ul style="font-size: 0.9rem; padding-left: 20px; color: #555;">
-                <li><strong>Draft:</strong> Pick the best 3 cards from 5 options.</li>
-                <li><strong>The Flop:</strong> 3 community cards are dealt.</li>
-                <li><strong>Swap:</strong> Discard up to 2 cards to draw new ones.</li>
-                <li><strong>The River:</strong> The final card. <strong style="color: var(--bonus-purple)">2x SCORE</strong> for the letter in this slot!</li>
+            <p style="font-size: 0.9rem; line-height: 1.4; color: #555;">Build the best word using your <strong>Hand</strong> and the <strong>Board</strong>.</p>
+            <ul style="font-size: 0.9rem; padding-left: 20px; color: #555; line-height: 1.4;">
+                <li><strong>Draft:</strong> Pick 3 cards to keep from 5.</li>
+                <li><strong>Swap:</strong> Discard up to 2 cards for new ones.</li>
+                <li><strong>River:</strong> The final board card gets <strong style="color: var(--bonus-purple)">2x SCORE</strong>!</li>
             </ul>
-
-            <h3 style="font-size: 1rem; border-bottom: 2px solid #ddd; margin-top: 20px;">Scoring</h3>
-            <table class="rules-table">
+            <h3 style="font-size: 1rem; border-bottom: 2px solid #ddd; margin-top: 15px;">Scoring</h3>
+            <table class="data-table">
                 <tr><th>Letters</th><th>Points</th></tr>
                 <tr><td>E, T, A, O, I, N</td><td>1 pt</td></tr>
                 <tr><td>R, S, H</td><td>3 pts</td></tr>
-                <tr><td>D, L, C, U, M, W</td><td>4 - 5 pts</td></tr>
-                <tr><td>F, G, Y, P, B, V</td><td>6 - 7 pts</td></tr>
-                <tr><td>J, K, Q, X, Z</td><td>8 - 9 pts</td></tr>
+                <tr><td>D, L, C, U, M, W</td><td>4-5 pts</td></tr>
+                <tr><td>F, G, Y, P, B, V</td><td>6-7 pts</td></tr>
+                <tr><td>J, K, Q, X, Z</td><td>8-9 pts</td></tr>
             </table>
-
-            <h3 style="font-size: 1rem; border-bottom: 2px solid #ddd; margin-top: 20px;">Length Multipliers</h3>
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold; margin-top: 5px;">
-                <span>5+ Letters: <span style="color:#2e7d32">1.5x</span></span>
-                <span>7+ Letters: <span style="color:#1565c0">2.0x</span></span>
-                <span>8 Letters: <span style="color:#d32f2f">3.0x</span></span>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: bold; margin-top: 10px; background: #eee; padding: 5px; border-radius: 5px;">
+                <span>Length Bonus:</span>
+                <span>5 or 6: <span style="color:#2e7d32">1.5x</span></span>
+                <span>7: <span style="color:#1565c0">2.0x</span></span>
+                <span>8: <span style="color:#d32f2f">3.0x</span></span>
             </div>
-
-            <button class="action-btn" onclick="document.getElementById('rules-modal').style.display='none'" style="width:100%; margin: 20px 0 0 0; background: var(--wood); color: white;">Got it</button>
         </div>
     </div>
 
     <div id="result-modal" class="modal-overlay" style="display:none; z-index:200;">
         <div class="modal-box">
             <h2 style="text-transform: uppercase; color: #888; font-size: 0.9rem;">Word Score</h2>
-            <h1 id="modal-word" style="font-size: 3rem; margin: 0; color: #222;">WORD</h1>
-            <div id="modal-score" style="font-size: 4rem; color: #2e7d32; font-weight: 900;">0</div>
+            <h1 id="modal-word" style="font-size: 3rem; margin: 0; color: #222; line-height: 1;">WORD</h1>
+            <div id="modal-score" style="font-size: 4rem; color: #2e7d32; font-weight: 900; line-height: 1;">0</div>
             
             <div class="best-word-box">
                 <div style="font-size: 0.7rem; text-transform: uppercase; color: #999;">The Oracle's Best Word</div>
                 <div id="best-word-text" style="font-size: 1.4rem; font-weight: bold; color: #333;">Calculating...</div>
             </div>
             
-            <button id="share-btn" class="action-btn" onclick="shareResult()" style="background: #2196f3; color: white; width: 100%; margin: 20px 0 0 0;">📤 Share Result</button>
-            <button id="next-hand-btn" class="action-btn" onclick="softReset()" style="background: var(--wood); color: white; width: 100%; margin: 10px 0 0 0;">Next Hand</button>
+            <button id="share-btn" class="action-btn" onclick="shareResult(false)" style="background: #2196f3; color: white; width: 100%; margin: 20px 0 0 0;">📤 Share Result</button>
+            <button id="next-hand-btn" class="action-btn" style="background: var(--wood); color: white; width: 100%; margin: 10px 0 0 0;">Next Hand</button>
         </div>
     </div>
 
@@ -354,125 +389,74 @@
             pendingStart: false,
             
             init() {
-                // CONFIG FROM USER PROMPT
-                const firebaseConfig = {
-                  apiKey: "AIzaSyDk0sQmVHlXM8_b6Q6ka1VzCr4hwIpdCf4",
-                  authDomain: "oxfordholdem.firebaseapp.com",
-                  projectId: "oxfordholdem",
-                  storageBucket: "oxfordholdem.firebasestorage.app",
-                  messagingSenderId: "153258290630",
-                  appId: "1:153258290630:web:5cc1b215681d2ea3dd96c7",
-                  measurementId: "G-ZT6CV3FVVY"
-                };
-                
-                try {
-                    firebase.initializeApp(firebaseConfig);
-                    this.db = firebase.firestore();
-                    console.log("Firebase initialized");
-                } catch(e) { console.warn("Firebase not configured."); }
+                const firebaseConfig = { apiKey: "AIzaSyDk0sQmVHlXM8_b6Q6ka1VzCr4hwIpdCf4", authDomain: "oxfordholdem.firebaseapp.com", projectId: "oxfordholdem", storageBucket: "oxfordholdem.firebasestorage.app", messagingSenderId: "153258290630", appId: "1:153258290630:web:5cc1b215681d2ea3dd96c7", measurementId: "G-ZT6CV3FVVY" };
+                try { firebase.initializeApp(firebaseConfig); this.db = firebase.firestore(); console.log("Firebase initialized"); } catch(e) { console.warn("Firebase not configured."); }
             },
-
             checkName() {
-                if (!this.username) {
-                    this.pendingStart = true;
-                    document.getElementById('start-overlay').style.display = 'none'; 
-                    document.getElementById('username-modal').style.display = 'flex';
-                } else {
-                    startGame('daily');
-                }
+                if (!this.username) { this.pendingStart = true; document.getElementById('start-overlay').style.display = 'none'; document.getElementById('username-modal').style.display = 'flex'; } 
+                else { startGame('daily'); }
             },
-
-            editName() {
-                document.getElementById('username-modal').style.display = 'flex';
-                this.pendingStart = false; 
-            },
-
+            editName() { document.getElementById('username-modal').style.display = 'flex'; this.pendingStart = false; },
             saveName() {
-                const input = document.getElementById('username-input');
-                const name = input.value.trim().toUpperCase().substring(0, 12);
+                const input = document.getElementById('username-input'); const name = input.value.trim().toUpperCase().substring(0, 12);
                 if (name.length < 3) return alert("Name too short!");
-                this.username = name;
-                localStorage.setItem('oxford_username', name);
+                this.username = name; localStorage.setItem('oxford_username', name);
                 document.getElementById('username-modal').style.display = 'none';
-                
-                if (this.pendingStart) {
-                    startGame('daily');
-                }
+                if (this.pendingStart) { startGame('daily'); }
             },
-
             async submitScore(score, word) {
                 if (!this.db || gameMode !== 'daily') return;
-                const today = new Date().toISOString().split('T')[0];
-                const docId = `${today}_${this.username}`;
-                const docRef = this.db.collection('leaderboard').doc(docId);
-
-                try {
-                    const doc = await docRef.get();
-                    if (!doc.exists || score > doc.data().score) {
-                        await docRef.set({
-                            name: this.username,
-                            score: score,
-                            word: word,
-                            date: today,
-                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-                } catch (e) { console.error("Score submit failed", e); }
+                const today = new Date().toISOString().split('T')[0]; const docId = `${today}_${this.username}`; const docRef = this.db.collection('leaderboard').doc(docId);
+                try { const doc = await docRef.get(); if (!doc.exists || score > doc.data().score) { await docRef.set({ name: this.username, score: score, word: word, date: today, timestamp: firebase.firestore.FieldValue.serverTimestamp() }); }} catch (e) { console.error("Score submit failed", e); }
             },
-
             async show() {
-                document.getElementById('lb-modal').style.display = 'flex';
-                const container = document.getElementById('lb-content');
+                document.getElementById('lb-modal').style.display = 'flex'; const container = document.getElementById('lb-content');
                 if (!this.db) { container.innerHTML = "<p>Leaderboard unavailable.</p>"; return; }
-                container.innerHTML = "Loading...";
-                const today = new Date().toISOString().split('T')[0];
-                
-                // SPOILER CHECK: Has user played today?
-                const lastPlayed = localStorage.getItem('oxford_last_daily_played');
-                const userPlayedToday = (lastPlayed === today);
-
+                container.innerHTML = "Loading..."; const today = new Date().toISOString().split('T')[0];
+                const lastPlayed = localStorage.getItem('oxford_last_daily_played'); const userPlayedToday = (lastPlayed === today);
                 try {
                     const q = await this.db.collection('leaderboard').where('date', '==', today).orderBy('score', 'desc').limit(10).get();
                     if (q.empty) { container.innerHTML = "<p>No scores yet today. Be the first!</p>"; return; }
-
-                    let html = `<table class="lb-table"><tr><th>#</th><th>Player</th><th>Word</th><th>Score</th></tr>`;
-                    let rank = 1;
-                    q.forEach(doc => {
-                        const d = doc.data();
-                        // Hide word if user hasn't played today
-                        const wordDisplay = userPlayedToday ? d.word : `<span class="hidden-word">🙈 HIDDEN</span>`;
-                        
-                        html += `<tr><td class="lb-rank">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank}</td><td>${d.name}</td><td style="font-size:0.8rem;">${wordDisplay}</td><td class="lb-score">${d.score}</td></tr>`;
-                        rank++;
-                    });
-                    html += "</table>";
-                    if(!userPlayedToday) html += "<p style='font-size:0.7rem; color:#aaa; margin-top:10px;'>* Words hidden until you complete today's hand.</p>";
-                    
+                    let html = `<table class="data-table"><tr><th>#</th><th>Player</th><th>Word</th><th>Score</th></tr>`; let rank = 1;
+                    q.forEach(doc => { const d = doc.data(); const wordDisplay = userPlayedToday ? d.word : `<span class="hidden-word">🙈 HIDDEN</span>`; html += `<tr><td class="lb-rank">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank}</td><td>${d.name}</td><td style="font-size:0.8rem;">${wordDisplay}</td><td class="lb-score">${d.score}</td></tr>`; rank++; });
+                    html += "</table>"; if(!userPlayedToday) html += "<p style='font-size:0.7rem; color:#aaa; margin-top:10px;'>* Words hidden until you play today's hand.</p>";
                     container.innerHTML = html;
                 } catch (e) { container.innerHTML = "<p>Error loading scores. Check Console.</p>"; }
             }
         };
 
+        /* --- DECK STATS MANAGER --- */
+        const DeckStatsManager = {
+            show() {
+                const container = document.getElementById('deck-stats-content');
+                let html = '<table class="data-table" style="text-align:center"><tr><th>Card</th><th>Orig</th><th>Rem</th></tr>';
+                // Calculate remaining cards
+                let remaining = {}; Object.keys(FREQUENCIES).forEach(k => remaining[k] = FREQUENCIES[k]);
+                [...discards, ...hand, ...board].forEach(c => { if(c && remaining[c]) remaining[c]--; });
+                
+                Object.keys(FREQUENCIES).sort().forEach(l => {
+                    const rem = remaining[l];
+                    const remClass = rem === 0 ? 'stat-out' : 'stat-rem';
+                    html += `<tr><td><b>${l==='*'?'?':l}</b></td><td>${FREQUENCIES[l]}</td><td class="${remClass}">${rem}</td></tr>`;
+                });
+                html += '</table>';
+                container.innerHTML = html;
+                document.getElementById('deck-modal').style.display = 'flex';
+            }
+        };
+
         /* --- RNG --- */
-        let currentSeed = 1;
-        let gameMode = 'free';
+        let currentSeed = 1; let gameMode = 'free';
         function mulberry32(a) { return function() { var t=a+=0x6D2B79F5; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61); return ((t^t>>>14)>>>0)/4294967296; } }
         let randomFunc = Math.random;
-
         function initSeed(mode) {
             gameMode = mode;
             if (mode === 'daily') {
-                const d = new Date();
-                const seedStr = d.getUTCFullYear() + "" + (d.getUTCMonth()+1).toString().padStart(2,'0') + "" + d.getUTCDate().toString().padStart(2,'0');
+                const d = new Date(); const seedStr = d.getUTCFullYear() + "" + (d.getUTCMonth()+1).toString().padStart(2,'0') + "" + d.getUTCDate().toString().padStart(2,'0');
                 randomFunc = mulberry32(parseInt(seedStr));
-                document.getElementById('mode-indicator').innerText = "DAILY: " + seedStr;
-                document.getElementById('mode-indicator').style.background = "var(--mode-daily)";
-                document.getElementById('leaderboard-btn').style.display = "inline-block";
+                document.getElementById('mode-indicator').innerText = "DAILY: " + seedStr; document.getElementById('mode-indicator').style.background = "var(--mode-daily)";
             } else {
-                randomFunc = Math.random;
-                document.getElementById('mode-indicator').innerText = "FREE PLAY";
-                document.getElementById('mode-indicator').style.background = "var(--mode-free)";
-                document.getElementById('leaderboard-btn').style.display = "none";
+                randomFunc = Math.random; document.getElementById('mode-indicator').innerText = "FREE PLAY"; document.getElementById('mode-indicator').style.background = "var(--mode-free)";
             }
         }
 
@@ -480,374 +464,217 @@
         const SoundManager = {
             init() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
             play(type) {
-                if (isMuted) return;
-                if (!this.ctx) this.init();
-                const t = this.ctx.currentTime;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                if (type === 'flip') {
-                    const buf = this.ctx.createBuffer(1, this.ctx.sampleRate*0.1, this.ctx.sampleRate);
-                    const d = buf.getChannelData(0);
-                    for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
-                    const n = this.ctx.createBufferSource(); n.buffer=buf;
-                    const f = this.ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(1000,t);
-                    gain.gain.setValueAtTime(0.3,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.1);
-                    n.connect(f); f.connect(gain); gain.connect(this.ctx.destination); n.start();
-                } else if (type==='chip') {
-                    osc.frequency.setValueAtTime(1200,t); gain.gain.setValueAtTime(0.1,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.05); osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(t+0.05);
-                } else if (type==='success') {
-                    osc.type='triangle'; osc.frequency.setValueAtTime(440,t); osc.frequency.exponentialRampToValueAtTime(880,t+0.1);
-                    gain.gain.setValueAtTime(0.2,t); gain.gain.linearRampToValueAtTime(0,t+0.4);
-                    osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(t+0.4);
-                } else if (type==='error') {
-                    osc.type='sawtooth'; osc.frequency.setValueAtTime(150,t); osc.frequency.linearRampToValueAtTime(100,t+0.2);
-                    gain.gain.setValueAtTime(0.2,t); gain.gain.linearRampToValueAtTime(0,t+0.2);
-                    osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(t+0.2);
-                }
+                if (isMuted) return; if (!this.ctx) this.init(); const t = this.ctx.currentTime; const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                if (type === 'flip') { const buf = this.ctx.createBuffer(1, this.ctx.sampleRate*0.1, this.ctx.sampleRate); const d = buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1; const n = this.ctx.createBufferSource(); n.buffer=buf; const f = this.ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(1000,t); gain.gain.setValueAtTime(0.3,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.1); n.connect(f); f.connect(gain); gain.connect(this.ctx.destination); n.start(); } 
+                else if (type==='chip') { osc.frequency.setValueAtTime(1200,t); gain.gain.setValueAtTime(0.1,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.05); osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(t+0.05); } 
+                else if (type==='success') { osc.type='triangle'; osc.frequency.setValueAtTime(440,t); osc.frequency.exponentialRampToValueAtTime(880,t+0.1); gain.gain.setValueAtTime(0.2,t); gain.gain.linearRampToValueAtTime(0,t+0.4); osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(t+0.4); } 
+                else if (type==='error') { osc.type='sawtooth'; osc.frequency.setValueAtTime(150,t); osc.frequency.linearRampToValueAtTime(100,t+0.2); gain.gain.setValueAtTime(0.2,t); gain.gain.linearRampToValueAtTime(0,t+0.2); osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(t+0.2); }
             }
         };
+        const MusicManager = { audio: new Audio('gambler_8bit.mp3'), init() { this.audio.loop = true; this.audio.volume = 0.3; }, play() { if (!isMuted) this.audio.play().catch(e => {}); }, pause() { this.audio.pause(); } }; MusicManager.init();
 
-        const MusicManager = {
-            audio: new Audio('gambler_8bit.mp3'), 
-            init() { this.audio.loop = true; this.audio.volume = 0.3; },
-            play() { if (!isMuted) this.audio.play().catch(e => {}); },
-            pause() { this.audio.pause(); }
-        };
-        MusicManager.init();
-
-        /* --- CONFIG --- */
+        /* --- CONFIG & STATE --- */
         const FREQUENCIES = { 'E':12,'A':9,'I':9,'O':8,'N':6,'R':6,'T':6,'L':4,'S':4,'U':4,'D':4,'G':3,'B':2,'C':2,'M':2,'P':2,'F':2,'H':2,'V':2,'W':2,'Y':2,'K':1,'J':1,'X':1,'Q':1,'Z':1, '*': 2 };
         const SCORES = { 'E':1,'T':1,'A':1,'O':2,'I':2,'N':2,'S':3,'H':3,'R':3,'D':4,'L':4,'C':4,'U':5,'M':5,'W':5,'F':6,'G':6,'Y':6,'P':7,'B':7,'V':7,'K':8,'J':8,'X':8,'Q':9,'Z':9, '*':0 };
         const ICONS = { 'A':'♠️','B':'🐝','C':'🐱','D':'🐶','E':'🐘','F':'🦊','G':'🦒','H':'🦔','I':'🦎','J':'🫅','K':'👑','L':'🦁','M':'🐒','N':'🥷','O':'🦉','P':'🐼','Q':'👸','R':'🐰','S':'🐍','T':'🐯','U':'🦄','V':'🦅','W':'🐺','X':'⚔️','Y':'🐃','Z':'🦓','*':'🤡' };
         const DICT_URL = 'https://raw.githubusercontent.com/redbo/scrabble/master/dictionary.txt';
 
-        /* --- STATE --- */
         let deck = [], hand = [], board = [], discards = [], draftPool = [], selectedIndices = [], dictionary = [];
         let phaseIndex = 0, swapsDoneThisHand = 0, swapLockedThisRound = false;
         let handAnims = [], boardAnims = [];
 
         window.onload = async () => {
-            loadStats();
-            LeaderboardManager.init();
-            renderDistGrid();
-            await initDictionary();
+            loadStats(); LeaderboardManager.init(); await initDictionary(); checkDailyPlayed();
         };
 
         function showRules() { document.getElementById('rules-modal').style.display = 'flex'; }
-        
-        function loadStats() {
-            document.getElementById('daily-total').innerText = localStorage.getItem('oxford_total') || 0;
-            document.getElementById('high-score').innerText = localStorage.getItem('oxford_high') || 0;
-            document.getElementById('last-score').innerText = localStorage.getItem('oxford_last') || 0;
-        }
-
-        function confirmReset() {
-            if(confirm("Reset all score history?")) {
-                localStorage.removeItem('oxford_total'); localStorage.removeItem('oxford_high'); localStorage.removeItem('oxford_last');
-                loadStats(); SoundManager.play('chip');
-            }
-        }
-
-        function renderDistGrid() {
-            const grid = document.getElementById('dist-grid');
-            Object.keys(FREQUENCIES).forEach(l => {
-                const item = document.createElement('div'); item.className = 'dist-item';
-                item.innerHTML = `<span>${l === '*' ? '?' : l}</span> <span>${FREQUENCIES[l]}</span>`;
-                grid.appendChild(item);
-            });
-        }
+        function loadStats() { document.getElementById('daily-total').innerText = localStorage.getItem('oxford_total') || 0; document.getElementById('high-score').innerText = localStorage.getItem('oxford_high') || 0; document.getElementById('last-score').innerText = localStorage.getItem('oxford_last') || 0; }
+        function confirmReset() { if(confirm("Reset local score history?")) { localStorage.removeItem('oxford_total'); localStorage.removeItem('oxford_high'); localStorage.removeItem('oxford_last'); localStorage.removeItem('oxford_last_daily_played'); localStorage.removeItem('oxford_daily_result'); loadStats(); SoundManager.play('chip'); checkDailyPlayed(); }}
 
         async function initDictionary() {
-            const loadingText = document.getElementById('loading-dict-text');
-            const cachedDict = localStorage.getItem('oxford_dict_v1');
-            if (cachedDict) {
-                dictionary = JSON.parse(cachedDict);
-            } else {
-                try {
-                    const res = await fetch(DICT_URL);
-                    const text = await res.text();
-                    dictionary = text.split('\n').map(w => w.trim().toUpperCase()).filter(w => w.length >= 3 && w.length <= 8);
-                    try { localStorage.setItem('oxford_dict_v1', JSON.stringify(dictionary)); } catch(e){}
-                } catch (e) { alert("Dictionary Error"); return; }
-            }
+            const loadingText = document.getElementById('loading-dict-text'); const cachedDict = localStorage.getItem('oxford_dict_v1');
+            if (cachedDict) { dictionary = JSON.parse(cachedDict); } else { try { const res = await fetch(DICT_URL); const text = await res.text(); dictionary = text.split('\n').map(w => w.trim().toUpperCase()).filter(w => w.length >= 3 && w.length <= 8); try { localStorage.setItem('oxford_dict_v1', JSON.stringify(dictionary)); } catch(e){} } catch (e) { alert("Dictionary Error"); return; }}
             loadingText.innerText = `Oracle Online: ${dictionary.length} words. Ready.`;
+        }
+
+        function checkDailyPlayed() {
+            const today = new Date().toISOString().split('T')[0];
+            const lastPlayed = localStorage.getItem('oxford_last_daily_played');
+            // Show/hide share button on main menu based on if played today
+            document.getElementById('menu-share-btn').style.display = (lastPlayed === today) ? 'block' : 'none';
         }
 
         function handleStartClick(mode) {
             if (mode === 'daily') {
-                const today = new Date().toISOString().split('T')[0];
-                const lastPlayed = localStorage.getItem('oxford_last_daily_played');
-                if (lastPlayed === today) {
-                    LeaderboardManager.show();
-                    return;
-                }
+                const today = new Date().toISOString().split('T')[0]; const lastPlayed = localStorage.getItem('oxford_last_daily_played');
+                if (lastPlayed === today) { LeaderboardManager.show(); return; }
                 LeaderboardManager.checkName(); 
-            } else {
-                startGame('free');
-            }
+            } else { startGame('free'); }
         }
-
-        function startGame(mode) {
-            initSeed(mode);
-            document.getElementById('start-overlay').style.display = 'none';
-            updateMuteUI();
-            document.getElementById('main-btn').disabled = false;
-            nextPhase();
-        }
-
-        function returnToMenu() {
-            if(confirm("Quit current game and return to menu?")) {
-                location.reload(); 
-            }
-        }
+        function startGame(mode) { initSeed(mode); document.getElementById('start-overlay').style.display = 'none'; updateMuteUI(); document.getElementById('main-btn').disabled = false; nextPhase(); }
+        function returnToMenu() { if(confirm("Quit current game and return to menu?")) { location.reload(); }}
 
         /* --- GAME LOGIC --- */
         function initDeck() {
-            deck = [];
-            Object.keys(FREQUENCIES).forEach(l => { for(let i=0; i<FREQUENCIES[l]; i++) deck.push(l); });
-            for (let i = deck.length - 1; i > 0; i--) {
-                const j = Math.floor(randomFunc() * (i + 1));
-                [deck[i], deck[j]] = [deck[j], deck[i]];
-            }
-            updatePileCounts();
-        }
-
-        function updatePileCounts() {
-            document.getElementById('deck-count-display').innerText = deck.length;
+            deck = []; Object.keys(FREQUENCIES).forEach(l => { for(let i=0; i<FREQUENCIES[l]; i++) deck.push(l); });
+            for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(randomFunc() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
             document.getElementById('discard-display').innerText = discards.length;
-            document.getElementById('discard-list').innerText = discards.join(', ');
         }
 
         function nextPhase() {
-            const btn = document.getElementById('main-btn');
-            const status = document.getElementById('status-msg');
-            handAnims = []; boardAnims = [];
-            SoundManager.play('flip');
-
+            const btn = document.getElementById('main-btn'); const status = document.getElementById('status-msg');
+            handAnims = []; boardAnims = []; SoundManager.play('flip');
             if (phaseIndex === 0) {
-                const vowels = ['A','E','I','O','U','Y'];
-                do {
-                    initDeck(); discards = [];
-                    draftPool = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
-                } while (!draftPool.some(card => vowels.includes(card) || card === '*'));
-                
-                handAnims = [0,1,2,3,4];
-                status.innerText = "Draft Phase: Keep 3 Cards";
-                btn.innerText = "Confirm Hand";
-                phaseIndex++;
-                render(false, true);
+                const vowels = ['A','E','I','O','U','Y']; do { initDeck(); discards = []; draftPool = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()]; } while (!draftPool.some(card => vowels.includes(card) || card === '*'));
+                handAnims = [0,1,2,3,4]; status.innerText = "Draft Phase: Keep 3 Cards"; btn.innerText = "Confirm Hand"; phaseIndex++; render(false, true);
             } else if (phaseIndex === 1) {
                 if (selectedIndices.length !== 3) return alert("Select 3 cards to keep.");
-                draftPool.forEach((c, i) => { if(!selectedIndices.includes(i)) discards.push(c); });
-                hand = selectedIndices.map(i => draftPool[i]);
-                selectedIndices = [];
-                handAnims = [0,1,2];
-                status.innerText = "Dealing Flop...";
-                phaseIndex++;
-                render(false, true); 
-                setTimeout(nextPhase, 600);
+                draftPool.forEach((c, i) => { if(!selectedIndices.includes(i)) discards.push(c); }); hand = selectedIndices.map(i => draftPool[i]); selectedIndices = [];
+                handAnims = [0,1,2]; status.innerText = "Dealing Flop..."; phaseIndex++; render(false, true); setTimeout(nextPhase, 600);
             } else if (phaseIndex === 2) {
-                board.push(deck.pop(), deck.pop(), deck.pop());
-                boardAnims = [0, 1, 2];
-                status.innerText = "The Flop: Select Discards";
-                btn.innerText = "Deal Turn";
-                swapLockedThisRound = false;
-                document.getElementById('swap-btn').style.display = "inline";
-                phaseIndex++;
-                render(false, true);
+                board.push(deck.pop(), deck.pop(), deck.pop()); boardAnims = [0, 1, 2]; status.innerText = "The Flop: Select Discards (Optional)"; btn.innerText = "Deal Turn"; swapLockedThisRound = false; document.getElementById('swap-btn').style.display = "inline"; phaseIndex++; render(false, true);
             } else if (phaseIndex === 3) {
-                board.push(deck.pop());
-                boardAnims = [3];
-                status.innerText = "The Turn";
-                btn.innerText = "Deal River";
-                swapLockedThisRound = false;
-                phaseIndex++;
-                render(false, true);
+                board.push(deck.pop()); boardAnims = [3]; status.innerText = "The Turn"; btn.innerText = "Deal River"; swapLockedThisRound = false; phaseIndex++; render(false, true);
             } else if (phaseIndex === 4) {
-                board.push(deck.pop());
-                boardAnims = [4];
-                status.innerText = "The River: Make a Word!";
-                btn.innerText = "Submit Word";
-                document.getElementById('swap-btn').style.display = "none";
-                const inp = document.getElementById('word-input');
-                inp.style.display = "inline-block"; inp.focus();
-                phaseIndex++;
-                render(false, true);
-            } else if (phaseIndex === 5) { 
-                calculateFinalScore(); 
-            }
+                board.push(deck.pop()); boardAnims = [4]; status.innerText = "The River: Make a Word!"; btn.innerText = "Submit Word"; document.getElementById('swap-btn').style.display = "none";
+                const inp = document.getElementById('word-input'); inp.style.display = "inline-block"; document.getElementById('score-preview').style.display = "block"; inp.focus(); phaseIndex++; render(false, true);
+            } else if (phaseIndex === 5) { calculateFinalScore(); }
         }
 
         function executeSwap() {
             if (selectedIndices.length === 0) return alert("Select cards to discard first.");
-            selectedIndices.forEach(idx => discards.push(hand[idx]));
-            handAnims = [...selectedIndices];
-            selectedIndices.forEach(idx => {
-                hand[idx] = deck.pop();
-                swapsDoneThisHand++;
-            });
-            selectedIndices = []; 
-            swapLockedThisRound = true;
-            SoundManager.play('flip');
-            document.getElementById('status-msg').innerText = "Swap Locked. Deal Next Card.";
-            render(false, false); 
+            selectedIndices.forEach(idx => discards.push(hand[idx])); handAnims = [...selectedIndices];
+            selectedIndices.forEach(idx => { hand[idx] = deck.pop(); swapsDoneThisHand++; });
+            selectedIndices = []; swapLockedThisRound = true; SoundManager.play('flip'); document.getElementById('status-msg').innerText = "Swap Locked. Deal Next Card."; render(false, false); 
         }
 
         function toggleSelect(i) {
             SoundManager.play('chip');
-            if (phaseIndex === 1) {
-                if (selectedIndices.includes(i)) selectedIndices = selectedIndices.filter(x => x !== i);
-                else if (selectedIndices.length < 3) selectedIndices.push(i);
-            } else if (!swapLockedThisRound && (phaseIndex === 3 || phaseIndex === 4)) {
-                const remaining = 2 - swapsDoneThisHand;
-                if (selectedIndices.includes(i)) selectedIndices = selectedIndices.filter(x => x !== i);
-                else if (selectedIndices.length < remaining) selectedIndices.push(i);
-            }
+            if (phaseIndex === 1) { if (selectedIndices.includes(i)) selectedIndices = selectedIndices.filter(x => x !== i); else if (selectedIndices.length < 3) selectedIndices.push(i); }
+            else if (!swapLockedThisRound && (phaseIndex === 3 || phaseIndex === 4)) { const remaining = 2 - swapsDoneThisHand; if (selectedIndices.includes(i)) selectedIndices = selectedIndices.filter(x => x !== i); else if (selectedIndices.length < remaining) selectedIndices.push(i); }
             render(true, false);
         }
 
         function createCardElement(letter, index, isBoard, shouldAnimate) {
-            const isSelected = !isBoard && selectedIndices.includes(index);
-            const isRiver = isBoard && index === 4;
-            const isFace = ['J','Q','K','A'].includes(letter); 
-            const card = document.createElement('div');
-            card.id = `card-${isBoard?'board':'hand'}-${index}`;
+            const isSelected = !isBoard && selectedIndices.includes(index); const isRiver = isBoard && index === 4; const isFace = ['J','Q','K','A'].includes(letter); 
+            const card = document.createElement('div'); card.id = `card-${isBoard?'board':'hand'}-${index}`;
             card.className = `card ${isBoard ? 'communal' : ''} ${isSelected ? 'selected' : ''} ${shouldAnimate ? 'animate-deal' : ''} ${isRiver ? 'river-bonus' : ''} ${isFace ? 'face-card' : ''}`;
             card.setAttribute('data-letter', letter);
-            const score = SCORES[letter];
-            const color = (letter === '*') ? '#e040fb' : (['J','Q','K','A'].includes(letter) ? '#000' : getScoreColor(letter));
+            const score = SCORES[letter]; const color = (letter === '*') ? '#e040fb' : (['J','Q','K','A'].includes(letter) ? '#000' : getScoreColor(letter));
             card.innerHTML = `<div class="corner top-left" style="color: ${color}">${score}</div><div class="animal-icon">${ICONS[letter] || '❓'}</div><div class="main-letter">${letter === '*' ? '?' : letter}</div><div class="corner bottom-right" style="color: ${color}">${score}</div>`;
             if (!isBoard) card.onclick = () => toggleSelect(index);
             return card;
         }
 
         function render(isInteraction = false, redrawBoard = true) {
-            updatePileCounts();
-            const handDiv = document.getElementById('hand');
-            const boardDiv = document.getElementById('board');
-            handDiv.innerHTML = '';
-            const displayHand = phaseIndex === 1 ? draftPool : hand;
-            displayHand.forEach((l, i) => {
-                const animate = !isInteraction && handAnims.includes(i);
-                handDiv.appendChild(createCardElement(l, i, false, animate));
-            });
+            document.getElementById('deck-count-display').innerText = deck.length; document.getElementById('discard-display').innerText = discards.length;
+            const handDiv = document.getElementById('hand'); const boardDiv = document.getElementById('board');
+            handDiv.innerHTML = ''; const displayHand = phaseIndex === 1 ? draftPool : hand;
+            displayHand.forEach((l, i) => { const animate = !isInteraction && handAnims.includes(i); handDiv.appendChild(createCardElement(l, i, false, animate)); });
             if (redrawBoard) {
                 boardDiv.innerHTML = '';
                 for (let i = 0; i < 5; i++) {
-                    if (board[i]) {
-                        const animate = !isInteraction && boardAnims.includes(i);
-                        boardDiv.appendChild(createCardElement(board[i], i, true, animate));
-                    } else {
-                        const slot = document.createElement('div'); slot.className = 'card-slot';
-                        if (i === 4) slot.innerHTML = '<span class="river-slot-text">THE RIVER</span>';
-                        boardDiv.appendChild(slot);
-                    }
+                    if (board[i]) { const animate = !isInteraction && boardAnims.includes(i); boardDiv.appendChild(createCardElement(board[i], i, true, animate)); } 
+                    else { const slot = document.createElement('div'); slot.className = 'card-slot'; if (i === 4) slot.innerHTML = '<span class="river-slot-text">THE RIVER</span>'; boardDiv.appendChild(slot); }
                 }
             }
             const swapBtn = document.getElementById('swap-btn');
-            if (swapBtn.style.display !== 'none') {
-                const remaining = 2 - swapsDoneThisHand;
-                swapBtn.innerText = `Confirm Swap (${remaining} left)`;
-                swapBtn.disabled = swapLockedThisRound || selectedIndices.length === 0;
-            }
+            if (swapBtn.style.display !== 'none') { const remaining = 2 - swapsDoneThisHand; swapBtn.innerText = `Confirm Swap (${remaining} left)`; swapBtn.disabled = swapLockedThisRound || selectedIndices.length === 0; }
             handleTyping();
         }
 
         function getScoreColor(l) { const s = SCORES[l]; return s<=1 ? "#2196F3" : s<=3 ? "#4CAF50" : s<=6 ? "#FF9800" : "#E91E63"; }
         function canFormWord(word, pool) { let tempPool = [...pool]; for (let char of word) { let idx = tempPool.indexOf(char); if (idx === -1) idx = tempPool.indexOf('*'); if (idx === -1) return false; tempPool.splice(idx, 1); } return true; }
         
+        // Updated score function returns details for preview
         function scoreSpecificWord(word, letterPool) {
             const riverIndex = letterPool.length - 1; const riverCard = letterPool[riverIndex];
             let availableRegular = [...letterPool]; availableRegular.pop(); 
-            let base = 0; let riverUsed = false;
+            let base = 0; let riverUsed = false; let breakdown = [];
+            
+            // Priority: River Letter > Regular Letter > River Wild > Regular Wild
             for (let char of word) {
-                let val = 0; let found = false;
-                if (!riverUsed && (riverCard === char || riverCard === '*')) {
-                    val = (riverCard === '*') ? 0 : SCORES[char]; if (riverCard !== '*') val = SCORES[char]; 
-                    val *= 2; riverUsed = true; found = true;
-                }
-                if (!found) {
-                    let idx = availableRegular.indexOf(char); if (idx === -1) idx = availableRegular.indexOf('*'); 
-                    if (idx !== -1) {
-                        const usedCard = availableRegular[idx]; val = (usedCard === '*') ? 0 : SCORES[char];
-                        availableRegular.splice(idx, 1); found = true;
-                    }
-                }
-                if (!found) return -1; base += val;
+                let val = 0; let source = null;
+                // 1. Try River exact match
+                if (!riverUsed && riverCard === char) { val = SCORES[char] * 2; riverUsed = true; source = 'river'; }
+                // 2. Try Regular exact match
+                if (source === null) { let idx = availableRegular.indexOf(char); if (idx !== -1) { val = SCORES[char]; availableRegular.splice(idx, 1); source = 'hand/board'; } }
+                // 3. Try River wildcard
+                if (source === null && !riverUsed && riverCard === '*') { val = 0; riverUsed = true; source = 'river(wild)'; }
+                // 4. Try Regular wildcard
+                if (source === null) { let idx = availableRegular.indexOf('*'); if (idx !== -1) { val = 0; availableRegular.splice(idx, 1); source = 'wild'; } }
+
+                if (source === null) return null; // Should not happen if canFormWord passed
+                base += val; breakdown.push({char, val, source});
             }
             let mult = word.length >= 8 ? 3 : word.length >= 7 ? 2 : word.length >= 5 ? 1.5 : 1;
-            return Math.floor(base * mult);
+            return { total: Math.floor(base * mult), base, mult, breakdown };
         }
 
         function findBestPossibleScore() {
             let pool = [...hand, ...board]; let maxScore = 0; let bestWord = "NONE";
             for (let word of dictionary) {
-                if (canFormWord(word, pool)) { let s = scoreSpecificWord(word, pool); if (s > maxScore) { maxScore = s; bestWord = word; } }
+                if (canFormWord(word, pool)) { let s = scoreSpecificWord(word, pool); if (s && s.total > maxScore) { maxScore = s.total; bestWord = word; } }
             }
             return { word: bestWord, score: maxScore };
         }
 
         async function calculateFinalScore() {
-            const wordInput = document.getElementById('word-input');
-            const word = wordInput.value.toUpperCase().trim();
+            const wordInput = document.getElementById('word-input'); const word = wordInput.value.toUpperCase().trim();
             if (word.length < 3) return;
             const pool = [...hand, ...board];
             if (!canFormWord(word, pool)) { markInvalid("Missing letters!"); return; }
             if (!dictionary.includes(word)) { markInvalid("Not in dictionary!"); return; }
-            let userScore = scoreSpecificWord(word, pool);
+            
+            const scoreData = scoreSpecificWord(word, pool);
+            const userScore = scoreData.total;
             SoundManager.play('success');
             
-            // STATS & DAILY LIMIT
             const today = new Date().toISOString().split('T')[0];
             if (gameMode === 'daily') {
                 localStorage.setItem('oxford_last_daily_played', today);
+                // Save daily result for menu sharing
+                localStorage.setItem('oxford_daily_result', JSON.stringify({score: userScore, date: today}));
                 LeaderboardManager.submitScore(userScore, word);
                 document.getElementById('next-hand-btn').innerText = "See Leaderboard";
-                document.getElementById('next-hand-btn').onclick = function() { 
-                    document.getElementById('result-modal').style.display = 'none';
-                    LeaderboardManager.show(); 
-                };
+                document.getElementById('next-hand-btn').onclick = function() { document.getElementById('result-modal').style.display = 'none'; LeaderboardManager.show(); };
             } else {
                 document.getElementById('next-hand-btn').innerText = "Next Hand";
                 document.getElementById('next-hand-btn').onclick = softReset;
             }
 
-            document.getElementById('modal-word').innerText = word;
-            document.getElementById('modal-score').innerText = userScore;
-            const best = findBestPossibleScore();
-            document.getElementById('best-word-text').innerText = `${best.word} (${best.score} pts)`;
+            document.getElementById('modal-word').innerText = word; document.getElementById('modal-score').innerText = userScore;
+            const best = findBestPossibleScore(); document.getElementById('best-word-text').innerText = `${best.word} (${best.score} pts)`;
             const daily = parseInt(localStorage.getItem('oxford_total') || 0) + userScore;
             const high = parseInt(localStorage.getItem('oxford_high') || 0);
             localStorage.setItem('oxford_total', daily); localStorage.setItem('oxford_last', userScore);
             if(userScore > high) localStorage.setItem('oxford_high', userScore);
-            
             document.getElementById('result-modal').style.display = 'flex';
         }
 
         function softReset() {
-            document.getElementById('result-modal').style.display = 'none';
-            document.getElementById('word-input').value = "";
-            document.getElementById('word-input').style.display = "none";
-            document.getElementById('swap-btn').style.display = "none";
-            
-            deck = []; hand = []; board = []; discards = []; draftPool = []; selectedIndices = [];
-            phaseIndex = 0; swapsDoneThisHand = 0; swapLockedThisRound = false;
-            
+            document.getElementById('result-modal').style.display = 'none'; document.getElementById('word-input').value = ""; document.getElementById('word-input').style.display = "none"; document.getElementById('score-preview').style.display = "none"; document.getElementById('swap-btn').style.display = "none";
+            deck = []; hand = []; board = []; discards = []; draftPool = []; selectedIndices = []; phaseIndex = 0; swapsDoneThisHand = 0; swapLockedThisRound = false;
             nextPhase();
         }
 
-        function shareResult() {
-            const score = document.getElementById('modal-score').innerText;
-            const date = new Date().toISOString().split('T')[0];
-            
-            // No Emoji Grid (No Spoilers)
-            const text = `🃏 Oxford Hold 'Em ${date}\n🏆 Score: ${score}\n\n${window.location.href}`;
-            
+        function shareResult(fromMenu = false) {
+            let score, date, modeLabel;
+            if (fromMenu) {
+                 const saved = JSON.parse(localStorage.getItem('oxford_daily_result'));
+                 if(!saved) return alert("No daily score to share yet!");
+                 score = saved.score; date = saved.date; modeLabel = date;
+            } else {
+                 score = document.getElementById('modal-score').innerText;
+                 date = new Date().toISOString().split('T')[0];
+                 modeLabel = (gameMode === 'daily') ? date : "Freeplay";
+            }
+
+            const text = `🃏 Oxford Hold 'Em - ${modeLabel}\n🏆 Score: ${score}\n\n${window.location.href.split('?')[0]}`;
             navigator.clipboard.writeText(text).then(() => {
-                const btn = document.getElementById('share-btn');
-                const orig = btn.innerText;
-                btn.innerText = "✅ Copied!";
-                setTimeout(() => btn.innerText = orig, 2000);
+                const btnId = fromMenu ? 'menu-share-btn' : 'share-btn';
+                const btn = document.getElementById(btnId);
+                const orig = btn.innerText; btn.innerText = "✅ Copied!"; setTimeout(() => btn.innerText = orig, 2000);
             });
         }
 
@@ -856,24 +683,42 @@
             SoundManager.play('error'); setTimeout(() => inp.placeholder = "Enter word...", 1500);
         }
 
+        // Fixed River Priority & Added Score Preview
         function handleTyping() {
             const input = document.getElementById('word-input'); if(input.style.display === 'none') return;
-            input.classList.remove('invalid'); const text = input.value.toUpperCase().split('');
+            input.classList.remove('invalid'); const text = input.value.toUpperCase();
             const allCards = document.querySelectorAll('.card'); allCards.forEach(c => c.classList.remove('bumped'));
+            const preview = document.getElementById('score-preview'); preview.innerHTML = '';
+
             let usedIndices = [];
-            text.forEach(char => {
+            // Priority: River Letter > Other Letter > River Wild > Other Wild
+            text.split('').forEach(char => {
                 let found = false;
-                for(let i=0; i<allCards.length; i++) {
-                    if (usedIndices.includes(i)) continue;
-                    if (allCards[i].getAttribute('data-letter') === char) { allCards[i].classList.add('bumped'); usedIndices.push(i); found = true; break; }
-                }
-                if (!found) {
-                    for(let i=0; i<allCards.length; i++) {
-                        if (usedIndices.includes(i)) continue;
-                        if (allCards[i].getAttribute('data-letter') === '*') { allCards[i].classList.add('bumped'); usedIndices.push(i); break; }
-                    }
-                }
+                // 1. River Letter
+                if (board[4] === char && !usedIndices.includes(4 + hand.length)) { document.getElementById(`card-board-4`).classList.add('bumped'); usedIndices.push(4 + hand.length); found = true; }
+                // 2. Other Letter
+                if (!found) { for(let i=0; i<allCards.length; i++) { if (usedIndices.includes(i)) continue; if (allCards[i].getAttribute('data-letter') === char && allCards[i].id !== 'card-board-4') { allCards[i].classList.add('bumped'); usedIndices.push(i); found = true; break; }}}
+                // 3. River Wild
+                if (!found && board[4] === '*' && !usedIndices.includes(4 + hand.length)) { document.getElementById(`card-board-4`).classList.add('bumped'); usedIndices.push(4 + hand.length); found = true; }
+                // 4. Other Wild
+                if (!found) { for(let i=0; i<allCards.length; i++) { if (usedIndices.includes(i)) continue; if (allCards[i].getAttribute('data-letter') === '*') { allCards[i].classList.add('bumped'); usedIndices.push(i); break; }}}
             });
+
+            // Score Preview
+            if (text.length >= 3) {
+                 const pool = [...hand, ...board];
+                 if (canFormWord(text, pool)) {
+                    const s = scoreSpecificWord(text, pool);
+                    if(s) {
+                        let html = '';
+                        s.breakdown.forEach(b => { html += `<div class="preview-row"><span>${b.char} (${b.source.includes('river')?'River':'Base'})</span><span>${b.val}</span></div>`; });
+                        html += `<div class="preview-row" style="border-top:1px solid #555; padding-top:4px;"><span>Base Sum</span><span>${s.base}</span></div>`;
+                        if(s.mult > 1) html += `<div class="preview-row"><span style="color:${s.mult>=3?'#d32f2f':s.mult>=2?'#1565c0':'#2e7d32'}">Length Bonus</span><span>x${s.mult}</span></div>`;
+                        html += `<div class="preview-total"><span>Total Estimate</span><span style="float:right">${s.total}</span></div>`;
+                        preview.innerHTML = html;
+                    }
+                 }
+            }
         }
     </script>
 </body>
