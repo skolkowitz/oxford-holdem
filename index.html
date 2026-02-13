@@ -756,27 +756,67 @@
         function getScoreColor(l) { const s = SCORES[l]; return s<=1 ? "#2196F3" : s<=3 ? "#4CAF50" : s<=6 ? "#FF9800" : "#E91E63"; }
         function canFormWord(word, pool) { let tempPool = [...pool]; for (let char of word) { let idx = tempPool.indexOf(char); if (idx === -1) idx = tempPool.indexOf('*'); if (idx === -1) return false; tempPool.splice(idx, 1); } return true; }
         
+// REPLACEMENT FUNCTION 1: PRIORITIZES RIVER SCORING
         function scoreSpecificWord(word, letterPool) {
-            const riverIndex = letterPool.length - 1; const riverCard = letterPool[riverIndex];
-            let availableRegular = [...letterPool]; availableRegular.pop(); 
-            let base = 0; let riverUsed = false;
+            // Create a copy so we don't mutate the original array
+            let tempPool = [...letterPool];
+
+            // The River is the LAST card in the combined pool (Hand + Board)
+            // We act as if it is separate to prioritize it
+            let riverCard = tempPool.pop(); 
+            let riverUsed = false;
+            let baseScore = 0;
+
             for (let char of word) {
-                let val = 0; let found = false;
-                if (!riverUsed && (riverCard === char || riverCard === '*')) {
-                    val = (riverCard === '*') ? 0 : SCORES[char]; if (riverCard !== '*') val = SCORES[char]; 
-                    val *= 2; riverUsed = true; found = true;
+                let found = false;
+                let val = 0;
+
+                // PRIORITY 1: Exact Match on River
+                if (!riverUsed && riverCard === char) {
+                    val = SCORES[char] * 2; // River Bonus
+                    riverUsed = true;
+                    found = true;
                 }
+
+                // PRIORITY 2: Exact Match in Hand/Board (excluding River)
                 if (!found) {
-                    let idx = availableRegular.indexOf(char); if (idx === -1) idx = availableRegular.indexOf('*'); 
+                    let idx = tempPool.indexOf(char);
                     if (idx !== -1) {
-                        const usedCard = availableRegular[idx]; val = (usedCard === '*') ? 0 : SCORES[char];
-                        availableRegular.splice(idx, 1); found = true;
+                        val = SCORES[char];
+                        tempPool.splice(idx, 1); // Remove used card
+                        found = true;
                     }
                 }
-                if (!found) return -1; base += val;
+
+                // PRIORITY 3: Wildcard on River
+                // (Note: Wildcard base value is 0, so 0 * 2 = 0, but it fills the slot)
+                if (!found && !riverUsed && riverCard === '*') {
+                    val = 0;
+                    riverUsed = true;
+                    found = true;
+                }
+
+                // PRIORITY 4: Wildcard in Hand/Board
+                if (!found) {
+                    let idx = tempPool.indexOf('*');
+                    if (idx !== -1) {
+                        val = 0;
+                        tempPool.splice(idx, 1);
+                        found = true;
+                    }
+                }
+
+                if (!found) return -1; // Impossible word
+                baseScore += val;
             }
-            let mult = word.length >= 8 ? 3 : word.length >= 7 ? 2 : word.length >= 5 ? 1.5 : 1;
-            return Math.floor(base * mult);
+
+            // Apply Length Multipliers
+            let mult = 1;
+            if (word.length >= 8) mult = 3;
+            else if (word.length >= 7) mult = 2;
+            else if (word.length >= 5) mult = 1.5;
+
+            return Math.floor(baseScore * mult);
         }
 
         function findBestPossibleScore() {
@@ -856,21 +896,71 @@
             SoundManager.play('error'); setTimeout(() => inp.placeholder = "Enter word...", 1500);
         }
 
+// REPLACEMENT FUNCTION 2: PRIORITIZES RIVER VISUALS
         function handleTyping() {
-            const input = document.getElementById('word-input'); if(input.style.display === 'none') return;
-            input.classList.remove('invalid'); const text = input.value.toUpperCase().split('');
-            const allCards = document.querySelectorAll('.card'); allCards.forEach(c => c.classList.remove('bumped'));
-            let usedIndices = [];
+            const input = document.getElementById('word-input');
+            if(input.style.display === 'none') return;
+            
+            input.classList.remove('invalid');
+            const text = input.value.toUpperCase().split('');
+            const allCards = document.querySelectorAll('.card');
+            
+            // Reset bumps
+            allCards.forEach(c => c.classList.remove('bumped'));
+            
+            let usedIds = [];
+
             text.forEach(char => {
                 let found = false;
-                for(let i=0; i<allCards.length; i++) {
-                    if (usedIndices.includes(i)) continue;
-                    if (allCards[i].getAttribute('data-letter') === char) { allCards[i].classList.add('bumped'); usedIndices.push(i); found = true; break; }
+                
+                // 1. Check River Exact Match
+                const riverEl = document.getElementById('card-board-4');
+                if (riverEl && !usedIds.includes('card-board-4')) {
+                    if (riverEl.getAttribute('data-letter') === char) {
+                        riverEl.classList.add('bumped');
+                        usedIds.push('card-board-4');
+                        found = true;
+                    }
                 }
+
+                // 2. Check Other Exact Matches
                 if (!found) {
                     for(let i=0; i<allCards.length; i++) {
-                        if (usedIndices.includes(i)) continue;
-                        if (allCards[i].getAttribute('data-letter') === '*') { allCards[i].classList.add('bumped'); usedIndices.push(i); break; }
+                        const c = allCards[i];
+                        if (usedIds.includes(c.id)) continue;
+                        if (c.id === 'card-board-4') continue; // Skip River
+
+                        if (c.getAttribute('data-letter') === char) {
+                            c.classList.add('bumped');
+                            usedIds.push(c.id);
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                // 3. Check River Wildcard
+                if (!found && riverEl && !usedIds.includes('card-board-4')) {
+                    if (riverEl.getAttribute('data-letter') === '*') {
+                        riverEl.classList.add('bumped');
+                        usedIds.push('card-board-4');
+                        found = true;
+                    }
+                }
+
+                // 4. Check Other Wildcards
+                if (!found) {
+                    for(let i=0; i<allCards.length; i++) {
+                        const c = allCards[i];
+                        if (usedIds.includes(c.id)) continue;
+                        if (c.id === 'card-board-4') continue;
+
+                        if (c.getAttribute('data-letter') === '*') {
+                            c.classList.add('bumped');
+                            usedIds.push(c.id);
+                            found = true;
+                            break;
+                        }
                     }
                 }
             });
