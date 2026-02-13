@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oxford Hold 'Em - Global Legends</title>
     
+    <title>Oxford Hold 'Em - Daily Word Game</title>
+    <meta name="description" content="Poker meets Scrabble. Play the Daily Hand and compete for the high score.">
+    <meta property="og:title" content="Oxford Hold 'Em">
+    <meta property="og:description" content="Draft cards, build words, and beat the daily high score.">
+    <meta property="og:image" content="https://placehold.co/1200x630/1b5e20/gold?text=Oxford+Hold+'Em"> <meta property="og:url" content="https://your-game-url.com">
+    <meta name="twitter:card" content="summary_large_image">
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
@@ -134,7 +140,6 @@
         .card-slot { width: 90px; height: 130px; border: 3px dashed rgba(255,255,255,0.2); border-radius: 12px; background: rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center; position: relative; }
         .river-slot-text { color: var(--bonus-purple); font-size: 0.6rem; font-weight: 900; text-transform: uppercase; position: absolute; bottom: 10px; filter: brightness(1.5); letter-spacing: 1px;}
         @keyframes dealIn { 0% { opacity: 0; transform: translateY(50px) rotateX(-90deg); } 100% { opacity: 1; transform: translateY(0) rotateX(0); } }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
         .card { width: 90px; height: 130px; background: var(--card-bg); color: black; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: pointer; border: 1px solid #ccc; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s; box-shadow: 3px 3px 8px var(--card-shadow); user-select: none; backface-visibility: hidden; z-index: 5; }
         .animate-deal { animation: dealIn 0.5s ease-out forwards; }
         .card.bumped { transform: translateY(-25px) scale(1.1) !important; border: 3px solid var(--gold); box-shadow: 0 15px 30px rgba(0,0,0,0.5); z-index: 100; }
@@ -196,10 +201,11 @@
                     <div id="mode-indicator" class="mode-badge" style="background:#555;">Waiting</div>
                 </div>
                 
-                <div style="display:flex; gap:10px;">
+                <div style="display:flex; gap:8px;">
+                    <button id="home-btn" class="icon-btn" onclick="returnToMenu()" title="Main Menu">🏠</button>
+                    <button id="profile-btn" class="icon-btn" onclick="LeaderboardManager.editName()" title="Edit Profile">👤</button>
                     <button id="leaderboard-btn" class="icon-btn" onclick="LeaderboardManager.show()" title="Daily Leaderboard">🏆</button>
                     <button id="music-btn" class="icon-btn" onclick="toggleMute()" title="Toggle Sound" style="opacity: 0.5;">🔇</button>
-                    <button class="icon-btn" onclick="confirmReset()" title="Reset Scores">↻</button>
                     <button class="icon-btn" onclick="showRules()">?</button>
                 </div>
             </div>
@@ -226,18 +232,18 @@
             <h1 style="margin:0 0 20px 0; color:#333;">Oxford Hold 'Em</h1>
             <p style="color:#666; margin-bottom:30px;">Choose your game mode:</p>
             
-            <button class="mode-btn mode-daily" onclick="startGame('daily')">
+            <button class="mode-btn mode-daily" onclick="handleStartClick('daily')">
                 <div>
                     <div>Daily Draw</div>
-                    <span class="mode-desc">Compete on the global leaderboard.</span>
+                    <span class="mode-desc">One chance per day. Global competition.</span>
                 </div>
                 <div>🏆</div>
             </button>
 
-            <button class="mode-btn mode-free" onclick="startGame('free')">
+            <button class="mode-btn mode-free" onclick="handleStartClick('free')">
                 <div>
                     <div>Free Play</div>
-                    <span class="mode-desc">Pure randomness. Practice mode.</span>
+                    <span class="mode-desc">Pure randomness. Unlimited hands.</span>
                 </div>
                 <div>🎲</div>
             </button>
@@ -262,7 +268,7 @@
             <p style="color: #666; font-size: 0.9rem;">Enter a handle for the leaderboard.</p>
             <input type="text" id="username-input" maxlength="12" placeholder="e.g. Maverick" style="padding: 10px; font-size: 1.2rem; width: 80%; text-align: center; border: 2px solid #ccc; border-radius: 8px;">
             <br>
-            <button class="action-btn" onclick="LeaderboardManager.saveName()" style="width:100%; margin-top: 20px;">Start Playing</button>
+            <button class="action-btn" onclick="LeaderboardManager.saveName()" style="width:100%; margin-top: 20px;">Save Handle</button>
         </div>
     </div>
 
@@ -295,7 +301,8 @@
                 <div id="best-word-text" style="font-size: 1.4rem; font-weight: bold; color: #333;">Calculating...</div>
             </div>
             
-            <button class="action-btn" onclick="location.reload()" style="background: var(--wood); color: white; width: 100%; margin: 20px 0 0 0;">Next Hand</button>
+            <button id="share-btn" class="action-btn" onclick="shareResult()" style="background: #2196f3; color: white; width: 100%; margin: 20px 0 0 0;">📤 Share Result</button>
+            <button id="next-hand-btn" class="action-btn" onclick="softReset()" style="background: var(--wood); color: white; width: 100%; margin: 10px 0 0 0;">Next Hand</button>
         </div>
     </div>
 
@@ -313,6 +320,7 @@
         const LeaderboardManager = {
             db: null,
             username: localStorage.getItem('oxford_username'),
+            pendingStart: false,
             
             init() {
                 // ============================================================
@@ -332,18 +340,22 @@
                     firebase.initializeApp(firebaseConfig);
                     this.db = firebase.firestore();
                     console.log("Firebase initialized");
-                } catch(e) {
-                    console.warn("Firebase not configured. Leaderboard disabled.");
-                }
+                } catch(e) { console.warn("Firebase not configured."); }
             },
 
             checkName() {
                 if (!this.username) {
-                    document.getElementById('start-overlay').style.display = 'none'; // Hide start temporarily
+                    this.pendingStart = true;
+                    document.getElementById('start-overlay').style.display = 'none'; 
                     document.getElementById('username-modal').style.display = 'flex';
                 } else {
                     startGame('daily');
                 }
+            },
+
+            editName() {
+                document.getElementById('username-modal').style.display = 'flex';
+                this.pendingStart = false; // Just editing, not starting
             },
 
             saveName() {
@@ -353,20 +365,20 @@
                 this.username = name;
                 localStorage.setItem('oxford_username', name);
                 document.getElementById('username-modal').style.display = 'none';
-                startGame('daily');
+                
+                if (this.pendingStart) {
+                    startGame('daily');
+                }
             },
 
             async submitScore(score, word) {
                 if (!this.db || gameMode !== 'daily') return;
-                
-                // We track "Highest Single Word" per user per day
-                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                const today = new Date().toISOString().split('T')[0];
                 const docId = `${today}_${this.username}`;
                 const docRef = this.db.collection('leaderboard').doc(docId);
 
                 try {
                     const doc = await docRef.get();
-                    // Only update if new score is higher
                     if (!doc.exists || score > doc.data().score) {
                         await docRef.set({
                             name: this.username,
@@ -375,7 +387,6 @@
                             date: today,
                             timestamp: firebase.firestore.FieldValue.serverTimestamp()
                         });
-                        console.log("New high score submitted!");
                     }
                 } catch (e) { console.error("Score submit failed", e); }
             },
@@ -383,76 +394,39 @@
             async show() {
                 document.getElementById('lb-modal').style.display = 'flex';
                 const container = document.getElementById('lb-content');
-                
-                if (!this.db) {
-                    container.innerHTML = "<p>Leaderboard requires Firebase config.</p>";
-                    return;
-                }
-
+                if (!this.db) { container.innerHTML = "<p>Leaderboard unavailable.</p>"; return; }
                 container.innerHTML = "Loading...";
                 const today = new Date().toISOString().split('T')[0];
 
                 try {
-                    // Requires a Composite Index in Firestore usually, but for low traffic 
-                    // we can fetch daily items and sort in JS if needed. 
-                    // Let's try direct query:
-                    const q = await this.db.collection('leaderboard')
-                        .where('date', '==', today)
-                        .orderBy('score', 'desc')
-                        .limit(10)
-                        .get();
-
-                    if (q.empty) {
-                        container.innerHTML = "<p>No scores yet today. Be the first!</p>";
-                        return;
-                    }
+                    const q = await this.db.collection('leaderboard').where('date', '==', today).orderBy('score', 'desc').limit(10).get();
+                    if (q.empty) { container.innerHTML = "<p>No scores yet today. Be the first!</p>"; return; }
 
                     let html = `<table class="lb-table"><tr><th>#</th><th>Player</th><th>Word</th><th>Score</th></tr>`;
                     let rank = 1;
                     q.forEach(doc => {
                         const d = doc.data();
-                        html += `<tr>
-                            <td class="lb-rank">${rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank}</td>
-                            <td>${d.name}</td>
-                            <td style="color:#666; font-size:0.8rem;">${d.word}</td>
-                            <td class="lb-score">${d.score}</td>
-                        </tr>`;
+                        html += `<tr><td class="lb-rank">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank}</td><td>${d.name}</td><td style="color:#666;font-size:0.8rem;">${d.word}</td><td class="lb-score">${d.score}</td></tr>`;
                         rank++;
                     });
                     html += "</table>";
                     container.innerHTML = html;
-
-                } catch (e) {
-                    console.error(e);
-                    container.innerHTML = "<p>Error loading scores. (Check Console)</p>";
-                }
+                } catch (e) { container.innerHTML = "<p>Error loading scores. Check Console.</p>"; }
             }
         };
 
-        /* --- RANDOM NUMBER GENERATOR (SEEDED) --- */
+        /* --- RNG --- */
         let currentSeed = 1;
         let gameMode = 'free';
-
-        function mulberry32(a) {
-            return function() {
-              var t = a += 0x6D2B79F5;
-              t = Math.imul(t ^ t >>> 15, t | 1);
-              t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-              return ((t ^ t >>> 14) >>> 0) / 4294967296;
-            }
-        }
-        
+        function mulberry32(a) { return function() { var t=a+=0x6D2B79F5; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61); return ((t^t>>>14)>>>0)/4294967296; } }
         let randomFunc = Math.random;
 
         function initSeed(mode) {
             gameMode = mode;
             if (mode === 'daily') {
                 const d = new Date();
-                // UTC for global consistency
                 const seedStr = d.getUTCFullYear() + "" + (d.getUTCMonth()+1).toString().padStart(2,'0') + "" + d.getUTCDate().toString().padStart(2,'0');
-                const seedVal = parseInt(seedStr);
-                randomFunc = mulberry32(seedVal);
-                
+                randomFunc = mulberry32(parseInt(seedStr));
                 document.getElementById('mode-indicator').innerText = "DAILY: " + seedStr;
                 document.getElementById('mode-indicator').style.background = "var(--mode-daily)";
                 document.getElementById('leaderboard-btn').style.display = "inline-block";
@@ -464,7 +438,7 @@
             }
         }
 
-        /* --- SOUND & MUSIC --- */
+        /* --- AUDIO --- */
         const SoundManager = {
             init() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
             play(type) {
@@ -482,8 +456,7 @@
                     gain.gain.setValueAtTime(0.3,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.1);
                     n.connect(f); f.connect(gain); gain.connect(this.ctx.destination); n.start();
                 } else if (type==='chip') {
-                    osc.frequency.setValueAtTime(1200,t); gain.gain.setValueAtTime(0.1,t); 
-                    gain.gain.exponentialRampToValueAtTime(0.01,t+0.05); osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(t+0.05);
+                    osc.frequency.setValueAtTime(1200,t); gain.gain.setValueAtTime(0.1,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.05); osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(t+0.05);
                 } else if (type==='success') {
                     osc.type='triangle'; osc.frequency.setValueAtTime(440,t); osc.frequency.exponentialRampToValueAtTime(880,t+0.1);
                     gain.gain.setValueAtTime(0.2,t); gain.gain.linearRampToValueAtTime(0,t+0.4);
@@ -562,10 +535,16 @@
             loadingText.innerText = `Oracle Online: ${dictionary.length} words. Ready.`;
         }
 
-        // ENTRY POINT
         function handleStartClick(mode) {
+            // DAILY LIMIT CHECK
             if (mode === 'daily') {
-                LeaderboardManager.checkName(); // Flows to startGame('daily')
+                const today = new Date().toISOString().split('T')[0];
+                const lastPlayed = localStorage.getItem('oxford_last_daily_played');
+                if (lastPlayed === today) {
+                    alert("You've already played the Daily Hand today! Come back tomorrow.");
+                    return;
+                }
+                LeaderboardManager.checkName(); 
             } else {
                 startGame('free');
             }
@@ -579,9 +558,13 @@
             nextPhase();
         }
 
-        // Override the buttons in HTML to use new handler
-        // See HTML section updates below
+        function returnToMenu() {
+            if(confirm("Quit current game and return to menu?")) {
+                location.reload(); // Simple reload is cleanest way to reset everything
+            }
+        }
 
+        /* --- GAME LOGIC --- */
         function initDeck() {
             deck = [];
             Object.keys(FREQUENCIES).forEach(l => { for(let i=0; i<FREQUENCIES[l]; i++) deck.push(l); });
@@ -777,8 +760,17 @@
             let userScore = scoreSpecificWord(word, pool);
             SoundManager.play('success');
             
-            // SUBMIT TO LEADERBOARD
-            LeaderboardManager.submitScore(userScore, word);
+            // STATS & DAILY LIMIT
+            const today = new Date().toISOString().split('T')[0];
+            if (gameMode === 'daily') {
+                localStorage.setItem('oxford_last_daily_played', today);
+                LeaderboardManager.submitScore(userScore, word);
+                document.getElementById('next-hand-btn').innerText = "See Leaderboard";
+                document.getElementById('next-hand-btn').onclick = function() { LeaderboardManager.show(); };
+            } else {
+                document.getElementById('next-hand-btn').innerText = "Next Hand";
+                document.getElementById('next-hand-btn').onclick = softReset;
+            }
 
             document.getElementById('modal-word').innerText = word;
             document.getElementById('modal-score').innerText = userScore;
@@ -788,7 +780,42 @@
             const high = parseInt(localStorage.getItem('oxford_high') || 0);
             localStorage.setItem('oxford_total', daily); localStorage.setItem('oxford_last', userScore);
             if(userScore > high) localStorage.setItem('oxford_high', userScore);
+            
             document.getElementById('result-modal').style.display = 'flex';
+        }
+
+        function softReset() {
+            // Reset Game State for FREE PLAY
+            document.getElementById('result-modal').style.display = 'none';
+            document.getElementById('word-input').value = "";
+            document.getElementById('word-input').style.display = "none";
+            document.getElementById('swap-btn').style.display = "none";
+            
+            deck = []; hand = []; board = []; discards = []; draftPool = []; selectedIndices = [];
+            phaseIndex = 0; swapsDoneThisHand = 0; swapLockedThisRound = false;
+            
+            nextPhase();
+        }
+
+        function shareResult() {
+            const score = document.getElementById('modal-score').innerText;
+            const word = document.getElementById('modal-word').innerText;
+            const date = new Date().toISOString().split('T')[0];
+            
+            // Generate visual grid of icons
+            let icons = "";
+            for (let char of word) {
+                icons += ICONS[char] || "❓";
+            }
+            
+            const text = `🃏 Oxford Hold 'Em ${date}\n🏆 Score: ${score}\n📝 Word: ${word}\n${icons}\n\nPlay here: https://your-game-url.com`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('share-btn');
+                const orig = btn.innerText;
+                btn.innerText = "✅ Copied!";
+                setTimeout(() => btn.innerText = orig, 2000);
+            });
         }
 
         function markInvalid(msg) {
@@ -815,9 +842,6 @@
                 }
             });
         }
-        
-        // Update Buttons to use new handler
-        document.querySelector('.mode-daily').onclick = function() { handleStartClick('daily'); };
     </script>
 </body>
 </html>
