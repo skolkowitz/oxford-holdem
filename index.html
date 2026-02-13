@@ -194,7 +194,7 @@
                 </div>
                 
                 <div style="display:flex; gap:10px;">
-                    <button id="music-btn" class="icon-btn" onclick="MusicManager.toggle()" title="Toggle Music" style="opacity: 0.5;">🔇</button>
+                    <button id="music-btn" class="icon-btn" onclick="toggleMute()" title="Toggle Sound" style="opacity: 0.5;">🔇</button>
                     <button class="icon-btn" onclick="confirmReset()" title="Reset Scores">↻</button>
                     <button class="icon-btn" onclick="showRules()">?</button>
                 </div>
@@ -280,6 +280,27 @@
     </div>
 
     <script>
+        /* --- GLOBAL AUDIO STATE --- */
+        let isMuted = true; // Default to muted
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            updateMuteUI();
+        }
+
+        function updateMuteUI() {
+            const btn = document.getElementById('music-btn');
+            if (isMuted) {
+                MusicManager.pause();
+                btn.innerText = "🔇";
+                btn.style.opacity = "0.5";
+            } else {
+                MusicManager.play();
+                btn.innerText = "🎵";
+                btn.style.opacity = "1";
+            }
+        }
+
         /* --- RANDOM NUMBER GENERATOR (SEEDED) --- */
         let currentSeed = 1;
         let gameMode = 'free';
@@ -294,15 +315,14 @@
             }
         }
         
-        // The main RNG function used by the game
         let randomFunc = Math.random;
 
         function initSeed(mode) {
             gameMode = mode;
             if (mode === 'daily') {
-                // Generate seed from Date string (YYYYMMDD)
                 const d = new Date();
-                const seedStr = d.getFullYear() + "" + (d.getMonth()+1).toString().padStart(2,'0') + "" + d.getDate().toString().padStart(2,'0');
+                // UTC for global consistency
+                const seedStr = d.getUTCFullYear() + "" + (d.getUTCMonth()+1).toString().padStart(2,'0') + "" + d.getUTCDate().toString().padStart(2,'0');
                 const seedVal = parseInt(seedStr);
                 randomFunc = mulberry32(seedVal);
                 
@@ -319,6 +339,8 @@
         const SoundManager = {
             init() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
             play(type) {
+                if (isMuted) return; // Silent if global mute is on
+                
                 if (!this.ctx) this.init();
                 const t = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
@@ -347,20 +369,23 @@
         };
 
         const MusicManager = {
-            audio: new Audio('gambler_8bit.mp3'), isPlaying: false,
-            init() { this.audio.loop = true; this.audio.volume = 0.3; },
-            toggle() {
-                if (this.isPlaying) {
-                    this.audio.pause(); this.isPlaying = false;
-                    const btn = document.getElementById('music-btn'); btn.innerText = "🔇"; btn.style.opacity = "0.5";
-                } else {
-                    this.audio.play().then(() => {
-                        this.isPlaying = true;
-                        const btn = document.getElementById('music-btn'); btn.innerText = "🎵"; btn.style.opacity = "1";
-                    }).catch(e=>{});
+            audio: new Audio('gambler_8bit.mp3'), 
+            
+            init() { 
+                this.audio.loop = true; 
+                this.audio.volume = 0.3; 
+            },
+
+            play() {
+                // Only try to play if global mute is OFF
+                if (!isMuted) {
+                    this.audio.play().catch(e => console.log("Audio play blocked until interaction"));
                 }
             },
-            tryStart() { if(!this.isPlaying) this.toggle(); }
+
+            pause() {
+                this.audio.pause();
+            }
         };
         MusicManager.init();
 
@@ -419,16 +444,15 @@
                 } catch (e) { alert("Dictionary Error"); return; }
             }
             loadingText.innerText = `Oracle Online: ${dictionary.length} words. Ready.`;
-            // Enable mode buttons if they were disabled
         }
 
         // ENTRY POINT FROM START SCREEN
         function startGame(mode) {
             initSeed(mode);
             document.getElementById('start-overlay').style.display = 'none';
-            MusicManager.tryStart();
+            // Try start music logic (checks mute state inside)
+            updateMuteUI();
             
-            // Start the game loop logic
             document.getElementById('main-btn').disabled = false;
             nextPhase();
         }
@@ -436,7 +460,6 @@
         function initDeck() {
             deck = [];
             Object.keys(FREQUENCIES).forEach(l => { for(let i=0; i<FREQUENCIES[l]; i++) deck.push(l); });
-            // SEEDED SHUFFLE
             for (let i = deck.length - 1; i > 0; i--) {
                 const j = Math.floor(randomFunc() * (i + 1));
                 [deck[i], deck[j]] = [deck[j], deck[i]];
