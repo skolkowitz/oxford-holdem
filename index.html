@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Oxford Hold 'Em - Daily Edition</title>
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root { 
+            --felt: #1b5e20; 
+            --wood: #3e2723; 
+            --gold: #ffd700; 
+            --card-bg: #ffffff;
+            --card-shadow: rgba(0,0,0,0.5);
+            --error-red: #ff5252;
+            --bonus-purple: #9c27b0;
+            --ui-dark: rgba(0,0,0,0.85);
+            --mode-daily: #2e7d32;
+            --mode-free: #1565c0;
+        }
+
+        body { 
+            background: #121212; color: white; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; flex-direction: column; align-items: center; 
+            padding: 20px; margin: 0; min-height: 100vh;
+        }
+
+        /* --- LAYOUT --- */
+        #main-container { 
+            display: flex; gap: 30px; align-items: flex-start; justify-content: center; 
+            width: 100%; max-width: 1250px; 
+            flex-wrap: wrap; 
+        }
+
+        /* SIDEBAR (Desktop) */
+        #distribution-sidebar { 
+            background: var(--ui-dark); padding: 15px; border-radius: 15px; 
+            border: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; min-width: 180px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        #distribution-sidebar h4 { margin-top: 0; color: var(--gold); text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        
+        .dist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 20px;}
+        .dist-item { display: flex; justify-content: space-between; padding: 2px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+        .pile-container { display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
+        .mini-card {
+            width: 60px; height: 85px; border-radius: 6px; 
+            display: flex; justify-content: center; align-items: center;
+            font-weight: bold; font-size: 1.2rem;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5); position: relative;
+        }
+        .deck-back {
+            background: #b71c1c;
+            background-image: repeating-linear-gradient(45deg, #c62828 0, #c62828 5px, #b71c1c 5px, #b71c1c 10px);
+            border: 2px solid white; color: white;
+        }
+        .discard-pile {
+            background: rgba(255,255,255,0.1); border: 2px dashed rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.5); font-size: 0.8rem; text-align: center;
+        }
+
+        /* --- GAME TABLE --- */
+        #game-table { 
+            background: var(--felt); border: 12px solid var(--wood); border-radius: 40px; 
+            padding: 30px; width: 100%; max-width: 850px; text-align: center; 
+            box-shadow: 0 25px 60px rgba(0,0,0,0.7), inset 0 0 100px rgba(0,0,0,0.3); 
+            position: relative;
+        }
+
+        /* HEADER UI */
+        .header-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; }
+        
+        .stats-group { display: flex; gap: 10px; }
+        .score-pill { 
+            background: rgba(0,0,0,0.4); padding: 5px 12px; border-radius: 20px; 
+            font-weight: bold; border: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;
+        }
+        .gold-text { color: var(--gold); }
+        .mode-badge { font-size: 0.7rem; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
+
+        /* BUTTONS */
+        .icon-btn { 
+            background: none; border: 2px solid rgba(255,255,255,0.3); color: white; 
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer; 
+            font-weight: bold; transition: 0.2s; display: flex; justify-content: center; align-items: center;
+        }
+        .icon-btn:hover { background: white; color: black; }
+
+        button.action-btn { 
+            padding: 12px 25px; margin: 5px; cursor: pointer; border-radius: 8px; border: none; 
+            font-weight: bold; background: #eee; transition: 0.2s; box-shadow: 0 4px 0 #bbb; font-size: 1rem;
+        }
+        button.action-btn:hover:not(:disabled) { background: var(--gold); transform: scale(1.05); }
+        button.action-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #bbb; }
+        button.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        #word-input { 
+            padding: 12px; border-radius: 8px; border: 2px solid var(--gold); width: 220px; 
+            font-size: 1.4rem; text-transform: uppercase; text-align: center; display: none; 
+            background: #222; color: white; margin-bottom: 10px;
+        }
+        #word-input.invalid { animation: shake 0.4s ease-in-out; border-color: var(--error-red); color: var(--error-red); }
+
+        /* --- MODALS --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(8px); }
+        .modal-box { background: white; color: #333; padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; }
+        
+        .best-word-box { background: #f5f5f5; padding: 15px; border-radius: 15px; margin-top: 20px; border-left: 5px solid var(--gold); text-align: left; }
+        
+        /* Start Screen Specifics */
+        .mode-btn { width: 100%; padding: 20px; margin: 10px 0; border-radius: 12px; border: none; font-size: 1.2rem; font-weight: bold; cursor: pointer; color: white; transition: transform 0.2s; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+        .mode-btn:hover { transform: scale(1.02); }
+        .mode-daily { background: var(--mode-daily); box-shadow: 0 5px 0 #1b5e20; }
+        .mode-free { background: var(--mode-free); box-shadow: 0 5px 0 #0d47a1; }
+        .mode-desc { font-size: 0.8rem; font-weight: normal; opacity: 0.9; margin-top: 5px; display: block; }
+
+        /* Rules Table */
+        .rules-table { width: 100%; text-align: left; font-size: 0.9rem; border-collapse: collapse; margin-top: 10px; }
+        .rules-table th { border-bottom: 2px solid #ddd; padding: 5px; color: #666; }
+        .rules-table td { border-bottom: 1px solid #eee; padding: 5px; }
+
+        #loading-msg { position: fixed; bottom: 10px; right: 10px; color: rgba(255,255,255,0.3); font-size: 0.7rem; }
+
+        /* --- CARDS --- */
+        .card-row { display: flex; justify-content: center; gap: 12px; margin-bottom: 30px; min-height: 140px; perspective: 1000px; flex-wrap: wrap; }
+        .card-slot { width: 90px; height: 130px; border: 3px dashed rgba(255,255,255,0.2); border-radius: 12px; background: rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center; position: relative; }
+        .river-slot-text { color: var(--bonus-purple); font-size: 0.6rem; font-weight: 900; text-transform: uppercase; position: absolute; bottom: 10px; filter: brightness(1.5); letter-spacing: 1px;}
+
+        @keyframes dealIn { 0% { opacity: 0; transform: translateY(50px) rotateX(-90deg); } 100% { opacity: 1; transform: translateY(0) rotateX(0); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+
+        .card { width: 90px; height: 130px; background: var(--card-bg); color: black; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: pointer; border: 1px solid #ccc; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s; box-shadow: 3px 3px 8px var(--card-shadow); user-select: none; backface-visibility: hidden; z-index: 5; }
+        .animate-deal { animation: dealIn 0.5s ease-out forwards; }
+        .card.bumped { transform: translateY(-25px) scale(1.1) !important; border: 3px solid var(--gold); box-shadow: 0 15px 30px rgba(0,0,0,0.5); z-index: 100; }
+        .card.selected { transform: translateY(-15px); border: 4px solid var(--gold); box-shadow: 0 0 15px var(--gold); }
+        .card.communal { background: #f0f7ff; border: 2px solid #2196f3; cursor: default; }
+        .card.face-card { background: #fff8e1; border: 2px solid #ffb300; }
+        .card.river-bonus { border: 4px solid var(--bonus-purple); box-shadow: 0 0 15px var(--bonus-purple); }
+        .card.river-bonus::before { content: "RIVER (2x)"; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); color: white; background: var(--bonus-purple); padding: 3px 8px; border-radius: 12px; font-size: 0.6rem; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.5); pointer-events: none; }
+        .card .corner { position: absolute; font-size: 0.9rem; font-weight: 900; }
+        .card .top-left { top: 6px; left: 6px; }
+        .card .bottom-right { bottom: 6px; right: 6px; } 
+        .card .animal-icon { font-size: 2rem; margin-top: 5px; }
+        .card .main-letter { font-size: 2.2rem; font-weight: 900; color: #000; line-height: 1; margin-bottom: 8px; }
+
+        /* --- MOBILE TWEAKS --- */
+        @media (max-width: 768px) {
+            #main-container { flex-direction: column-reverse; align-items: center; }
+            #distribution-sidebar { width: 90%; display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 10px 20px; }
+            #distribution-sidebar h4, .dist-grid, #discard-list { display: none; } 
+            .pile-container { flex-direction: row; border-top: none; padding-top: 0; margin-top: 0; width: 100%; justify-content: space-around; }
+            #game-table { padding: 15px; border-width: 6px; }
+            .card { width: 65px; height: 95px; border-radius: 6px; }
+            .card-slot { width: 65px; height: 95px; }
+            .card .main-letter { font-size: 1.6rem; }
+            .card .animal-icon { font-size: 1.4rem; }
+            .card .corner { font-size: 0.7rem; }
+            #status-msg { font-size: 1rem; }
+            .score-pill { padding: 3px 8px; font-size: 0.75rem; }
+            .stats-group { gap: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="main-container">
+        <div id="distribution-sidebar">
+            <h4 style="margin-bottom: 10px;">Deck Stats</h4>
+            <div id="dist-grid" class="dist-grid"></div>
+            
+            <div class="pile-container">
+                <div>
+                    <div style="font-size:0.6rem; color:#aaa; margin-bottom:3px; text-align:center;">DECK</div>
+                    <div class="mini-card deck-back" id="deck-count-display">100</div>
+                </div>
+                <div>
+                    <div style="font-size:0.6rem; color:#aaa; margin-bottom:3px; text-align:center;">DISCARDS</div>
+                    <div class="mini-card discard-pile" id="discard-display">0</div>
+                </div>
+            </div>
+            <div id="discard-list" style="margin-top:10px; font-size:0.7rem; color:#888; text-align:center; word-wrap:break-word;"></div>
+        </div>
+
+        <div id="game-table">
+            
+            <div class="header-row">
+                <div class="stats-group">
+                    <div class="score-pill">Last: <span id="last-score" class="gold-text">0</span></div>
+                    <div class="score-pill">Best: <span id="high-score" class="gold-text">0</span></div>
+                    <div class="score-pill">Total: <span id="daily-total" class="gold-text">0</span></div>
+                    <div id="mode-indicator" class="mode-badge" style="background:#555;">Waiting</div>
+                </div>
+                
+                <div style="display:flex; gap:10px;">
+                    <button id="music-btn" class="icon-btn" onclick="MusicManager.toggle()" title="Toggle Music" style="opacity: 0.5;">🔇</button>
+                    <button class="icon-btn" onclick="confirmReset()" title="Reset Scores">↻</button>
+                    <button class="icon-btn" onclick="showRules()">?</button>
+                </div>
+            </div>
+            
+            <div id="status-msg">Select Game Mode</div>
+            
+            <h3 style="color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 2px; margin: 0 0 10px 0;">THE BOARD</h3>
+            <div id="board" class="card-row"></div>
+
+            <h3 id="hand-label" style="color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 2px; margin: 0 0 10px 0;">YOUR HAND</h3>
+            <div id="hand" class="card-row"></div>
+
+            <div id="controls">
+                <input type="text" id="word-input" placeholder="Type word..." oninput="handleTyping()" onkeydown="if(event.key === 'Enter') calculateFinalScore()">
+                <br>
+                <button id="main-btn" class="action-btn" onclick="nextPhase()" disabled>Start</button>
+                <button id="swap-btn" class="action-btn" onclick="executeSwap()" style="display:none">Confirm Swap</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="start-overlay" class="modal-overlay">
+        <div class="modal-box">
+            <h1 style="margin:0 0 20px 0; color:#333;">Oxford Hold 'Em</h1>
+            <p style="color:#666; margin-bottom:30px;">Choose your game mode:</p>
+            
+            <button class="mode-btn mode-daily" onclick="startGame('daily')">
+                <div>
+                    <div>Daily Draw</div>
+                    <span class="mode-desc">Same cards for everyone, every day.</span>
+                </div>
+                <div>📅</div>
+            </button>
+
+            <button class="mode-btn mode-free" onclick="startGame('free')">
+                <div>
+                    <div>Free Play</div>
+                    <span class="mode-desc">Pure randomness. Infinite hands.</span>
+                </div>
+                <div>🎲</div>
+            </button>
+            
+            <div id="loading-dict-text" style="margin-top:20px; color:#888; font-size:0.8rem;">Connecting to Oracle...</div>
+        </div>
+    </div>
+
+    <div id="rules-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) this.style.display='none'">
+        <div class="modal-box" style="text-align: left;">
+            <h2 style="color: var(--bonus-purple); margin-top: 0; text-align: center;">How to Play</h2>
+            <ul style="font-size: 0.9rem; padding-left: 20px; color: #555;">
+                <li><strong>Draft:</strong> Pick the best 3 cards from 5 options.</li>
+                <li><strong>The Flop:</strong> 3 community cards are dealt.</li>
+                <li><strong>Swap:</strong> Discard up to 2 cards to draw new ones.</li>
+                <li><strong>The River:</strong> <strong style="color: var(--bonus-purple)">2x SCORE</strong> for the letter in this slot!</li>
+            </ul>
+            <h3 style="font-size: 1rem; border-bottom: 2px solid #ddd; margin-top: 20px;">Scoring</h3>
+            <table class="rules-table">
+                <tr><th>Letters</th><th>Points</th></tr>
+                <tr><td>E, T, A, O, I, N</td><td>1 pt</td></tr>
+                <tr><td>R, S, H</td><td>3 pts</td></tr>
+                <tr><td>D, L, C, U, M, W</td><td>4 - 5 pts</td></tr>
+                <tr><td>F, G, Y, P, B, V</td><td>6 - 7 pts</td></tr>
+                <tr><td>J, K, Q, X, Z</td><td>8 - 9 pts</td></tr>
+            </table>
+            <button class="action-btn" onclick="document.getElementById('rules-modal').style.display='none'" style="width:100%; margin: 20px 0 0 0; background: var(--wood); color: white;">Close</button>
+        </div>
+    </div>
+
+    <div id="result-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <h2 style="text-transform: uppercase; color: #888; font-size: 0.9rem;">Word Score</h2>
+            <h1 id="modal-word" style="font-size: 3rem; margin: 0; color: #222;">WORD</h1>
+            <div id="modal-score" style="font-size: 4rem; color: #2e7d32; font-weight: 900;">0</div>
+            
+            <div class="best-word-box">
+                <div style="font-size: 0.7rem; text-transform: uppercase; color: #999;">The Oracle's Best Word</div>
+                <div id="best-word-text" style="font-size: 1.4rem; font-weight: bold; color: #333;">Calculating...</div>
+            </div>
+            
+            <button class="action-btn" onclick="location.reload()" style="background: var(--wood); color: white; width: 100%; margin: 20px 0 0 0;">Next Hand</button>
+        </div>
+    </div>
+
+    <script>
+        /* --- RANDOM NUMBER GENERATOR (SEEDED) --- */
+        let currentSeed = 1;
+        let gameMode = 'free';
+
+        // Simple Mulberry32 Seeded RNG
+        function mulberry32(a) {
+            return function() {
+              var t = a += 0x6D2B79F5;
+              t = Math.imul(t ^ t >>> 15, t | 1);
+              t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+              return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            }
+        }
+        
+        // The main RNG function used by the game
+        let randomFunc = Math.random;
+
+        function initSeed(mode) {
+            gameMode = mode;
+            if (mode === 'daily') {
+                // Generate seed from Date string (YYYYMMDD)
+                const d = new Date();
+                const seedStr = d.getFullYear() + "" + (d.getMonth()+1).toString().padStart(2,'0') + "" + d.getDate().toString().padStart(2,'0');
+                const seedVal = parseInt(seedStr);
+                randomFunc = mulberry32(seedVal);
+                
+                document.getElementById('mode-indicator').innerText = "DAILY: " + seedStr;
+                document.getElementById('mode-indicator').style.background = "var(--mode-daily)";
+            } else {
+                randomFunc = Math.random;
+                document.getElementById('mode-indicator').innerText = "FREE PLAY";
+                document.getElementById('mode-indicator').style.background = "var(--mode-free)";
+            }
+        }
+
+        /* --- SOUND & MUSIC --- */
+        const SoundManager = {
+            init() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            play(type) {
+                if (!this.ctx) this.init();
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                if (type === 'flip') {
+                    const buf = this.ctx.createBuffer(1, this.ctx.sampleRate*0.1, this.ctx.sampleRate);
+                    const d = buf.getChannelData(0);
+                    for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+                    const n = this.ctx.createBufferSource(); n.buffer=buf;
+                    const f = this.ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(1000,t);
+                    gain.gain.setValueAtTime(0.3,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.1);
+                    n.connect(f); f.connect(gain); gain.connect(this.ctx.destination); n.start();
+                } else if (type==='chip') {
+                    osc.frequency.setValueAtTime(1200,t); gain.gain.setValueAtTime(0.1,t); 
+                    gain.gain.exponentialRampToValueAtTime(0.01,t+0.05); osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(t+0.05);
+                } else if (type==='success') {
+                    osc.type='triangle'; osc.frequency.setValueAtTime(440,t); osc.frequency.exponentialRampToValueAtTime(880,t+0.1);
+                    gain.gain.setValueAtTime(0.2,t); gain.gain.linearRampToValueAtTime(0,t+0.4);
+                    osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(t+0.4);
+                } else if (type==='error') {
+                    osc.type='sawtooth'; osc.frequency.setValueAtTime(150,t); osc.frequency.linearRampToValueAtTime(100,t+0.2);
+                    gain.gain.setValueAtTime(0.2,t); gain.gain.linearRampToValueAtTime(0,t+0.2);
+                    osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(t+0.2);
+                }
+            }
+        };
+
+        const MusicManager = {
+            audio: new Audio('gambler_8bit.mp3'), isPlaying: false,
+            init() { this.audio.loop = true; this.audio.volume = 0.3; },
+            toggle() {
+                if (this.isPlaying) {
+                    this.audio.pause(); this.isPlaying = false;
+                    const btn = document.getElementById('music-btn'); btn.innerText = "🔇"; btn.style.opacity = "0.5";
+                } else {
+                    this.audio.play().then(() => {
+                        this.isPlaying = true;
+                        const btn = document.getElementById('music-btn'); btn.innerText = "🎵"; btn.style.opacity = "1";
+                    }).catch(e=>{});
+                }
+            },
+            tryStart() { if(!this.isPlaying) this.toggle(); }
+        };
+        MusicManager.init();
+
+        /* --- CONFIG --- */
+        const FREQUENCIES = { 'E':12,'A':9,'I':9,'O':8,'N':6,'R':6,'T':6,'L':4,'S':4,'U':4,'D':4,'G':3,'B':2,'C':2,'M':2,'P':2,'F':2,'H':2,'V':2,'W':2,'Y':2,'K':1,'J':1,'X':1,'Q':1,'Z':1, '*': 2 };
+        const SCORES = { 'E':1,'T':1,'A':1,'O':2,'I':2,'N':2,'S':3,'H':3,'R':3,'D':4,'L':4,'C':4,'U':5,'M':5,'W':5,'F':6,'G':6,'Y':6,'P':7,'B':7,'V':7,'K':8,'J':8,'X':8,'Q':9,'Z':9, '*':0 };
+        const ICONS = { 'A':'♠️','B':'🐝','C':'🐱','D':'🐶','E':'🐘','F':'🦊','G':'🦒','H':'🦔','I':'🦎','J':'🫅','K':'👑','L':'🦁','M':'🐒','N':'🥷','O':'🦉','P':'🐼','Q':'👸','R':'🐰','S':'🐍','T':'🐯','U':'🦄','V':'🦅','W':'🐺','X':'⚔️','Y':'🐃','Z':'🦓','*':'🤡' };
+        const DICT_URL = 'https://raw.githubusercontent.com/redbo/scrabble/master/dictionary.txt';
+
+        /* --- STATE --- */
+        let deck = [], hand = [], board = [], discards = [], draftPool = [], selectedIndices = [], dictionary = [];
+        let phaseIndex = 0, swapsDoneThisHand = 0, swapLockedThisRound = false;
+        let handAnims = [], boardAnims = [];
+
+        window.onload = async () => {
+            loadStats();
+            renderDistGrid();
+            await initDictionary();
+        };
+
+        function showRules() { document.getElementById('rules-modal').style.display = 'flex'; }
+        
+        function loadStats() {
+            document.getElementById('daily-total').innerText = localStorage.getItem('oxford_total') || 0;
+            document.getElementById('high-score').innerText = localStorage.getItem('oxford_high') || 0;
+            document.getElementById('last-score').innerText = localStorage.getItem('oxford_last') || 0;
+        }
+
+        function confirmReset() {
+            if(confirm("Reset all score history?")) {
+                localStorage.removeItem('oxford_total'); localStorage.removeItem('oxford_high'); localStorage.removeItem('oxford_last');
+                loadStats(); SoundManager.play('chip');
+            }
+        }
+
+        function renderDistGrid() {
+            const grid = document.getElementById('dist-grid');
+            Object.keys(FREQUENCIES).forEach(l => {
+                const item = document.createElement('div'); item.className = 'dist-item';
+                item.innerHTML = `<span>${l === '*' ? '?' : l}</span> <span>${FREQUENCIES[l]}</span>`;
+                grid.appendChild(item);
+            });
+        }
+
+        async function initDictionary() {
+            const loadingText = document.getElementById('loading-dict-text');
+            const cachedDict = localStorage.getItem('oxford_dict_v1');
+            if (cachedDict) {
+                dictionary = JSON.parse(cachedDict);
+            } else {
+                try {
+                    const res = await fetch(DICT_URL);
+                    const text = await res.text();
+                    dictionary = text.split('\n').map(w => w.trim().toUpperCase()).filter(w => w.length >= 3 && w.length <= 8);
+                    try { localStorage.setItem('oxford_dict_v1', JSON.stringify(dictionary)); } catch(e){}
+                } catch (e) { alert("Dictionary Error"); return; }
+            }
+            loadingText.innerText = `Oracle Online: ${dictionary.length} words. Ready.`;
+            // Enable mode buttons if they were disabled
+        }
+
+        // ENTRY POINT FROM START SCREEN
+        function startGame(mode) {
+            initSeed(mode);
+            document.getElementById('start-overlay').style.display = 'none';
+            MusicManager.tryStart();
+            
+            // Start the game loop logic
+            document.getElementById('main-btn').disabled = false;
+            nextPhase();
+        }
+
+        function initDeck() {
+            deck = [];
+            Object.keys(FREQUENCIES).forEach(l => { for(let i=0; i<FREQUENCIES[l]; i++) deck.push(l); });
+            // SEEDED SHUFFLE
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(randomFunc() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            updatePileCounts();
+        }
+
+        function updatePileCounts() {
+            document.getElementById('deck-count-display').innerText = deck.length;
+            document.getElementById('discard-display').innerText = discards.length;
+            document.getElementById('discard-list').innerText = discards.join(', ');
+        }
+
+        function nextPhase() {
+            const btn = document.getElementById('main-btn');
+            const status = document.getElementById('status-msg');
+            handAnims = []; boardAnims = [];
+            SoundManager.play('flip');
+
+            if (phaseIndex === 0) {
+                const vowels = ['A','E','I','O','U','Y'];
+                do {
+                    initDeck(); discards = [];
+                    draftPool = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
+                } while (!draftPool.some(card => vowels.includes(card) || card === '*'));
+                
+                handAnims = [0,1,2,3,4];
+                status.innerText = "Draft Phase: Keep 3 Cards";
+                btn.innerText = "Confirm Hand";
+                phaseIndex++;
+                render(false, true);
+            } else if (phaseIndex === 1) {
+                if (selectedIndices.length !== 3) return alert("Select 3 cards to keep.");
+                draftPool.forEach((c, i) => { if(!selectedIndices.includes(i)) discards.push(c); });
+                hand = selectedIndices.map(i => draftPool[i]);
+                selectedIndices = [];
+                handAnims = [0,1,2];
+                status.innerText = "Dealing Flop...";
+                phaseIndex++;
+                render(false, true); 
+                setTimeout(nextPhase, 600);
+            } else if (phaseIndex === 2) {
+                board.push(deck.pop(), deck.pop(), deck.pop());
+                boardAnims = [0, 1, 2];
+                status.innerText = "The Flop: Select Discards";
+                btn.innerText = "Deal Turn";
+                swapLockedThisRound = false;
+                document.getElementById('swap-btn').style.display = "inline";
+                phaseIndex++;
+                render(false, true);
+            } else if (phaseIndex === 3) {
+                board.push(deck.pop());
+                boardAnims = [3];
+                status.innerText = "The Turn";
+                btn.innerText = "Deal River";
+                swapLockedThisRound = false;
+                phaseIndex++;
+                render(false, true);
+            } else if (phaseIndex === 4) {
+                board.push(deck.pop());
+                boardAnims = [4];
+                status.innerText = "The River: Make a Word!";
+                btn.innerText = "Submit Word";
+                document.getElementById('swap-btn').style.display = "none";
+                const inp = document.getElementById('word-input');
+                inp.style.display = "inline-block"; inp.focus();
+                phaseIndex++;
+                render(false, true);
+            } else if (phaseIndex === 5) { 
+                calculateFinalScore(); 
+            }
+        }
+
+        function executeSwap() {
+            if (selectedIndices.length === 0) return alert("Select cards to discard first.");
+            selectedIndices.forEach(idx => discards.push(hand[idx]));
+            handAnims = [...selectedIndices];
+            selectedIndices.forEach(idx => {
+                hand[idx] = deck.pop();
+                swapsDoneThisHand++;
+            });
+            selectedIndices = []; 
+            swapLockedThisRound = true;
+            SoundManager.play('flip');
+            document.getElementById('status-msg').innerText = "Swap Locked. Deal Next Card.";
+            render(false, false); 
+        }
+
+        function toggleSelect(i) {
+            SoundManager.play('chip');
+            if (phaseIndex === 1) {
+                if (selectedIndices.includes(i)) selectedIndices = selectedIndices.filter(x => x !== i);
+                else if (selectedIndices.length < 3) selectedIndices.push(i);
+            } else if (!swapLockedThisRound && (phaseIndex === 3 || phaseIndex === 4)) {
+                const remaining = 2 - swapsDoneThisHand;
+                if (selectedIndices.includes(i)) selectedIndices = selectedIndices.filter(x => x !== i);
+                else if (selectedIndices.length < remaining) selectedIndices.push(i);
+            }
+            render(true, false);
+        }
+
+        function createCardElement(letter, index, isBoard, shouldAnimate) {
+            const isSelected = !isBoard && selectedIndices.includes(index);
+            const isRiver = isBoard && index === 4;
+            const isFace = ['J','Q','K','A'].includes(letter); 
+            const card = document.createElement('div');
+            card.id = `card-${isBoard?'board':'hand'}-${index}`;
+            card.className = `card ${isBoard ? 'communal' : ''} ${isSelected ? 'selected' : ''} ${shouldAnimate ? 'animate-deal' : ''} ${isRiver ? 'river-bonus' : ''} ${isFace ? 'face-card' : ''}`;
+            card.setAttribute('data-letter', letter);
+            const score = SCORES[letter];
+            const color = (letter === '*') ? '#e040fb' : (['J','Q','K','A'].includes(letter) ? '#000' : getScoreColor(letter));
+            card.innerHTML = `<div class="corner top-left" style="color: ${color}">${score}</div><div class="animal-icon">${ICONS[letter] || '❓'}</div><div class="main-letter">${letter === '*' ? '?' : letter}</div><div class="corner bottom-right" style="color: ${color}">${score}</div>`;
+            if (!isBoard) card.onclick = () => toggleSelect(index);
+            return card;
+        }
+
+        function render(isInteraction = false, redrawBoard = true) {
+            updatePileCounts();
+            const handDiv = document.getElementById('hand');
+            const boardDiv = document.getElementById('board');
+            handDiv.innerHTML = '';
+            const displayHand = phaseIndex === 1 ? draftPool : hand;
+            displayHand.forEach((l, i) => {
+                const animate = !isInteraction && handAnims.includes(i);
+                handDiv.appendChild(createCardElement(l, i, false, animate));
+            });
+            if (redrawBoard) {
+                boardDiv.innerHTML = '';
+                for (let i = 0; i < 5; i++) {
+                    if (board[i]) {
+                        const animate = !isInteraction && boardAnims.includes(i);
+                        boardDiv.appendChild(createCardElement(board[i], i, true, animate));
+                    } else {
+                        const slot = document.createElement('div'); slot.className = 'card-slot';
+                        if (i === 4) slot.innerHTML = '<span class="river-slot-text">THE RIVER</span>';
+                        boardDiv.appendChild(slot);
+                    }
+                }
+            }
+            const swapBtn = document.getElementById('swap-btn');
+            if (swapBtn.style.display !== 'none') {
+                const remaining = 2 - swapsDoneThisHand;
+                swapBtn.innerText = `Confirm Swap (${remaining} left)`;
+                swapBtn.disabled = swapLockedThisRound || selectedIndices.length === 0;
+            }
+            handleTyping();
+        }
+
+        function getScoreColor(l) { const s = SCORES[l]; return s<=1 ? "#2196F3" : s<=3 ? "#4CAF50" : s<=6 ? "#FF9800" : "#E91E63"; }
+        function canFormWord(word, pool) { let tempPool = [...pool]; for (let char of word) { let idx = tempPool.indexOf(char); if (idx === -1) idx = tempPool.indexOf('*'); if (idx === -1) return false; tempPool.splice(idx, 1); } return true; }
+        
+        function scoreSpecificWord(word, letterPool) {
+            const riverIndex = letterPool.length - 1; const riverCard = letterPool[riverIndex];
+            let availableRegular = [...letterPool]; availableRegular.pop(); 
+            let base = 0; let riverUsed = false;
+            for (let char of word) {
+                let val = 0; let found = false;
+                if (!riverUsed && (riverCard === char || riverCard === '*')) {
+                    val = (riverCard === '*') ? 0 : SCORES[char]; if (riverCard !== '*') val = SCORES[char]; 
+                    val *= 2; riverUsed = true; found = true;
+                }
+                if (!found) {
+                    let idx = availableRegular.indexOf(char); if (idx === -1) idx = availableRegular.indexOf('*'); 
+                    if (idx !== -1) {
+                        const usedCard = availableRegular[idx]; val = (usedCard === '*') ? 0 : SCORES[char];
+                        availableRegular.splice(idx, 1); found = true;
+                    }
+                }
+                if (!found) return -1; base += val;
+            }
+            let mult = word.length >= 8 ? 3 : word.length >= 7 ? 2 : word.length >= 5 ? 1.5 : 1;
+            return Math.floor(base * mult);
+        }
+
+        function findBestPossibleScore() {
+            let pool = [...hand, ...board]; let maxScore = 0; let bestWord = "NONE";
+            for (let word of dictionary) {
+                if (canFormWord(word, pool)) { let s = scoreSpecificWord(word, pool); if (s > maxScore) { maxScore = s; bestWord = word; } }
+            }
+            return { word: bestWord, score: maxScore };
+        }
+
+        async function calculateFinalScore() {
+            const wordInput = document.getElementById('word-input');
+            const word = wordInput.value.toUpperCase().trim();
+            if (word.length < 3) return;
+            const pool = [...hand, ...board];
+            if (!canFormWord(word, pool)) { markInvalid("Missing letters!"); return; }
+            if (!dictionary.includes(word)) { markInvalid("Not in dictionary!"); return; }
+            let userScore = scoreSpecificWord(word, pool);
+            SoundManager.play('success');
+            document.getElementById('modal-word').innerText = word;
+            document.getElementById('modal-score').innerText = userScore;
+            const best = findBestPossibleScore();
+            document.getElementById('best-word-text').innerText = `${best.word} (${best.score} pts)`;
+            const daily = parseInt(localStorage.getItem('oxford_total') || 0) + userScore;
+            const high = parseInt(localStorage.getItem('oxford_high') || 0);
+            localStorage.setItem('oxford_total', daily); localStorage.setItem('oxford_last', userScore);
+            if(userScore > high) localStorage.setItem('oxford_high', userScore);
+            document.getElementById('result-modal').style.display = 'flex';
+        }
+
+        function markInvalid(msg) {
+            const inp = document.getElementById('word-input'); inp.classList.add('invalid'); inp.value = ""; inp.placeholder = msg;
+            SoundManager.play('error'); setTimeout(() => inp.placeholder = "Enter word...", 1500);
+        }
+
+        function handleTyping() {
+            const input = document.getElementById('word-input'); if(input.style.display === 'none') return;
+            input.classList.remove('invalid'); const text = input.value.toUpperCase().split('');
+            const allCards = document.querySelectorAll('.card'); allCards.forEach(c => c.classList.remove('bumped'));
+            let usedIndices = [];
+            text.forEach(char => {
+                let found = false;
+                for(let i=0; i<allCards.length; i++) {
+                    if (usedIndices.includes(i)) continue;
+                    if (allCards[i].getAttribute('data-letter') === char) { allCards[i].classList.add('bumped'); usedIndices.push(i); found = true; break; }
+                }
+                if (!found) {
+                    for(let i=0; i<allCards.length; i++) {
+                        if (usedIndices.includes(i)) continue;
+                        if (allCards[i].getAttribute('data-letter') === '*') { allCards[i].classList.add('bumped'); usedIndices.push(i); break; }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
