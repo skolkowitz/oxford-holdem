@@ -108,6 +108,9 @@
         }
         #word-input.invalid { animation: shake 0.4s ease-in-out; border-color: var(--error-red); color: var(--error-red); }
 
+        /* --- CREDITS FOOTER --- */
+        #credits { margin-top: 30px; font-size: 0.75rem; color: rgba(255,255,255,0.3); text-align: center; line-height: 1.6; }
+
         /* --- MODALS --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(8px); }
         .modal-box { background: white; color: #333; padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 450px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto; }
@@ -118,7 +121,7 @@
         .mode-btn:hover { transform: scale(1.02); }
         .mode-daily { background: var(--mode-daily); box-shadow: 0 5px 0 #1b5e20; }
         .mode-free { background: var(--mode-free); box-shadow: 0 5px 0 #0d47a1; }
-        .mode-score { background: #444; border: 1px solid #666; } /* Style for Leaderboard btn */
+        .mode-score { background: #444; border: 1px solid #666; } 
         .mode-desc { font-size: 0.8rem; font-weight: normal; opacity: 0.9; margin-top: 5px; display: block; }
 
         /* Leaderboard Table */
@@ -127,6 +130,7 @@
         .lb-table td { padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; }
         .lb-rank { color: var(--gold); width: 30px; }
         .lb-score { text-align: right; color: var(--mode-daily); }
+        .hidden-word { color: #aaa; font-style: italic; letter-spacing: 2px; }
 
         .rules-table { width: 100%; text-align: left; font-size: 0.9rem; border-collapse: collapse; margin-top: 10px; }
         .rules-table th { border-bottom: 2px solid #ddd; padding: 5px; color: #666; }
@@ -224,6 +228,11 @@
                 <button id="swap-btn" class="action-btn" onclick="executeSwap()" style="display:none">Confirm Swap</button>
             </div>
         </div>
+    </div>
+
+    <div id="credits">
+        A game by Ilan and Shimon, with a whole lot of help from Gemini.<br>
+        Music by Kenny Rogers and Fish5.
     </div>
 
     <div id="start-overlay" class="modal-overlay">
@@ -330,7 +339,7 @@
             pendingStart: false,
             
             init() {
-                // Config Provided by User
+                // CONFIG FROM USER PROMPT
                 const firebaseConfig = {
                   apiKey: "AIzaSyDk0sQmVHlXM8_b6Q6ka1VzCr4hwIpdCf4",
                   authDomain: "oxfordholdem.firebaseapp.com",
@@ -360,7 +369,7 @@
 
             editName() {
                 document.getElementById('username-modal').style.display = 'flex';
-                this.pendingStart = false; // Just editing, not starting
+                this.pendingStart = false; 
             },
 
             saveName() {
@@ -402,6 +411,10 @@
                 if (!this.db) { container.innerHTML = "<p>Leaderboard unavailable.</p>"; return; }
                 container.innerHTML = "Loading...";
                 const today = new Date().toISOString().split('T')[0];
+                
+                // SPOILER CHECK: Has user played today?
+                const lastPlayed = localStorage.getItem('oxford_last_daily_played');
+                const userPlayedToday = (lastPlayed === today);
 
                 try {
                     const q = await this.db.collection('leaderboard').where('date', '==', today).orderBy('score', 'desc').limit(10).get();
@@ -411,10 +424,15 @@
                     let rank = 1;
                     q.forEach(doc => {
                         const d = doc.data();
-                        html += `<tr><td class="lb-rank">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank}</td><td>${d.name}</td><td style="color:#666;font-size:0.8rem;">${d.word}</td><td class="lb-score">${d.score}</td></tr>`;
+                        // Hide word if user hasn't played today
+                        const wordDisplay = userPlayedToday ? d.word : `<span class="hidden-word">🙈 HIDDEN</span>`;
+                        
+                        html += `<tr><td class="lb-rank">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank}</td><td>${d.name}</td><td style="font-size:0.8rem;">${wordDisplay}</td><td class="lb-score">${d.score}</td></tr>`;
                         rank++;
                     });
                     html += "</table>";
+                    if(!userPlayedToday) html += "<p style='font-size:0.7rem; color:#aaa; margin-top:10px;'>* Words hidden until you complete today's hand.</p>";
+                    
                     container.innerHTML = html;
                 } catch (e) { container.innerHTML = "<p>Error loading scores. Check Console.</p>"; }
             }
@@ -541,13 +559,10 @@
         }
 
         function handleStartClick(mode) {
-            // DAILY LIMIT CHECK
             if (mode === 'daily') {
                 const today = new Date().toISOString().split('T')[0];
                 const lastPlayed = localStorage.getItem('oxford_last_daily_played');
-                
                 if (lastPlayed === today) {
-                    // FIX: If already played, show Leaderboard instead of alerting
                     LeaderboardManager.show();
                     return;
                 }
@@ -773,8 +788,6 @@
                 localStorage.setItem('oxford_last_daily_played', today);
                 LeaderboardManager.submitScore(userScore, word);
                 document.getElementById('next-hand-btn').innerText = "See Leaderboard";
-                
-                // FIX: Close result modal BEFORE opening Leaderboard
                 document.getElementById('next-hand-btn').onclick = function() { 
                     document.getElementById('result-modal').style.display = 'none';
                     LeaderboardManager.show(); 
@@ -810,14 +823,10 @@
 
         function shareResult() {
             const score = document.getElementById('modal-score').innerText;
-            const word = document.getElementById('modal-word').innerText;
             const date = new Date().toISOString().split('T')[0];
             
-            let icons = "";
-            for (let char of word) { icons += ICONS[char] || "❓"; }
-            
-            // FIX: Removed word, clean URL
-            const text = `🃏 Oxford Hold 'Em ${date}\n🏆 Score: ${score}\n${icons}\n\n${window.location.href}`;
+            // No Emoji Grid (No Spoilers)
+            const text = `🃏 Oxford Hold 'Em ${date}\n🏆 Score: ${score}\n\n${window.location.href}`;
             
             navigator.clipboard.writeText(text).then(() => {
                 const btn = document.getElementById('share-btn');
