@@ -175,6 +175,7 @@ const DICT_URL = 'https://raw.githubusercontent.com/redbo/scrabble/master/dictio
 let deck = [], hand = [], board = [], discards = [], draftPool = [], selectedIndices = [], dictionary = [];
 let phaseIndex = 0, swapsDoneThisHand = 0, swapLockedThisRound = false;
 let handAnims = [], boardAnims = [];
+let currentDeckSort = { field: 'left', dir: 'desc' };
 
 async function initGame() {
     loadStats();
@@ -210,10 +211,20 @@ function confirmReset() {
     }
 }
 
-function showDeckStats() {
+function showDeckStats(sortBy) {
     const modal = document.getElementById('deck-stats-modal');
     const content = document.getElementById('deck-stats-content');
     if (!modal || !content) return;
+
+    if (sortBy) {
+        if (currentDeckSort.field === sortBy) {
+            currentDeckSort.dir = currentDeckSort.dir === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentDeckSort.field = sortBy;
+            currentDeckSort.dir = 'desc';
+            if (sortBy === 'card') currentDeckSort.dir = 'asc';
+        }
+    }
 
     const remainingCounts = {};
     Object.keys(FREQUENCIES).forEach(k => remainingCounts[k] = 0);
@@ -221,16 +232,36 @@ function showDeckStats() {
         if (remainingCounts[card] !== undefined) remainingCounts[card]++;
     });
 
+    const rows = Object.keys(FREQUENCIES).map(k => ({
+        key: k,
+        cardDisplay: (k === '*' ? '?' : k) + ' ' + (ICONS[k] || k),
+        pts: SCORES[k],
+        orig: FREQUENCIES[k],
+        left: remainingCounts[k]
+    }));
+
+    rows.sort((a, b) => {
+        let valA = a[currentDeckSort.field];
+        let valB = b[currentDeckSort.field];
+        if (currentDeckSort.field === 'card') { valA = a.key; valB = b.key; }
+        if (valA < valB) return currentDeckSort.dir === 'asc' ? -1 : 1;
+        if (valA > valB) return currentDeckSort.dir === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const getArrow = (f) => currentDeckSort.field === f ? (currentDeckSort.dir === 'asc' ? '↑' : '↓') : '';
+
     let html = '<table class="rules-table" style="text-align:center; margin-top:0;">';
-    html += '<tr><th>Card</th><th>Pts</th><th>Orig</th><th>Left</th></tr>';
+    html += `<tr>
+        <th onclick="showDeckStats('card')" style="cursor:pointer; user-select:none;">Card ${getArrow('card')}</th>
+        <th onclick="showDeckStats('pts')" style="cursor:pointer; user-select:none;">Pts ${getArrow('pts')}</th>
+        <th onclick="showDeckStats('orig')" style="cursor:pointer; user-select:none;">Orig ${getArrow('orig')}</th>
+        <th onclick="showDeckStats('left')" style="cursor:pointer; user-select:none;">Left ${getArrow('left')}</th>
+    </tr>`;
     
-    Object.keys(FREQUENCIES).forEach(k => {
-        const orig = FREQUENCIES[k];
-        const left = remainingCounts[k];
-        const icon = ICONS[k] || k;
-        const score = SCORES[k];
-        const style = left === 0 ? 'opacity: 0.3' : '';
-        html += `<tr style="${style}"><td>${k==='*'?'?':k} ${icon}</td><td>${score}</td><td>${orig}</td><td style="font-weight:bold; color:${left>0?'var(--mode-daily)':'#555'}">${left}</td></tr>`;
+    rows.forEach(row => {
+        const style = row.left === 0 ? 'opacity: 0.3' : '';
+        html += `<tr style="${style}"><td>${row.cardDisplay}</td><td>${row.pts}</td><td>${row.orig}</td><td style="font-weight:bold; color:${row.left>0?'var(--mode-daily)':'#555'}">${row.left}</td></tr>`;
     });
     html += '</table>';
     
