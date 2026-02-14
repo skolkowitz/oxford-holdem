@@ -195,9 +195,23 @@ async function initGame() {
     input.addEventListener('blur', () => document.body.classList.remove('keyboard-active'));
     
     document.addEventListener('keydown', handleGlobalKeydown);
+    updateRulesUI();
 }
 
 function showRules() { document.getElementById('rules-modal').style.display = 'flex'; }
+
+function updateRulesUI() {
+    const draftRule = document.getElementById('rule-draft');
+    const holeBonuses = document.getElementById('rule-hole-bonuses');
+    
+    if (ENABLE_VARIABLE_HOLE_CARDS) {
+        if (draftRule) draftRule.innerHTML = '<strong>Draft:</strong> Pick 1, 2, or 3 hole cards. Fewer cards = higher multipliers!';
+        if (holeBonuses) holeBonuses.style.display = 'block';
+    } else {
+        if (draftRule) draftRule.innerHTML = '<strong>Draft:</strong> Pick the best 3 hole cards from 5 options.';
+        if (holeBonuses) holeBonuses.style.display = 'none';
+    }
+}
 
 function loadStats() {
     document.getElementById('daily-total').innerText = localStorage.getItem('oxford_total') || 0;
@@ -448,19 +462,19 @@ function nextPhase() {
         
         handAnims = [0,1,2,3,4];
         if (ENABLE_VARIABLE_HOLE_CARDS) {
-            status.innerText = "Draft: Keep up to 3 cards. Fewer cards = bigger bonuses, but fewer and shorter possible words!";
-            btn.innerText = "Select at least one card to keep";
+            status.innerText = "Draft: Keep up to 3 hole cards. Fewer cards = bigger bonuses, but fewer and shorter possible words!";
+            btn.innerText = "Select at least one hole card to keep";
         } else {
-            status.innerText = "Draft Phase: Keep 3 Cards";
-            btn.innerText = "Confirm Hand";
+            status.innerText = "Draft Phase: Keep 3 Hole Cards";
+            btn.innerText = "Confirm Hole Cards";
         }
         phaseIndex++;
         render(false, true);
     } else if (phaseIndex === 1) {
         if (ENABLE_VARIABLE_HOLE_CARDS) {
-            if (selectedIndices.length < 1 || selectedIndices.length > 3) return alert("Select 1, 2, or 3 cards to keep.");
+            if (selectedIndices.length < 1 || selectedIndices.length > 3) return alert("Select 1, 2, or 3 hole cards to keep.");
         } else {
-            if (selectedIndices.length !== 3) return alert("Select 3 cards to keep.");
+            if (selectedIndices.length !== 3) return alert("Select 3 hole cards to keep.");
         }
         
         draftPool.forEach((c, i) => { if(!selectedIndices.includes(i)) discards.push(c); });
@@ -519,7 +533,7 @@ function nextPhase() {
 }
 
 function executeSwap() {
-    if (selectedIndices.length === 0) return alert("Select cards to discard first.");
+    if (selectedIndices.length === 0) return alert("Select hole cards to discard first.");
     selectedIndices.forEach(idx => discards.push(hand[idx]));
     handAnims = [...selectedIndices];
     selectedIndices.forEach(idx => {
@@ -572,10 +586,10 @@ function toggleSelect(i, isBoard = false) {
         if (ENABLE_VARIABLE_HOLE_CARDS) {
             const btn = document.getElementById('main-btn');
             const count = selectedIndices.length;
-            if (count === 0) btn.innerText = "Select at least one card to keep";
+            if (count === 0) btn.innerText = "Select at least one hole card to keep";
             else if (count === 1) btn.innerText = "Confirm: Feelin' Lucky (3x)";
             else if (count === 2) btn.innerText = "Confirm: Texas Two Step (1.5x)";
-            else btn.innerText = "Confirm Hand";
+            else btn.innerText = "Confirm Hole Cards";
         }
     } else if (!swapLockedThisRound && (phaseIndex === 3 || phaseIndex === 4)) {
         const remaining = 2 - swapsDoneThisHand;

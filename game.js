@@ -446,8 +446,8 @@ function nextPhase() {
         } while (!draftPool.some(card => vowels.includes(card) || card === '*'));
         
         handAnims = [0,1,2,3,4];
-        status.innerText = "Draft Phase: Keep 3 Cards";
-        btn.innerText = "Confirm Hand";
+        status.innerText = "Draft Phase: Keep 3 Hole Cards";
+        btn.innerText = "Confirm Hole Cards";
         phaseIndex++;
         render(false, true);
     } else if (phaseIndex === 1) {
@@ -503,7 +503,7 @@ function nextPhase() {
 }
 
 function executeSwap() {
-    if (selectedIndices.length === 0) return alert("Select cards to discard first.");
+    if (selectedIndices.length === 0) return alert("Select hole cards to discard first.");
     selectedIndices.forEach(idx => discards.push(hand[idx]));
     handAnims = [...selectedIndices];
     selectedIndices.forEach(idx => {
