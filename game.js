@@ -544,7 +544,7 @@ async function calculateFinalScore() {
     const word = wordInput.value.toUpperCase().trim();
     if (word.length < 3) return;
     const pool = [...hand, ...board];
-    if (!canFormWord(word, pool)) { markInvalid("Missing letters!"); return; }
+    if (!canFormWord(word, pool)) { markInvalid("You can't make that word!"); return; }
     if (!dictionary.includes(word)) { markInvalid("Not in dictionary!"); return; }
     let userScore = scoreSpecificWord(word, pool);
     SoundManager.play('success');
