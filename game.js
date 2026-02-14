@@ -255,7 +255,9 @@ async function initDictionary() {
 function checkDailyStatus() {
     const today = new Date().toISOString().split('T')[0];
     const lastPlayed = localStorage.getItem('oxford_last_daily_played');
-    if (lastPlayed === today) {
+    const dailyScore = localStorage.getItem('oxford_daily_score');
+    
+    if (lastPlayed === today && dailyScore) {
         const shareBtn = document.getElementById('daily-share-btn');
         if (shareBtn) shareBtn.style.display = 'flex';
     }
@@ -696,15 +698,20 @@ function shareResult() {
 
 function shareDailyResult() {
     const score = localStorage.getItem('oxford_daily_score');
-    if (!score) return;
+    if (!score) {
+        alert("Score not found. Please play today's hand to generate a score.");
+        return;
+    }
     const date = new Date().toISOString().split('T')[0];
     const text = `🃏 Oxford Hold 'Em ${date}\n🏆 Score: ${score}\n\n${window.location.href}`;
     
     copyToClipboard(text, () => {
         const btn = document.getElementById('daily-share-btn');
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = `<div><div>✅ Copied!</div><span class="mode-desc">Paste it anywhere!</span></div><div>📋</div>`;
-        setTimeout(() => btn.innerHTML = originalHTML, 2000);
+        if (btn) {
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<div><div>✅ Copied!</div><span class="mode-desc">Paste it anywhere!</span></div><div>📋</div>`;
+            setTimeout(() => btn.innerHTML = originalHTML, 2000);
+        }
     });
 }
 
@@ -720,11 +727,22 @@ function fallbackCopy(text, onSuccess) {
     const textArea = document.createElement("textarea");
     textArea.value = text;
     textArea.style.position = "fixed";
-    textArea.style.left = "-9999px";
+    textArea.style.left = "0";
     textArea.style.top = "0";
+    textArea.style.opacity = "0";
+    
+    // iOS requirements for successful copy
+    textArea.contentEditable = true;
+    textArea.readOnly = false;
+    
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
+    
+    if (textArea.setSelectionRange) {
+        textArea.setSelectionRange(0, 999999); // iOS selection
+    }
+    
     try {
         const successful = document.execCommand('copy');
         if (successful && onSuccess) onSuccess();
