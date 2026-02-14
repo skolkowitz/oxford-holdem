@@ -494,8 +494,8 @@ function nextPhase() {
         
         handAnims = [0,1,2,3,4];
         if (ENABLE_VARIABLE_HOLE_CARDS) {
-            status.innerText = "Draft: Keep up to 3 hole cards. Fewer cards = bigger bonuses, but fewer and shorter possible words!";
-            btn.innerText = "Select at least one hole card to keep";
+            status.innerText = "Draft: Keep up to 3 hole cards. Fewer cards = bigger bonuses, but shorter words!";
+            btn.innerText = "Select hole cards to keep";
         } else {
             status.innerText = "Draft Phase: Keep 3 Hole Cards";
             btn.innerText = "Confirm Hole Cards";
@@ -525,7 +525,7 @@ function nextPhase() {
     } else if (phaseIndex === 2) {
         board.push(deck.pop(), deck.pop(), deck.pop());
         boardAnims = [0, 1, 2];
-        status.innerText = "The Flop: Select Discards";
+        status.innerText = "The Flop: select hole cards to swap (if you want to.)";
         btn.innerText = "Deal Turn";
         swapLockedThisRound = false;
         document.getElementById('swap-btn').style.display = "inline";
@@ -534,7 +534,7 @@ function nextPhase() {
     } else if (phaseIndex === 3) {
         board.push(deck.pop());
         boardAnims = [3];
-        status.innerText = "The Turn";
+        status.innerText = "The Turn: select hole cards to swap (if you want to.)";
         btn.innerText = "Deal River";
         swapLockedThisRound = false;
         phaseIndex++;
@@ -618,10 +618,10 @@ function toggleSelect(i, isBoard = false) {
         if (ENABLE_VARIABLE_HOLE_CARDS) {
             const btn = document.getElementById('main-btn');
             const count = selectedIndices.length;
-            if (count === 0) btn.innerText = "Select at least one hole card to keep";
-            else if (count === 1) btn.innerText = "Confirm: Feelin' Lucky (3x)";
-            else if (count === 2) btn.innerText = "Confirm: Texas Two Step (1.5x)";
-            else btn.innerText = "Confirm Hole Cards";
+            if (count === 0) btn.innerHTML = "Select at least one hole card to keep";
+            else if (count === 1) btn.innerHTML = "Confirm: <span style='color:#d32f2f'>Feelin' Lucky (3x)</span>";
+            else if (count === 2) btn.innerHTML = "Confirm: <span style='color:#ef6c00'>Texas Two Step (1.5x)</span>";
+            else btn.innerHTML = "Confirm Hole Cards";
         }
     } else if (!swapLockedThisRound && (phaseIndex === 3 || phaseIndex === 4)) {
         const remaining = 2 - swapsDoneThisHand;
