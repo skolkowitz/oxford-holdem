@@ -182,6 +182,7 @@ async function initGame() {
     renderDistGrid();
     await initDictionary();
     checkDailyStatus();
+    document.addEventListener('keydown', handleGlobalKeydown);
 }
 
 function showRules() { document.getElementById('rules-modal').style.display = 'flex'; }
@@ -244,6 +245,48 @@ function handleStartClick(mode) {
         LeaderboardManager.checkName(); 
     } else {
         startGame('free');
+    }
+}
+
+function handleGlobalKeydown(e) {
+    if (e.target.tagName === 'INPUT') return;
+    
+    // Backspace support for Word Phase when not focused
+    if (phaseIndex === 5 && e.key === 'Backspace') {
+        const input = document.getElementById('word-input');
+        input.value = input.value.slice(0, -1);
+        handleTyping();
+        return;
+    }
+
+    const key = e.key.toUpperCase();
+    if (!/^[A-Z*?]$/.test(key)) return;
+    const searchKey = key === '?' ? '*' : key;
+
+    let pool = null;
+    if (phaseIndex === 1) pool = draftPool;
+    else if ((phaseIndex === 3 || phaseIndex === 4) && !swapLockedThisRound) pool = hand;
+    
+    if (pool) {
+        const matches = pool.map((l, i) => l === searchKey ? i : -1).filter(i => i !== -1);
+        if (matches.length === 0) return;
+
+        // Try to select an unselected one first
+        const unselected = matches.find(i => !selectedIndices.includes(i));
+        if (unselected !== undefined) {
+            toggleSelect(unselected);
+        } else {
+            // Otherwise deselect one
+            const selected = matches.find(i => selectedIndices.includes(i));
+            if (selected !== undefined) toggleSelect(selected);
+        }
+    } else if (phaseIndex === 5) {
+        // Auto-focus and type if in word phase
+        const input = document.getElementById('word-input');
+        input.value += searchKey;
+        handleTyping();
+        input.focus();
+        e.preventDefault();
     }
 }
 
@@ -353,8 +396,18 @@ function executeSwap() {
     render(false, false); 
 }
 
-function toggleSelect(i) {
+function toggleSelect(i, isBoard = false) {
     SoundManager.play('chip');
+    
+    if (phaseIndex === 5) {
+        const char = isBoard ? board[i] : hand[i];
+        const input = document.getElementById('word-input');
+        input.value += char;
+        handleTyping();
+        return;
+    }
+    if (isBoard) return;
+
     if (phaseIndex === 1) {
         if (selectedIndices.includes(i)) selectedIndices = selectedIndices.filter(x => x !== i);
         else if (selectedIndices.length < 3) selectedIndices.push(i);
@@ -377,7 +430,7 @@ function createCardElement(letter, index, isBoard, shouldAnimate) {
     const score = SCORES[letter];
     const color = (letter === '*') ? '#e040fb' : (['J','Q','K','A'].includes(letter) ? '#000' : getScoreColor(letter));
     card.innerHTML = `<div class="corner top-left" style="color: ${color}">${score}</div><div class="animal-icon">${ICONS[letter] || '❓'}</div><div class="main-letter">${letter === '*' ? '?' : letter}</div><div class="corner bottom-right" style="color: ${color}">${score}</div>`;
-    if (!isBoard) card.onclick = () => toggleSelect(index);
+    if (!isBoard || phaseIndex === 5) card.onclick = () => toggleSelect(index, isBoard);
     return card;
 }
 
