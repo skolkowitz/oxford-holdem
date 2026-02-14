@@ -185,12 +185,14 @@
             .stats-group { width: 100%; justify-content: center; flex-wrap: wrap; gap: 8px; }
             .header-row > div:last-child { width: 100%; justify-content: center; }
             
+            .game-area { padding: 2px 0; margin-bottom: 5px; border-radius: 12px; }
+
             .card-row { 
                 flex-wrap: nowrap; overflow-x: auto; justify-content: center;
-                gap: 5px; width: 100%; 
-                padding-top: 35px; padding-bottom: 10px; /* Space for lift/shadow */
+                gap: 5px; width: 100%;
+                padding-top: 22px; padding-bottom: 20px; /* Space for lift/shadow and bonuses */
                 padding-left: 2px; padding-right: 2px;
-                min-height: 120px;
+                min-height: auto;
             }
             .card, .card-slot { 
                 width: 17vw; height: 25vw; 
@@ -203,6 +205,14 @@
             .card .top-left { top: 3px; left: 3px; }
             .card .bottom-right { bottom: 3px; right: 3px; }
             
+            /* Compact bonuses on mobile */
+            .card.river-bonus::before, .card.hole-bonus-3x::before, .card.hole-bonus-15x::before {
+                bottom: -18px; font-size: 0.5rem; padding: 1px 4px;
+            }
+            /* Reduce lift on mobile */
+            .card.bumped { transform: translateY(-15px) scale(1.05) !important; }
+            .card.selected { transform: translateY(-10px); }
+
             #status-msg { font-size: 0.9rem; margin-bottom: 5px; }
             .score-pill { padding: 3px 8px; font-size: 0.75rem; }
             .stats-group { gap: 5px; }
@@ -221,9 +231,11 @@
             }
             
             body.keyboard-active .card-row {
-                margin-bottom: 5px; padding-top: 35px; padding-bottom: 5px;
+                margin-bottom: 0; padding-top: 22px; padding-bottom: 20px;
             }
             
+            body.keyboard-active .game-area { margin-bottom: 2px; }
+
             body.keyboard-active h3 { display: none; }
         }
     </style>
@@ -368,31 +380,24 @@
             
             <ul style="font-size: 0.9rem; padding-left: 20px; color: #555;">
                 <li id="rule-draft"><strong>Draft:</strong> Pick 1, 2, or 3 hole cards. Fewer cards = higher multipliers!</li>
-                <li><strong>The Flop:</strong> 3 board cards are dealt. Discard up to 2 cards to draw new ones.</li>
-                <li><strong>The turn:</strong> A 4th board card is dealt. Discard up to 2 cards to draw new ones.</li>
+                <li><strong>The Flop:</strong> 3 community cards are dealt.</li>
+                <li><strong>Swap:</strong> Discard up to 2 cards to draw new ones.</li>
                 <li><strong>The River:</strong> The final card. <strong style="color: var(--bonus-purple)">2x SCORE</strong> for the letter in this slot!</li>
             </ul>
 
             <h3 style="font-size: 1rem; border-bottom: 2px solid #ddd; margin-top: 20px;">Scoring</h3>
-            <p style="font-size: 0.9rem; color: #555; margin-top: 10px;">
-                Each letter has a point value shown on the card. <strong>Tap the Deck</strong> to see all values.
-            </p>
-            <p style="font-size: 0.9rem; color: #555;">
-                <strong>Total Score</strong> = (Sum of letter points with bonuses) × Length Multiplier.
-            </p>
-
-            <div id="rule-hole-bonuses">
-                <h3 style="font-size: 1rem; border-bottom: 2px solid #ddd; margin-top: 20px;">Hole Card Bonuses</h3>
-                <div style="font-size: 0.85rem; margin-top: 5px;">
-                    <div style="margin-bottom: 4px;"><strong>3 Cards:</strong> Standard Play (No bonus)</div>
-                    <div style="margin-bottom: 4px; color: #ff9800;"><strong>2 Cards:</strong> Texas Two Step (1.5x on hole cards)</div>
-                    <div style="color: #ff5252;"><strong>1 Card:</strong> Feelin' Lucky (3x on hole card)</div>
-                </div>
-            </div>
+            <table class="rules-table">
+                <tr><th>Letters</th><th>Points</th></tr>
+                <tr><td>E, T, A, O, I, N</td><td>1 pt</td></tr>
+                <tr><td>R, S, H</td><td>3 pts</td></tr>
+                <tr><td>D, L, C, U, M, W</td><td>4 - 5 pts</td></tr>
+                <tr><td>F, G, Y, P, B, V</td><td>6 - 7 pts</td></tr>
+                <tr><td>J, K, Q, X, Z</td><td>8 - 9 pts</td></tr>
+            </table>
 
             <h3 style="font-size: 1rem; border-bottom: 2px solid #ddd; margin-top: 20px;">Length Multipliers</h3>
             <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold; margin-top: 5px;">
-                <span>5 or 6 Letters long: <span style="color:#2e7d32">1.5x</span></span>
+                <span>5 or 6 Letters: <span style="color:#2e7d32">1.5x</span></span>
                 <span>7 Letters: <span style="color:#1565c0">2.0x</span></span>
                 <span>8 Letters: <span style="color:#d32f2f">3.0x</span></span>
             </div>
