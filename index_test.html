@@ -164,8 +164,13 @@
             #distribution-sidebar h4, .dist-grid, #discard-list { display: none; } 
             .pile-container { flex-direction: row; border-top: none; padding-top: 0; margin-top: 0; width: 100%; justify-content: space-around; }
             #game-table { padding: 15px; border-width: 6px; }
-            .card { width: 65px; height: 95px; border-radius: 6px; }
-            .card-slot { width: 65px; height: 95px; }
+            .card-row { 
+                flex-wrap: nowrap; overflow-x: auto; justify-content: center; 
+                gap: 6px; width: 100%; padding-bottom: 5px;
+            }
+            .card, .card-slot { 
+                width: 18vw; height: 26vw; max-width: 65px; max-height: 95px; flex: 0 0 auto; border-radius: 6px; 
+            }
             .card .main-letter { font-size: 1.6rem; }
             .card .animal-icon { font-size: 1.4rem; }
             .card .corner { font-size: 0.7rem; }
@@ -179,13 +184,12 @@
 
     <div id="main-container">
         <div id="distribution-sidebar">
-            <h4 style="margin-bottom: 10px;">Deck Stats</h4>
-            <div id="dist-grid" class="dist-grid"></div>
             
             <div class="pile-container">
-                <div>
+                <div onclick="showDeckStats()" style="cursor:pointer; display:flex; flex-direction:column; align-items:center;">
                     <div style="font-size:0.6rem; color:#aaa; margin-bottom:3px; text-align:center;">DECK</div>
                     <div class="mini-card deck-back" id="deck-count-display">100</div>
+                    <div style="font-size:0.6rem; color:var(--gold); margin-top:5px; text-align:center; line-height:1.1; opacity:0.8; max-width:80px;">Tap to see<br>remaining</div>
                 </div>
                 <div>
                     <div style="font-size:0.6rem; color:#aaa; margin-bottom:3px; text-align:center;">DISCARDS</div>
@@ -284,6 +288,14 @@
                 <p>Loading...</p>
             </div>
             <button class="action-btn" onclick="closeLeaderboard()" style="width:100%; margin-top: 20px; background: var(--wood); color: white;">Close</button>
+        </div>
+    </div>
+
+    <div id="deck-stats-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) this.style.display='none'">
+        <div class="modal-box" style="text-align: center;">
+            <h2 style="color: var(--gold); margin-top: 0;">Deck Stats</h2>
+            <div id="deck-stats-content" style="max-height: 50vh; overflow-y: auto;"></div>
+            <button class="action-btn" onclick="document.getElementById('deck-stats-modal').style.display='none'" style="width:100%; margin-top: 20px; background: var(--wood); color: white;">Close</button>
         </div>
     </div>
 

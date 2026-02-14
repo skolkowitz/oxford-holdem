@@ -179,7 +179,6 @@ let handAnims = [], boardAnims = [];
 async function initGame() {
     loadStats();
     LeaderboardManager.init();
-    renderDistGrid();
     await initDictionary();
     checkDailyStatus();
     
@@ -205,13 +204,31 @@ function confirmReset() {
     }
 }
 
-function renderDistGrid() {
-    const grid = document.getElementById('dist-grid');
-    Object.keys(FREQUENCIES).forEach(l => {
-        const item = document.createElement('div'); item.className = 'dist-item';
-        item.innerHTML = `<span>${l === '*' ? '?' : l}</span> <span>${FREQUENCIES[l]}</span>`;
-        grid.appendChild(item);
+function showDeckStats() {
+    const modal = document.getElementById('deck-stats-modal');
+    const content = document.getElementById('deck-stats-content');
+    if (!modal || !content) return;
+
+    const remainingCounts = {};
+    Object.keys(FREQUENCIES).forEach(k => remainingCounts[k] = 0);
+    deck.forEach(card => {
+        if (remainingCounts[card] !== undefined) remainingCounts[card]++;
     });
+
+    let html = '<table class="rules-table" style="text-align:center; margin-top:0;">';
+    html += '<tr><th>Card</th><th>Orig</th><th>Left</th></tr>';
+    
+    Object.keys(FREQUENCIES).forEach(k => {
+        const orig = FREQUENCIES[k];
+        const left = remainingCounts[k];
+        const icon = ICONS[k] || k;
+        const style = left === 0 ? 'opacity: 0.3' : '';
+        html += `<tr style="${style}"><td>${k==='*'?'?':k} ${icon}</td><td>${orig}</td><td style="font-weight:bold; color:${left>0?'var(--mode-daily)':'#555'}">${left}</td></tr>`;
+    });
+    html += '</table>';
+    
+    content.innerHTML = html;
+    modal.style.display = 'flex';
 }
 
 async function initDictionary() {
