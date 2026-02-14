@@ -159,6 +159,10 @@
         .card.face-card { background: #fff8e1; border: 2px solid #ffb300; }
         .card.river-bonus { border: 4px solid var(--bonus-purple); box-shadow: 0 0 15px var(--bonus-purple); }
         .card.river-bonus::before { content: "RIVER (2x)"; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); color: white; background: var(--bonus-purple); padding: 3px 8px; border-radius: 12px; font-size: 0.6rem; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.5); pointer-events: none; }
+        .card.hole-bonus-3x { border: 4px solid #ff5252; box-shadow: 0 0 15px #ff5252; }
+        .card.hole-bonus-3x::before { content: "3x"; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); color: white; background: #ff5252; padding: 3px 8px; border-radius: 12px; font-size: 0.6rem; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.5); pointer-events: none; }
+        .card.hole-bonus-15x { border: 4px solid #ff9800; box-shadow: 0 0 15px #ff9800; }
+        .card.hole-bonus-15x::before { content: "1.5x"; position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); color: white; background: #ff9800; padding: 3px 8px; border-radius: 12px; font-size: 0.6rem; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.5); pointer-events: none; }
         .card .corner { position: absolute; font-size: 0.9rem; font-weight: 900; }
         .card .top-left { top: 6px; left: 6px; }
         .card .bottom-right { bottom: 6px; right: 6px; } 
@@ -363,25 +367,32 @@
             <p style="font-size: 0.9rem; line-height: 1.5; color: #555;">Build the best word using your <strong>Hole Cards</strong> and the <strong>Board</strong>.</p>
             
             <ul style="font-size: 0.9rem; padding-left: 20px; color: #555;">
-                <li><strong>Draft:</strong> Pick the best 3 hole cards from 5 options.</li>
-                <li><strong>The Flop:</strong> 3 community cards are dealt.</li>
-                <li><strong>Swap:</strong> Discard up to 2 cards to draw new ones.</li>
+                <li id="rule-draft"><strong>Draft:</strong> Pick 1, 2, or 3 hole cards. Fewer cards = higher multipliers!</li>
+                <li><strong>The Flop:</strong> 3 board cards are dealt. Discard up to 2 cards to draw new ones.</li>
+                <li><strong>The turn:</strong> A 4th board card is dealt. Discard up to 2 cards to draw new ones.</li>
                 <li><strong>The River:</strong> The final card. <strong style="color: var(--bonus-purple)">2x SCORE</strong> for the letter in this slot!</li>
             </ul>
 
             <h3 style="font-size: 1rem; border-bottom: 2px solid #ddd; margin-top: 20px;">Scoring</h3>
-            <table class="rules-table">
-                <tr><th>Letters</th><th>Points</th></tr>
-                <tr><td>E, T, A, O, I, N</td><td>1 pt</td></tr>
-                <tr><td>R, S, H</td><td>3 pts</td></tr>
-                <tr><td>D, L, C, U, M, W</td><td>4 - 5 pts</td></tr>
-                <tr><td>F, G, Y, P, B, V</td><td>6 - 7 pts</td></tr>
-                <tr><td>J, K, Q, X, Z</td><td>8 - 9 pts</td></tr>
-            </table>
+            <p style="font-size: 0.9rem; color: #555; margin-top: 10px;">
+                Each letter has a point value shown on the card. <strong>Tap the Deck</strong> to see all values.
+            </p>
+            <p style="font-size: 0.9rem; color: #555;">
+                <strong>Total Score</strong> = (Sum of letter points with bonuses) × Length Multiplier.
+            </p>
+
+            <div id="rule-hole-bonuses">
+                <h3 style="font-size: 1rem; border-bottom: 2px solid #ddd; margin-top: 20px;">Hole Card Bonuses</h3>
+                <div style="font-size: 0.85rem; margin-top: 5px;">
+                    <div style="margin-bottom: 4px;"><strong>3 Cards:</strong> Standard Play (No bonus)</div>
+                    <div style="margin-bottom: 4px; color: #ff9800;"><strong>2 Cards:</strong> Texas Two Step (1.5x on hole cards)</div>
+                    <div style="color: #ff5252;"><strong>1 Card:</strong> Feelin' Lucky (3x on hole card)</div>
+                </div>
+            </div>
 
             <h3 style="font-size: 1rem; border-bottom: 2px solid #ddd; margin-top: 20px;">Length Multipliers</h3>
             <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold; margin-top: 5px;">
-                <span>5 or 6 Letters: <span style="color:#2e7d32">1.5x</span></span>
+                <span>5 or 6 Letters long: <span style="color:#2e7d32">1.5x</span></span>
                 <span>7 Letters: <span style="color:#1565c0">2.0x</span></span>
                 <span>8 Letters: <span style="color:#d32f2f">3.0x</span></span>
             </div>

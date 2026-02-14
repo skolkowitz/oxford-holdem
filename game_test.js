@@ -176,7 +176,7 @@ let deck = [], hand = [], board = [], discards = [], draftPool = [], selectedInd
 let phaseIndex = 0, swapsDoneThisHand = 0, swapLockedThisRound = false;
 let handAnims = [], boardAnims = [];
 let currentDeckSort = { field: 'left', dir: 'desc' };
-const ENABLE_VARIABLE_HOLE_CARDS = true;
+const ENABLE_VARIABLE_HOLE_CARDS = false;
 
 async function initGame() {
     loadStats();

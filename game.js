@@ -176,6 +176,7 @@ let deck = [], hand = [], board = [], discards = [], draftPool = [], selectedInd
 let phaseIndex = 0, swapsDoneThisHand = 0, swapLockedThisRound = false;
 let handAnims = [], boardAnims = [];
 let currentDeckSort = { field: 'left', dir: 'desc' };
+const ENABLE_VARIABLE_HOLE_CARDS = true;
 
 async function initGame() {
     loadStats();
@@ -194,9 +195,23 @@ async function initGame() {
     input.addEventListener('blur', () => document.body.classList.remove('keyboard-active'));
     
     document.addEventListener('keydown', handleGlobalKeydown);
+    updateRulesUI();
 }
 
 function showRules() { document.getElementById('rules-modal').style.display = 'flex'; }
+
+function updateRulesUI() {
+    const draftRule = document.getElementById('rule-draft');
+    const holeBonuses = document.getElementById('rule-hole-bonuses');
+    
+    if (ENABLE_VARIABLE_HOLE_CARDS) {
+        if (draftRule) draftRule.innerHTML = '<strong>Draft:</strong> Pick 1, 2, or 3 hole cards. Fewer cards = higher multipliers!';
+        if (holeBonuses) holeBonuses.style.display = 'block';
+    } else {
+        if (draftRule) draftRule.innerHTML = '<strong>Draft:</strong> Pick the best 3 hole cards from 5 options.';
+        if (holeBonuses) holeBonuses.style.display = 'none';
+    }
+}
 
 function loadStats() {
     document.getElementById('daily-total').innerText = localStorage.getItem('oxford_total') || 0;
@@ -446,16 +461,31 @@ function nextPhase() {
         } while (!draftPool.some(card => vowels.includes(card) || card === '*'));
         
         handAnims = [0,1,2,3,4];
-        status.innerText = "Draft Phase: Keep 3 Hole Cards";
-        btn.innerText = "Confirm Hole Cards";
+        if (ENABLE_VARIABLE_HOLE_CARDS) {
+            status.innerText = "Draft: Keep up to 3 hole cards. Fewer cards = bigger bonuses, but fewer and shorter possible words!";
+            btn.innerText = "Select at least one hole card to keep";
+        } else {
+            status.innerText = "Draft Phase: Keep 3 Hole Cards";
+            btn.innerText = "Confirm Hole Cards";
+        }
         phaseIndex++;
         render(false, true);
     } else if (phaseIndex === 1) {
-        if (selectedIndices.length !== 3) return alert("Select 3 cards to keep.");
+        if (ENABLE_VARIABLE_HOLE_CARDS) {
+            if (selectedIndices.length < 1 || selectedIndices.length > 3) return alert("Select 1, 2, or 3 hole cards to keep.");
+        } else {
+            if (selectedIndices.length !== 3) return alert("Select 3 hole cards to keep.");
+        }
+        
         draftPool.forEach((c, i) => { if(!selectedIndices.includes(i)) discards.push(c); });
         hand = selectedIndices.map(i => draftPool[i]);
         selectedIndices = [];
         handAnims = [0,1,2];
+        
+        if (hand.length < 3) {
+            handAnims = Array.from({length: hand.length}, (_, i) => i);
+        }
+        
         status.innerText = "Dealing Flop...";
         phaseIndex++;
         render(false, true); 
@@ -552,6 +582,15 @@ function toggleSelect(i, isBoard = false) {
     if (phaseIndex === 1) {
         if (selectedIndices.includes(i)) selectedIndices = selectedIndices.filter(x => x !== i);
         else if (selectedIndices.length < 3) selectedIndices.push(i);
+        
+        if (ENABLE_VARIABLE_HOLE_CARDS) {
+            const btn = document.getElementById('main-btn');
+            const count = selectedIndices.length;
+            if (count === 0) btn.innerText = "Select at least one hole card to keep";
+            else if (count === 1) btn.innerText = "Confirm: Feelin' Lucky (3x)";
+            else if (count === 2) btn.innerText = "Confirm: Texas Two Step (1.5x)";
+            else btn.innerText = "Confirm Hole Cards";
+        }
     } else if (!swapLockedThisRound && (phaseIndex === 3 || phaseIndex === 4)) {
         const remaining = 2 - swapsDoneThisHand;
         if (selectedIndices.includes(i)) selectedIndices = selectedIndices.filter(x => x !== i);
@@ -564,9 +603,16 @@ function createCardElement(letter, index, isBoard, shouldAnimate) {
     const isSelected = !isBoard && selectedIndices.includes(index);
     const isRiver = isBoard && index === 4;
     const isFace = ['J','Q','K','A'].includes(letter); 
+    
+    let bonusClass = '';
+    if (ENABLE_VARIABLE_HOLE_CARDS && !isBoard && phaseIndex > 1) {
+        if (hand.length === 1) bonusClass = 'hole-bonus-3x';
+        else if (hand.length === 2) bonusClass = 'hole-bonus-15x';
+    }
+
     const card = document.createElement('div');
     card.id = `card-${isBoard?'board':'hand'}-${index}`;
-    card.className = `card ${isBoard ? 'communal' : ''} ${isSelected ? 'selected' : ''} ${shouldAnimate ? 'animate-deal' : ''} ${isRiver ? 'river-bonus' : ''} ${isFace ? 'face-card' : ''}`;
+    card.className = `card ${isBoard ? 'communal' : ''} ${isSelected ? 'selected' : ''} ${shouldAnimate ? 'animate-deal' : ''} ${isRiver ? 'river-bonus' : ''} ${isFace ? 'face-card' : ''} ${bonusClass}`;
     card.setAttribute('data-letter', letter);
     const score = SCORES[letter];
     const color = (letter === '*') ? '#e040fb' : (['J','Q','K','A'].includes(letter) ? '#000' : getScoreColor(letter));
@@ -664,10 +710,61 @@ function scoreSpecificWord(word, letterPool) {
     return maxScore;
 }
 
+function getCardObjects() {
+    let cards = [];
+    // Hole cards
+    let holeMult = 1;
+    if (ENABLE_VARIABLE_HOLE_CARDS) {
+        if (hand.length === 1) holeMult = 3;
+        else if (hand.length === 2) holeMult = 1.5;
+    }
+    hand.forEach(c => cards.push({ char: c, mult: holeMult }));
+    
+    // Board cards
+    board.forEach((c, i) => {
+        let mult = 1;
+        if (i === 4) mult = 2; // River
+        cards.push({ char: c, mult: mult });
+    });
+    return cards;
+}
+
+function calculateOptimalScore(word, cardObjects) {
+    let pool = cardObjects.map(c => ({...c}));
+    let baseScore = 0;
+    
+    for (let char of word) {
+        let matches = pool.filter(c => c.char === char);
+        if (matches.length > 0) {
+            matches.sort((a, b) => b.mult - a.mult);
+            let best = matches[0];
+            baseScore += SCORES[char] * best.mult;
+            let idx = pool.indexOf(best);
+            pool.splice(idx, 1);
+        } else {
+            let wildcards = pool.filter(c => c.char === '*');
+            if (wildcards.length > 0) {
+                let idx = pool.indexOf(wildcards[0]);
+                pool.splice(idx, 1);
+            } else {
+                return 0;
+            }
+        }
+    }
+    
+    let mult = word.length >= 8 ? 3 : word.length >= 7 ? 2 : word.length >= 5 ? 1.5 : 1;
+    return Math.floor(baseScore * mult);
+}
+
 function findBestPossibleScore() {
-    let pool = [...hand, ...board]; let maxScore = 0; let bestWord = "NONE";
+    let cardObjs = getCardObjects();
+    let simplePool = [...hand, ...board];
+    let maxScore = 0; let bestWord = "NONE";
     for (let word of dictionary) {
-        if (canFormWord(word, pool)) { let s = scoreSpecificWord(word, pool); if (s > maxScore) { maxScore = s; bestWord = word; } }
+        if (canFormWord(word, simplePool)) { 
+            let s = calculateOptimalScore(word, cardObjs); 
+            if (s > maxScore) { maxScore = s; bestWord = word; } 
+        }
     }
     return { word: bestWord, score: maxScore };
 }
@@ -687,7 +784,7 @@ async function calculateFinalScore() {
         const pool = [...hand, ...board];
         if (!canFormWord(word, pool)) { markInvalid("Missing letters!"); return; }
         if (!dictionary.includes(word)) { markInvalid("Not in dictionary!"); return; }
-        userScore = scoreSpecificWord(word, pool);
+        userScore = calculateScoreWithMultipliers(word);
         SoundManager.play('success');
     }
     
@@ -836,9 +933,13 @@ function handleTyping() {
     });
     
     allCards.sort((a, b) => {
-        const aRiver = a.classList.contains('river-bonus') ? 1 : 0;
-        const bRiver = b.classList.contains('river-bonus') ? 1 : 0;
-        return bRiver - aRiver;
+        const getMult = (c) => {
+            if (c.classList.contains('hole-bonus-3x')) return 3;
+            if (c.classList.contains('river-bonus')) return 2;
+            if (c.classList.contains('hole-bonus-15x')) return 1.5;
+            return 1;
+        };
+        return getMult(b) - getMult(a);
     });
 
     let usedCards = new Set();
@@ -869,6 +970,36 @@ function handleTyping() {
         }
     });
     updateScorePreview(input.value.toUpperCase());
+}
+
+function calculateScoreWithMultipliers(word) {
+    let baseScore = 0;
+    const allCards = Array.from(document.querySelectorAll('.card.bumped'));
+    
+    for (let i = 0; i < word.length; i++) {
+        const card = allCards.find(c => c.dataset.inputIndex == i);
+        if (card) {
+            const cardLetter = card.getAttribute('data-letter');
+            let val = (cardLetter === '*') ? 0 : SCORES[cardLetter];
+            
+            const isRiver = card.classList.contains('river-bonus');
+            const isHole3x = card.classList.contains('hole-bonus-3x');
+            const isHole15x = card.classList.contains('hole-bonus-15x');
+            
+            if (isRiver) {
+                val *= 2;
+            } else if (isHole3x) {
+                val *= 3;
+            } else if (isHole15x) {
+                val *= 1.5;
+            }
+            
+            baseScore += val;
+        }
+    }
+    
+    let mult = word.length >= 8 ? 3 : word.length >= 7 ? 2 : word.length >= 5 ? 1.5 : 1;
+    return Math.floor(baseScore * mult);
 }
 
 function updateScorePreview(word) {
@@ -910,10 +1041,18 @@ function updateScorePreview(word) {
             let val = (cardLetter === '*') ? 0 : SCORES[cardLetter];
             
             const isRiver = card.classList.contains('river-bonus');
+            const isHole3x = card.classList.contains('hole-bonus-3x');
+            const isHole15x = card.classList.contains('hole-bonus-15x');
             
             if (isRiver) {
                 val *= 2;
                 breakdown.push(`<span style="color:var(--bonus-purple)">${displayLetter}(${val/2}x2)</span>`);
+            } else if (isHole3x) {
+                val *= 3;
+                breakdown.push(`<span style="color:#ff5252">${displayLetter}(${val/3}x3)</span>`);
+            } else if (isHole15x) {
+                val *= 1.5;
+                breakdown.push(`<span style="color:#ff9800">${displayLetter}(${val/1.5}x1.5)</span>`);
             } else {
                 breakdown.push(`${displayLetter}(${val})`);
             }
