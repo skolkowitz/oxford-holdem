@@ -447,8 +447,12 @@ function nextPhase() {
         } while (!draftPool.some(card => vowels.includes(card) || card === '*'));
         
         handAnims = [0,1,2,3,4];
-        status.innerText = "Draft Phase: Keep up to 3 hole cards. Fewer cards = bigger bonuses, but shorter words!";
-        btn.innerText = "Confirm Hand";
+        status.innerText = "Draft: Keep up to 3 cards. Fewer cards = bigger bonuses, but shorter words!";
+        if (ENABLE_VARIABLE_HOLE_CARDS) {
+            btn.innerText = "Select at least one card to keep";
+        } else {
+            btn.innerText = "Confirm Hand";
+        }
         phaseIndex++;
         render(false, true);
     } else if (phaseIndex === 1) {
@@ -567,7 +571,8 @@ function toggleSelect(i, isBoard = false) {
         if (ENABLE_VARIABLE_HOLE_CARDS) {
             const btn = document.getElementById('main-btn');
             const count = selectedIndices.length;
-            if (count === 1) btn.innerText = "Confirm: Feelin' Lucky (3x)";
+            if (count === 0) btn.innerText = "Select at least one card to keep";
+            else if (count === 1) btn.innerText = "Confirm: Feelin' Lucky (3x)";
             else if (count === 2) btn.innerText = "Confirm: Texas Two Step (1.5x)";
             else btn.innerText = "Confirm Hand";
         }
