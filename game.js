@@ -692,6 +692,9 @@ function softReset() {
     document.getElementById('word-input').style.display = "none";
     document.getElementById('swap-btn').style.display = "none";
     
+    const preview = document.getElementById('score-preview');
+    if (preview) preview.innerHTML = "";
+    
     deck = []; hand = []; board = []; discards = []; draftPool = []; selectedIndices = [];
     phaseIndex = 0; swapsDoneThisHand = 0; swapLockedThisRound = false;
     
@@ -829,4 +832,60 @@ function handleTyping() {
             }
         }
     });
+    updateScorePreview(input.value.toUpperCase());
+}
+
+function updateScorePreview(word) {
+    let previewEl = document.getElementById('score-preview');
+    if (!previewEl) {
+        previewEl = document.createElement('div');
+        previewEl.id = 'score-preview';
+        previewEl.style.marginTop = '5px';
+        previewEl.style.fontSize = '0.8rem';
+        previewEl.style.color = 'rgba(255,255,255,0.7)';
+        previewEl.style.minHeight = '1.2em';
+        previewEl.style.fontFamily = 'monospace';
+        const input = document.getElementById('word-input');
+        input.insertAdjacentElement('afterend', previewEl);
+    }
+    
+    if (!word || word.length === 0) {
+        previewEl.innerHTML = "";
+        return;
+    }
+
+    let breakdown = [];
+    let baseScore = 0;
+    const allCards = Array.from(document.querySelectorAll('.card.bumped'));
+    
+    for (let i = 0; i < word.length; i++) {
+        const card = allCards.find(c => c.dataset.inputIndex == i);
+        if (card) {
+            const cardLetter = card.getAttribute('data-letter');
+            const displayLetter = word[i];
+            let val = (cardLetter === '*') ? 0 : SCORES[cardLetter];
+            
+            const isRiver = card.classList.contains('river-bonus');
+            
+            if (isRiver) {
+                val *= 2;
+                breakdown.push(`<span style="color:var(--bonus-purple)">${displayLetter}(${val/2}x2)</span>`);
+            } else {
+                breakdown.push(`${displayLetter}(${val})`);
+            }
+            baseScore += val;
+        }
+    }
+    
+    let mult = word.length >= 8 ? 3 : word.length >= 7 ? 2 : word.length >= 5 ? 1.5 : 1;
+    let total = Math.floor(baseScore * mult);
+    
+    let html = breakdown.join('+');
+    if (mult > 1) {
+        let color = mult >= 3 ? '#d32f2f' : mult >= 2 ? '#1565c0' : '#2e7d32';
+        html = `(${html}) <span style="color:${color}; font-weight:bold;">x${mult}</span>`;
+    }
+    html += ` = <span style="color:white; font-weight:bold;">${total}</span>`;
+    
+    previewEl.innerHTML = html;
 }
