@@ -690,10 +690,61 @@ function scoreSpecificWord(word, letterPool) {
     return maxScore;
 }
 
+function getCardObjects() {
+    let cards = [];
+    // Hole cards
+    let holeMult = 1;
+    if (ENABLE_VARIABLE_HOLE_CARDS) {
+        if (hand.length === 1) holeMult = 3;
+        else if (hand.length === 2) holeMult = 1.5;
+    }
+    hand.forEach(c => cards.push({ char: c, mult: holeMult }));
+    
+    // Board cards
+    board.forEach((c, i) => {
+        let mult = 1;
+        if (i === 4) mult = 2; // River
+        cards.push({ char: c, mult: mult });
+    });
+    return cards;
+}
+
+function calculateOptimalScore(word, cardObjects) {
+    let pool = cardObjects.map(c => ({...c}));
+    let baseScore = 0;
+    
+    for (let char of word) {
+        let matches = pool.filter(c => c.char === char);
+        if (matches.length > 0) {
+            matches.sort((a, b) => b.mult - a.mult);
+            let best = matches[0];
+            baseScore += SCORES[char] * best.mult;
+            let idx = pool.indexOf(best);
+            pool.splice(idx, 1);
+        } else {
+            let wildcards = pool.filter(c => c.char === '*');
+            if (wildcards.length > 0) {
+                let idx = pool.indexOf(wildcards[0]);
+                pool.splice(idx, 1);
+            } else {
+                return 0;
+            }
+        }
+    }
+    
+    let mult = word.length >= 8 ? 3 : word.length >= 7 ? 2 : word.length >= 5 ? 1.5 : 1;
+    return Math.floor(baseScore * mult);
+}
+
 function findBestPossibleScore() {
-    let pool = [...hand, ...board]; let maxScore = 0; let bestWord = "NONE";
+    let cardObjs = getCardObjects();
+    let simplePool = [...hand, ...board];
+    let maxScore = 0; let bestWord = "NONE";
     for (let word of dictionary) {
-        if (canFormWord(word, pool)) { let s = scoreSpecificWord(word, pool); if (s > maxScore) { maxScore = s; bestWord = word; } }
+        if (canFormWord(word, simplePool)) { 
+            let s = calculateOptimalScore(word, cardObjs); 
+            if (s > maxScore) { maxScore = s; bestWord = word; } 
+        }
     }
     return { word: bestWord, score: maxScore };
 }
