@@ -641,7 +641,20 @@ function createCardElement(letter, index, isBoard, shouldAnimate) {
     card.setAttribute('data-letter', letter);
     const score = SCORES[letter];
     const color = (letter === '*') ? '#e040fb' : (['J','Q','K','A'].includes(letter) ? '#000' : getScoreColor(letter));
-    card.innerHTML = `<div class="corner top-left" style="color: ${color}">${score}</div><div class="animal-icon">${ICONS[letter] || '❓'}</div><div class="main-letter">${letter === '*' ? '?' : letter}</div><div class="corner bottom-right" style="color: ${color}">${score}</div>`;
+    const displayLetter = letter === '*' ? '?' : letter;
+    const icon = ICONS[letter] || '❓';
+
+    card.innerHTML = `
+        <div class="corner-letter top-left" style="color: ${color}">${displayLetter}</div>
+        <div class="corner-score top-right" style="color: ${color}">${score}</div>
+        <div class="main-content">
+            <div class="animal-icon">${icon}</div>
+            <div class="main-letter">${displayLetter}</div>
+            <div class="animal-icon" style="transform: rotate(180deg);">${icon}</div>
+        </div>
+        <div class="corner-score bottom-left" style="color: ${color}">${score}</div>
+        <div class="corner-letter bottom-right" style="color: ${color}">${displayLetter}</div>
+    `;
     if (!isBoard || phaseIndex === 5) card.onclick = () => toggleSelect(index, isBoard);
     return card;
 }
