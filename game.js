@@ -186,6 +186,7 @@ async function initGame() {
     const input = document.getElementById('word-input');
     input.onkeydown = null;
     input.oninput = null;
+    input.addEventListener('input', handleTyping);
     
     // Add focus listeners for mobile layout adjustment
     input.addEventListener('focus', () => document.body.classList.add('keyboard-active'));
@@ -891,7 +892,8 @@ function updateScorePreview(word) {
     let mult = word.length >= 8 ? 3 : word.length >= 7 ? 2 : word.length >= 5 ? 1.5 : 1;
     let total = Math.floor(baseScore * mult);
     
-    let html = breakdown.join('+');
+    let html = '<span style="color:#ccc; margin-right:8px;">Score Preview:</span>';
+    html += breakdown.join('+');
     if (mult > 1) {
         let color = mult >= 3 ? '#d32f2f' : mult >= 2 ? '#1565c0' : '#2e7d32';
         html = `(${html}) <span style="color:${color}; font-weight:bold;">x${mult}</span>`;
