@@ -191,6 +191,25 @@
             #status-msg { font-size: 0.9rem; margin-bottom: 5px; }
             .score-pill { padding: 3px 8px; font-size: 0.75rem; }
             .stats-group { gap: 5px; }
+
+            /* Keyboard Active State (Mobile) */
+            body.keyboard-active { padding: 0; }
+            body.keyboard-active #main-container { margin: 0; width: 100%; }
+            body.keyboard-active #distribution-sidebar,
+            body.keyboard-active .header-row,
+            body.keyboard-active #credits,
+            body.keyboard-active #status-msg { display: none !important; }
+            
+            body.keyboard-active #game-table {
+                border: none; border-radius: 0; width: 100%;
+                padding: 5px; margin: 0;
+            }
+            
+            body.keyboard-active .card-row {
+                margin-bottom: 5px; padding-top: 10px; padding-bottom: 5px;
+            }
+            
+            body.keyboard-active h3 { margin: 5px 0; }
         }
     </style>
 </head>

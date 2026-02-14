@@ -186,6 +186,11 @@ async function initGame() {
     const input = document.getElementById('word-input');
     input.onkeydown = null;
     input.oninput = null;
+    
+    // Add focus listeners for mobile layout adjustment
+    input.addEventListener('focus', () => document.body.classList.add('keyboard-active'));
+    input.addEventListener('blur', () => document.body.classList.remove('keyboard-active'));
+    
     document.addEventListener('keydown', handleGlobalKeydown);
 }
 
