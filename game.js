@@ -308,6 +308,17 @@ function handleGlobalKeydown(e) {
 
     // 3. Other Phases: Selection Logic
     if (e.target.tagName === 'INPUT') return;
+
+    if (key === 'DELETE' || key === 'BACKSPACE') {
+        if (selectedIndices.length > 0) {
+            selectedIndices.pop();
+            SoundManager.play('chip');
+            render(true, false);
+        }
+        e.preventDefault();
+        return;
+    }
+
     if (!/^[A-Z*?]$/.test(key)) return;
     const searchKey = key === '?' ? '*' : key;
 
