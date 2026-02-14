@@ -402,7 +402,15 @@ function toggleSelect(i, isBoard = false) {
     if (phaseIndex === 5) {
         const char = isBoard ? board[i] : hand[i];
         const input = document.getElementById('word-input');
-        input.value += char;
+        
+        if (char === '*') {
+            const letter = prompt("What letter is this wildcard?");
+            if (letter && /^[a-zA-Z]$/.test(letter.trim())) {
+                input.value += letter.trim().toUpperCase();
+            }
+        } else {
+            input.value += char;
+        }
         handleTyping();
         return;
     }
