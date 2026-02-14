@@ -644,11 +644,32 @@ function render(isInteraction = false, redrawBoard = true) {
             }
         }
     }
+
+    const mainBtn = document.getElementById('main-btn');
+    if (phaseIndex === 1) {
+        const valid = ENABLE_VARIABLE_HOLE_CARDS 
+            ? (selectedIndices.length >= 1 && selectedIndices.length <= 3)
+            : (selectedIndices.length === 3);
+        mainBtn.disabled = !valid;
+        mainBtn.style.opacity = valid ? "1" : "0.5";
+        mainBtn.style.cursor = valid ? "pointer" : "not-allowed";
+    } else if (phaseIndex === 5 && mainBtn.innerText === "Go Bust") {
+        mainBtn.disabled = false;
+        mainBtn.style.opacity = "1";
+        mainBtn.style.cursor = "pointer";
+    } else if (phaseIndex !== 5) {
+        mainBtn.disabled = false;
+        mainBtn.style.opacity = "1";
+        mainBtn.style.cursor = "pointer";
+    }
+
     const swapBtn = document.getElementById('swap-btn');
     if (swapBtn.style.display !== 'none') {
         const remaining = 2 - swapsDoneThisHand;
         swapBtn.innerText = `Confirm Swap (${remaining} left)`;
         swapBtn.disabled = swapLockedThisRound || selectedIndices.length === 0;
+        swapBtn.style.opacity = swapBtn.disabled ? "0.5" : "1";
+        swapBtn.style.cursor = swapBtn.disabled ? "not-allowed" : "pointer";
     }
     handleTyping();
 }
@@ -924,6 +945,14 @@ function markInvalid(msg) {
 function handleTyping() {
     const input = document.getElementById('word-input'); if(input.style.display === 'none') return;
     input.classList.remove('invalid'); const text = input.value.toUpperCase().split('');
+    
+    const mainBtn = document.getElementById('main-btn');
+    if (phaseIndex === 5 && mainBtn.innerText !== "Go Bust") {
+        const valid = input.value.trim().length >= 3;
+        mainBtn.disabled = !valid;
+        mainBtn.style.opacity = valid ? "1" : "0.5";
+        mainBtn.style.cursor = valid ? "pointer" : "not-allowed";
+    }
     
     // Get all cards and sort to prioritize River card (visually)
     const allCards = Array.from(document.querySelectorAll('.card'));
