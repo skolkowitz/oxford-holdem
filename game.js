@@ -293,6 +293,8 @@ function handleGlobalKeydown(e) {
     
     // 2. Phase 5: Word Entry (Typing & Validation)
     if (phaseIndex === 5) {
+        if (document.getElementById('main-btn').innerText === "Go Bust") return;
+
         const input = document.getElementById('word-input');
         
         if (key === 'BACKSPACE') {
@@ -445,11 +447,21 @@ function nextPhase() {
     } else if (phaseIndex === 4) {
         board.push(deck.pop());
         boardAnims = [4];
-        status.innerText = "The River: Make a Word!";
-        btn.innerText = "Submit Word";
+        
+        // Check for bust (no possible words)
+        const best = findBestPossibleScore();
+        if (best.score === 0) {
+            status.innerText = "The River: No possible words!";
+            btn.innerText = "Go Bust";
+            document.getElementById('word-input').style.display = "none";
+        } else {
+            status.innerText = "The River: Make a Word!";
+            btn.innerText = "Submit Word";
+            const inp = document.getElementById('word-input');
+            inp.style.display = "inline-block"; inp.focus();
+        }
+
         document.getElementById('swap-btn').style.display = "none";
-        const inp = document.getElementById('word-input');
-        inp.style.display = "inline-block"; inp.focus();
         phaseIndex++;
         render(false, true);
     } else if (phaseIndex === 5) { 
@@ -628,14 +640,23 @@ function findBestPossibleScore() {
 }
 
 async function calculateFinalScore() {
-    const wordInput = document.getElementById('word-input');
-    const word = wordInput.value.toUpperCase().trim();
-    if (word.length < 3) return;
-    const pool = [...hand, ...board];
-    if (!canFormWord(word, pool)) { markInvalid("Missing letters!"); return; }
-    if (!dictionary.includes(word)) { markInvalid("Not in dictionary!"); return; }
-    let userScore = scoreSpecificWord(word, pool);
-    SoundManager.play('success');
+    const btn = document.getElementById('main-btn');
+    let word = "";
+    let userScore = 0;
+
+    if (btn.innerText === "Go Bust") {
+        word = "BUST";
+        SoundManager.play('error');
+    } else {
+        const wordInput = document.getElementById('word-input');
+        word = wordInput.value.toUpperCase().trim();
+        if (word.length < 3) return;
+        const pool = [...hand, ...board];
+        if (!canFormWord(word, pool)) { markInvalid("Missing letters!"); return; }
+        if (!dictionary.includes(word)) { markInvalid("Not in dictionary!"); return; }
+        userScore = scoreSpecificWord(word, pool);
+        SoundManager.play('success');
+    }
     
     // STATS & DAILY LIMIT
     const today = new Date().toISOString().split('T')[0];
