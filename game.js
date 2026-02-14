@@ -693,7 +693,10 @@ function softReset() {
     document.getElementById('swap-btn').style.display = "none";
     
     const preview = document.getElementById('score-preview');
-    if (preview) preview.innerHTML = "";
+    if (preview) {
+        preview.innerHTML = "";
+        preview.style.display = "none";
+    }
     
     deck = []; hand = []; board = []; discards = []; draftPool = []; selectedIndices = [];
     phaseIndex = 0; swapsDoneThisHand = 0; swapLockedThisRound = false;
@@ -840,19 +843,27 @@ function updateScorePreview(word) {
     if (!previewEl) {
         previewEl = document.createElement('div');
         previewEl.id = 'score-preview';
+        // Styles for readability
         previewEl.style.marginTop = '5px';
-        previewEl.style.fontSize = '0.8rem';
-        previewEl.style.color = 'rgba(255,255,255,0.7)';
-        previewEl.style.minHeight = '1.2em';
+        previewEl.style.fontSize = '0.9rem';
+        previewEl.style.color = '#ffffff';
+        previewEl.style.backgroundColor = 'rgba(0,0,0,0.85)';
+        previewEl.style.padding = '6px 12px';
+        previewEl.style.borderRadius = '20px';
+        previewEl.style.width = 'fit-content';
+        previewEl.style.margin = '5px auto';
         previewEl.style.fontFamily = 'monospace';
+        previewEl.style.display = 'none';
         const input = document.getElementById('word-input');
         input.insertAdjacentElement('afterend', previewEl);
     }
     
-    if (!word || word.length === 0) {
+    if (!word || word.length < 3) {
         previewEl.innerHTML = "";
+        previewEl.style.display = 'none';
         return;
     }
+    previewEl.style.display = 'block';
 
     let breakdown = [];
     let baseScore = 0;
