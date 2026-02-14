@@ -249,6 +249,14 @@
                 <div>🏆</div>
             </button>
 
+            <button id="daily-share-btn" class="mode-btn" style="display:none; background: #2196f3; box-shadow: 0 5px 0 #0d47a1;" onclick="shareDailyResult()">
+                <div>
+                    <div>Share Today's Score</div>
+                    <span class="mode-desc">Show off your result.</span>
+                </div>
+                <div>📤</div>
+            </button>
+
             <button class="mode-btn mode-free" onclick="handleStartClick('free')">
                 <div>
                     <div>Free Play</div>
@@ -275,7 +283,7 @@
             <div id="lb-content" style="min-height: 200px;">
                 <p>Loading...</p>
             </div>
-            <button class="action-btn" onclick="document.getElementById('lb-modal').style.display='none'" style="width:100%; margin-top: 20px; background: var(--wood); color: white;">Close</button>
+            <button class="action-btn" onclick="closeLeaderboard()" style="width:100%; margin-top: 20px; background: var(--wood); color: white;">Close</button>
         </div>
     </div>
 

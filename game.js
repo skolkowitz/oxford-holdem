@@ -181,6 +181,7 @@ async function initGame() {
     LeaderboardManager.init();
     renderDistGrid();
     await initDictionary();
+    checkDailyStatus();
 }
 
 function showRules() { document.getElementById('rules-modal').style.display = 'flex'; }
@@ -221,6 +222,15 @@ async function initDictionary() {
         } catch (e) { alert("Dictionary Error"); return; }
     }
     loadingText.innerText = `Oracle Online: ${dictionary.length} words. Ready.`;
+}
+
+function checkDailyStatus() {
+    const today = new Date().toISOString().split('T')[0];
+    const lastPlayed = localStorage.getItem('oxford_last_daily_played');
+    if (lastPlayed === today) {
+        const shareBtn = document.getElementById('daily-share-btn');
+        if (shareBtn) shareBtn.style.display = 'flex';
+    }
 }
 
 function handleStartClick(mode) {
@@ -482,6 +492,7 @@ async function calculateFinalScore() {
     const today = new Date().toISOString().split('T')[0];
     if (gameMode === 'daily') {
         localStorage.setItem('oxford_last_daily_played', today);
+        localStorage.setItem('oxford_daily_score', userScore);
         LeaderboardManager.submitScore(userScore, word);
         document.getElementById('next-hand-btn').innerText = "See Leaderboard";
         document.getElementById('next-hand-btn').onclick = function() { 
@@ -530,6 +541,27 @@ function shareResult() {
         btn.innerText = "✅ Copied!";
         setTimeout(() => btn.innerText = orig, 2000);
     });
+}
+
+function shareDailyResult() {
+    const score = localStorage.getItem('oxford_daily_score');
+    if (!score) return;
+    const date = new Date().toISOString().split('T')[0];
+    const text = `🃏 Oxford Hold 'Em ${date}\n🏆 Score: ${score}\n\n${window.location.href}`;
+    
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('daily-share-btn');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = `<div><div>✅ Copied!</div><span class="mode-desc">Paste it anywhere!</span></div><div>📋</div>`;
+        setTimeout(() => btn.innerHTML = originalHTML, 2000);
+    });
+}
+
+function closeLeaderboard() {
+    document.getElementById('lb-modal').style.display = 'none';
+    if (gameMode === 'daily' && phaseIndex === 5) {
+        location.reload();
+    }
 }
 
 function markInvalid(msg) {
