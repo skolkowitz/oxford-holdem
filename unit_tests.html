@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Oxford Hold 'Em Unit Tests</title>
+    <style>
+        body { font-family: monospace; background: #121212; color: #eee; padding: 20px; }
+        .pass { color: #4CAF50; }
+        .fail { color: #ff5252; font-weight: bold; }
+        .summary { margin-top: 20px; font-size: 1.2em; border-top: 1px solid #555; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Unit Tests</h1>
+    <div id="results"></div>
+    <div id="summary" class="summary"></div>
+
+    <!-- Mock Dependencies if needed -->
+    <script>
+        // Mock Firebase to avoid errors if code runs
+        const firebase = {
+            initializeApp: () => {},
+            firestore: () => ({ collection: () => ({ doc: () => ({ get: () => Promise.resolve({exists:false}), set: () => Promise.resolve() }) }) }),
+            firestore: { FieldValue: { serverTimestamp: () => 'TIMESTAMP' } }
+        };
+        // Mock Audio
+        window.AudioContext = class { createOscillator(){return{connect:()=>{},start:()=>{},stop:()=>{},frequency:{setValueAtTime:()=>{},exponentialRampToValueAtTime:()=>{},linearRampToValueAtTime:()=>{}}};} createGain(){return{gain:{setValueAtTime:()=>{},exponentialRampToValueAtTime:()=>{},linearRampToValueAtTime:()=>{}},connect:()=>{}};} };
+    </script>
+    
+    <!-- Load Game Logic -->
+    <script src="firebase-config.js"></script>
+    <script src="game.js"></script>
+
+    <script>
+        let passed = 0;
+        let failed = 0;
+
+        function test(name, fn) {
+            try {
+                fn();
+                document.getElementById('results').innerHTML += `<div class="pass">✅ PASS: ${name}</div>`;
+                passed++;
+            } catch (e) {
+                document.getElementById('results').innerHTML += `<div class="fail">❌ FAIL: ${name} - ${e.message}</div>`;
+                console.error(e);
+                failed++;
+            }
+        }
+
+        function assert(condition, message) {
+            if (!condition) throw new Error(message || "Assertion failed");
+        }
+
+        function assertEqual(actual, expected, message) {
+            if (actual !== expected) throw new Error(`${message || ''} Expected ${expected}, got ${actual}`);
+        }
+
+        // --- TESTS ---
+        
+        // 1. Scoring Tests
+        test("Score: Basic Word (CAT)", () => {
+            // C=4, A=1, T=1. Total 6.
+            // Mock pool: C, A, T, X, Y (River Y)
+            const pool = ['C', 'A', 'T', 'X', 'Y'];
+            const score = scoreSpecificWord("CAT", pool);
+            assertEqual(score, 6, "CAT should be 6 points");
+        });
+
+        test("Score: River Bonus (River is T)", () => {
+            // C=4, A=1, T=1.
+            // Pool: C, A, X, Y, T (River T)
+            // T matches River. T score (1) * 2 = 2.
+            // C(4) + A(1) + T(2) = 7.
+            const pool = ['C', 'A', 'X', 'Y', 'T'];
+            const score = scoreSpecificWord("CAT", pool);
+            assertEqual(score, 7, "CAT with River T should be 7 points");
+        });
+
+        test("Score: Length Multiplier (5 letters)", () => {
+            // STEAM (S=3, T=1, E=1, A=1, M=5) = 11 base.
+            // 5 letters = 1.5x.
+            // 11 * 1.5 = 16.5 -> floor(16)
+            const pool = ['S', 'T', 'E', 'A', 'M', 'X']; // River X
+            const score = scoreSpecificWord("STEAM", pool);
+            assertEqual(score, 16, "STEAM (5 letters) should be 16 points");
+        });
+
+        // 2. Validation Tests
+        test("Validation: Can Form Word", () => {
+            const pool = ['A', 'B', 'C', 'D', 'E'];
+            assert(canFormWord("CAB", pool), "Should be able to form CAB");
+            assert(!canFormWord("CAT", pool), "Should NOT be able to form CAT (missing T)");
+        });
+
+        test("Validation: Wildcard Usage", () => {
+            const pool = ['C', 'A', '*', 'D', 'E'];
+            assert(canFormWord("CAT", pool), "Should be able to form CAT using * as T");
+        });
+
+        test("Scoring: River Wildcard Greedy Issue", () => {
+            // Pool: A (Regular), * (River)
+            // Word: AB
+            // Logic should use A from pool, * from River for B.
+            const pool = ['A', '*']; 
+            const score = scoreSpecificWord("AB", pool);
+            assert(score !== -1, "Should be able to form AB with A and River *");
+            assertEqual(score, 1, "Score should be 1 (A=1, B=0 from wildcard)");
+        });
+
+        test("Scoring: River Wildcard Preference", () => {
+            // Pool: A (Regular), * (River)
+            // Word: A
+            // Should prefer Pool A (1pt) over River * (0pts)
+            const pool = ['A', '*'];
+            const score = scoreSpecificWord("A", pool);
+            assertEqual(score, 1, "Should prefer Pool A (1pt) over River * (0pts)");
+        });
+
+        // 3. AI Tests
+        test("AI: Find Best Word", () => {
+            // Setup global variables that findBestPossibleScore uses
+            hand = ['C', 'A', 'T'];
+            board = ['S', 'B', 'X', 'Y', 'Z']; // River Z
+            dictionary = ['CAT', 'CATS', 'CAB'];
+            
+            // CAT = 6
+            // CATS = 6 + 3 = 9
+            // CAB = 4+1+7 = 12
+            
+            const result = findBestPossibleScore();
+            assertEqual(result.word, "CAB", "Best word should be CAB");
+            assertEqual(result.score, 12, "Best score should be 12");
+        });
+
+        // Summary
+        document.getElementById('summary').innerText = `Total: ${passed+failed}, Passed: ${passed}, Failed: ${failed}`;
+        document.getElementById('summary').style.color = failed > 0 ? '#ff5252' : '#4CAF50';
+
+    </script>
+</body>
+</html>
