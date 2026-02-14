@@ -166,12 +166,16 @@
         .card .main-letter { font-size: 2.2rem; font-weight: 900; color: #000; line-height: 1; margin-bottom: 8px; }
         
         @media (max-width: 768px) {
+            body { padding: 5px; }
             #main-container { flex-direction: column-reverse; align-items: center; }
             #distribution-sidebar { width: 90%; display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 10px 20px; }
             #distribution-sidebar h4, .dist-grid, #discard-list { display: none; } 
             .pile-container { flex-direction: row; border-top: none; padding-top: 0; margin-top: 0; width: 100%; justify-content: space-around; }
             
-            #game-table { padding: 10px; border-width: 6px; width: 96%; }
+            #game-table { 
+                padding: 10px; border-width: 6px; width: 100%; 
+                box-sizing: border-box; margin: 0 auto;
+            }
             
             .header-row { flex-direction: column; gap: 10px; margin-bottom: 15px; }
             .stats-group { width: 100%; justify-content: center; flex-wrap: wrap; gap: 8px; }
