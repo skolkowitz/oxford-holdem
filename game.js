@@ -204,12 +204,23 @@ function updateRulesUI() {
     const draftRule = document.getElementById('rule-draft');
     const holeBonuses = document.getElementById('rule-hole-bonuses');
     
+    let draftText = "";
+    let scoringText = "";
+
     if (ENABLE_VARIABLE_HOLE_CARDS) {
-        if (draftRule) draftRule.innerHTML = '<strong>Draft:</strong> Pick 1, 2, or 3 hole cards. Fewer cards = higher multipliers!';
-        if (holeBonuses) holeBonuses.style.display = 'block';
+        draftText = '<strong>Draft:</strong> Pick 1, 2, or 3 hole cards. Fewer cards = higher multipliers!';
+        scoringText += '<strong>Hole Multipliers:</strong> 1 Card = 3x, 2 Cards = 1.5x, 3 Cards = 1x.<br>';
     } else {
-        if (draftRule) draftRule.innerHTML = '<strong>Draft:</strong> Pick the best 3 hole cards from 5 options.';
-        if (holeBonuses) holeBonuses.style.display = 'none';
+        draftText = '<strong>Draft:</strong> Pick the best 3 hole cards from 5 options.';
+    }
+
+    scoringText += '<strong>Scoring:</strong> Sum of (Letter Points × Card Multipliers) × Length Multiplier.<br>';
+    scoringText += '<span style="font-size:0.9em; color:#ccc;">Tip: Tap the deck to see letter values!</span>';
+
+    if (draftRule) draftRule.innerHTML = draftText;
+    if (holeBonuses) {
+        holeBonuses.innerHTML = scoringText;
+        holeBonuses.style.display = 'block';
     }
 }
 
