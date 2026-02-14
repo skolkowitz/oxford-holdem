@@ -109,6 +109,13 @@
         }
         #word-input.invalid { animation: shake 0.4s ease-in-out; border-color: var(--error-red); color: var(--error-red); }
 
+        .game-area {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
         /* --- CREDITS FOOTER --- */
         #credits { margin-top: 30px; font-size: 0.75rem; color: rgba(255,255,255,0.3); text-align: center; line-height: 1.6; }
 
@@ -140,7 +147,7 @@
         #loading-msg { position: fixed; bottom: 10px; right: 10px; color: rgba(255,255,255,0.3); font-size: 0.7rem; }
 
         /* --- CARDS --- */
-        .card-row { display: flex; justify-content: center; gap: 12px; margin-bottom: 30px; min-height: 140px; perspective: 1000px; flex-wrap: wrap; }
+        .card-row { display: flex; justify-content: center; gap: 12px; margin-bottom: 10px; min-height: 140px; perspective: 1000px; flex-wrap: wrap; padding-top: 25px; }
         .card-slot { width: 90px; height: 130px; border: 3px dashed rgba(255,255,255,0.2); border-radius: 12px; background: rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center; position: relative; }
         .river-slot-text { color: var(--bonus-purple); font-size: 0.6rem; font-weight: 900; text-transform: uppercase; position: absolute; bottom: 10px; filter: brightness(1.5); letter-spacing: 1px;}
         @keyframes dealIn { 0% { opacity: 0; transform: translateY(50px) rotateX(-90deg); } 100% { opacity: 1; transform: translateY(0) rotateX(0); } }
@@ -209,7 +216,7 @@
                 margin-bottom: 5px; padding-top: 35px; padding-bottom: 5px;
             }
             
-            body.keyboard-active h3 { margin: 5px 0; }
+            body.keyboard-active h3 { display: none; }
         }
     </style>
 </head>
@@ -253,11 +260,15 @@
             
             <div id="status-msg">Select Game Mode</div>
             
-            <h3 style="color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 2px; margin: 0 0 10px 0;">THE BOARD</h3>
-            <div id="board" class="card-row"></div>
+            <div class="game-area">
+                <div id="board" class="card-row"></div>
+                <h3 style="color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 2px; margin: 5px 0 0 0;">THE BOARD</h3>
+            </div>
 
-            <h3 id="hand-label" style="color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 2px; margin: 0 0 10px 0;">YOUR HAND</h3>
-            <div id="hand" class="card-row"></div>
+            <div class="game-area">
+                <div id="hand" class="card-row"></div>
+                <h3 id="hand-label" style="color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 2px; margin: 5px 0 0 0;">HOLE CARDS</h3>
+            </div>
 
             <div id="controls">
                 <input type="text" id="word-input" placeholder="Type word..." oninput="handleTyping()" onkeydown="if(event.key === 'Enter') calculateFinalScore()">
@@ -345,10 +356,10 @@
 <div id="rules-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) this.style.display='none'">
         <div class="modal-box" style="text-align: left;">
             <h2 style="color: var(--bonus-purple); margin-top: 0; text-align: center;">How to Play</h2>
-            <p style="font-size: 0.9rem; line-height: 1.5; color: #555;">Build the highest scoring word using a combination of your <strong>Hand</strong> and the <strong>Board</strong>.</p>
+            <p style="font-size: 0.9rem; line-height: 1.5; color: #555;">Build the highest scoring word of three letters of more using a combination of your <strong>Hole</strong> cards and the <strong>Board</strong> cards.</p>
             
             <ul style="font-size: 0.9rem; padding-left: 20px; color: #555;">
-                <li><strong>Draft:</strong> Pick the best 3 cards from 5 options.</li>
+                <li><strong>Draft:</strong> Pick 3 cards from the five draft cards.</li>
                 <li><strong>The Flop:</strong> 3 community cards are dealt.</li>
                 <li><strong>Swap:</strong> Discard up to 2 cards to draw new ones.</li>
                 <li><strong>The River:</strong> The final card. <strong style="color: var(--bonus-purple)">2x SCORE</strong> for the letter in this slot!</li>
