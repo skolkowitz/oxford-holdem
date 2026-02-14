@@ -131,6 +131,17 @@
             assertEqual(result.score, 12, "Best score should be 12");
         });
 
+        test("AI: Go Bust (No words possible)", () => {
+            // Setup global variables
+            hand = ['Q', 'Q', 'Q'];
+            board = ['Z', 'Z', 'Z', 'Z', 'Z']; 
+            dictionary = ['CAT', 'DOG', 'FISH'];
+            
+            const result = findBestPossibleScore();
+            assertEqual(result.word, "NONE", "Best word should be NONE");
+            assertEqual(result.score, 0, "Best score should be 0");
+        });
+
         // Summary
         document.getElementById('summary').innerText = `Total: ${passed+failed}, Passed: ${passed}, Failed: ${failed}`;
         document.getElementById('summary').style.color = failed > 0 ? '#ff5252' : '#4CAF50';
