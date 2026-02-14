@@ -447,7 +447,7 @@ function nextPhase() {
         } while (!draftPool.some(card => vowels.includes(card) || card === '*'));
         
         handAnims = [0,1,2,3,4];
-        status.innerText = "Draft Phase: Keep 3 Cards";
+        status.innerText = "Draft Phase: Keep up to 3 Cards.";
         btn.innerText = "Confirm Hand";
         phaseIndex++;
         render(false, true);
