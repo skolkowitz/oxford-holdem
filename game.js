@@ -591,12 +591,16 @@ function softReset() {
 
 function shareResult() {
     const score = document.getElementById('modal-score').innerText;
-    const date = new Date().toISOString().split('T')[0];
+    let text;
     
-    // No Emoji Grid (No Spoilers)
-    const text = `🃏 Oxford Hold 'Em ${date}\n🏆 Score: ${score}\n\n${window.location.href}`;
+    if (gameMode === 'daily') {
+        const date = new Date().toISOString().split('T')[0];
+        text = `🃏 Oxford Hold 'Em ${date}\n🏆 Score: ${score}\n\n${window.location.href}`;
+    } else {
+        text = `🃏 Oxford Hold 'Em Freeplay\n🏆 Score: ${score}\n\n${window.location.href}`;
+    }
     
-    navigator.clipboard.writeText(text).then(() => {
+    copyToClipboard(text, () => {
         const btn = document.getElementById('share-btn');
         const orig = btn.innerText;
         btn.innerText = "✅ Copied!";
@@ -610,12 +614,38 @@ function shareDailyResult() {
     const date = new Date().toISOString().split('T')[0];
     const text = `🃏 Oxford Hold 'Em ${date}\n🏆 Score: ${score}\n\n${window.location.href}`;
     
-    navigator.clipboard.writeText(text).then(() => {
+    copyToClipboard(text, () => {
         const btn = document.getElementById('daily-share-btn');
         const originalHTML = btn.innerHTML;
         btn.innerHTML = `<div><div>✅ Copied!</div><span class="mode-desc">Paste it anywhere!</span></div><div>📋</div>`;
         setTimeout(() => btn.innerHTML = originalHTML, 2000);
     });
+}
+
+function copyToClipboard(text, onSuccess) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(onSuccess).catch(() => fallbackCopy(text, onSuccess));
+    } else {
+        fallbackCopy(text, onSuccess);
+    }
+}
+
+function fallbackCopy(text, onSuccess) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    textArea.style.top = "0";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        const successful = document.execCommand('copy');
+        if (successful && onSuccess) onSuccess();
+    } catch (err) {
+        console.error('Fallback copy failed', err);
+    }
+    document.body.removeChild(textArea);
 }
 
 function closeLeaderboard() {
