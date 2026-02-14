@@ -163,18 +163,32 @@
             #distribution-sidebar { width: 90%; display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 10px 20px; }
             #distribution-sidebar h4, .dist-grid, #discard-list { display: none; } 
             .pile-container { flex-direction: row; border-top: none; padding-top: 0; margin-top: 0; width: 100%; justify-content: space-around; }
-            #game-table { padding: 15px; border-width: 6px; }
+            
+            #game-table { padding: 10px; border-width: 6px; width: 96%; }
+            
+            .header-row { flex-direction: column; gap: 10px; margin-bottom: 15px; }
+            .stats-group { width: 100%; justify-content: center; flex-wrap: wrap; gap: 8px; }
+            .header-row > div:last-child { width: 100%; justify-content: center; }
+            
             .card-row { 
-                flex-wrap: nowrap; overflow-x: auto; justify-content: center; 
-                gap: 6px; width: 100%; padding-bottom: 5px;
+                flex-wrap: nowrap; overflow-x: auto; justify-content: center;
+                gap: 5px; width: 100%; 
+                padding-top: 35px; padding-bottom: 10px; /* Space for lift/shadow */
+                padding-left: 2px; padding-right: 2px;
+                min-height: 120px;
             }
             .card, .card-slot { 
-                width: 18vw; height: 26vw; max-width: 65px; max-height: 95px; flex: 0 0 auto; border-radius: 6px; 
+                width: 17vw; height: 25vw; 
+                max-width: 52px; max-height: 78px; /* Fits 5 on 320px screen */
+                flex: 0 0 auto; border-radius: 6px; 
             }
-            .card .main-letter { font-size: 1.6rem; }
-            .card .animal-icon { font-size: 1.4rem; }
-            .card .corner { font-size: 0.7rem; }
-            #status-msg { font-size: 1rem; }
+            .card .main-letter { font-size: 1.4rem; margin-bottom: 2px; }
+            .card .animal-icon { font-size: 1.0rem; margin-top: 2px; }
+            .card .corner { font-size: 0.6rem; }
+            .card .top-left { top: 3px; left: 3px; }
+            .card .bottom-right { bottom: 3px; right: 3px; }
+            
+            #status-msg { font-size: 0.9rem; margin-bottom: 5px; }
             .score-pill { padding: 3px 8px; font-size: 0.75rem; }
             .stats-group { gap: 5px; }
         }
