@@ -185,12 +185,14 @@
             .stats-group { width: 100%; justify-content: center; flex-wrap: wrap; gap: 8px; }
             .header-row > div:last-child { width: 100%; justify-content: center; }
             
+            .game-area { padding: 5px 0; margin-bottom: 10px; border-radius: 15px; }
+
             .card-row { 
                 flex-wrap: nowrap; overflow-x: auto; justify-content: center;
-                gap: 5px; width: 100%; 
-                padding-top: 35px; padding-bottom: 10px; /* Space for lift/shadow */
+                gap: 5px; width: 100%;
+                padding-top: 30px; padding-bottom: 25px; /* Space for lift/shadow and bonuses */
                 padding-left: 2px; padding-right: 2px;
-                min-height: 120px;
+                min-height: auto;
             }
             .card, .card-slot { 
                 width: 17vw; height: 25vw; 
@@ -203,6 +205,13 @@
             .card .top-left { top: 3px; left: 3px; }
             .card .bottom-right { bottom: 3px; right: 3px; }
             
+            /* Compact bonuses on mobile */
+            .card.river-bonus::before, .card.hole-bonus-3x::before, .card.hole-bonus-15x::before {
+                bottom: -22px; font-size: 0.55rem; padding: 2px 5px;
+            }
+            /* Reduce lift on mobile */
+            .card.bumped { transform: translateY(-20px) scale(1.1) !important; }
+
             #status-msg { font-size: 0.9rem; margin-bottom: 5px; }
             .score-pill { padding: 3px 8px; font-size: 0.75rem; }
             .stats-group { gap: 5px; }
@@ -221,9 +230,11 @@
             }
             
             body.keyboard-active .card-row {
-                margin-bottom: 5px; padding-top: 35px; padding-bottom: 5px;
+                margin-bottom: 0; padding-top: 30px; padding-bottom: 25px;
             }
             
+            body.keyboard-active .game-area { margin-bottom: 5px; }
+
             body.keyboard-active h3 { display: none; }
         }
     </style>
