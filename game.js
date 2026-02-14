@@ -222,14 +222,15 @@ function showDeckStats() {
     });
 
     let html = '<table class="rules-table" style="text-align:center; margin-top:0;">';
-    html += '<tr><th>Card</th><th>Orig</th><th>Left</th></tr>';
+    html += '<tr><th>Card</th><th>Pts</th><th>Orig</th><th>Left</th></tr>';
     
     Object.keys(FREQUENCIES).forEach(k => {
         const orig = FREQUENCIES[k];
         const left = remainingCounts[k];
         const icon = ICONS[k] || k;
+        const score = SCORES[k];
         const style = left === 0 ? 'opacity: 0.3' : '';
-        html += `<tr style="${style}"><td>${k==='*'?'?':k} ${icon}</td><td>${orig}</td><td style="font-weight:bold; color:${left>0?'var(--mode-daily)':'#555'}">${left}</td></tr>`;
+        html += `<tr style="${style}"><td>${k==='*'?'?':k} ${icon}</td><td>${score}</td><td>${orig}</td><td style="font-weight:bold; color:${left>0?'var(--mode-daily)':'#555'}">${left}</td></tr>`;
     });
     html += '</table>';
     
