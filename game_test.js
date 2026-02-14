@@ -447,10 +447,11 @@ function nextPhase() {
         } while (!draftPool.some(card => vowels.includes(card) || card === '*'));
         
         handAnims = [0,1,2,3,4];
-        status.innerText = "Draft: Keep up to 3 cards. Fewer cards = bigger bonuses, but shorter words!";
         if (ENABLE_VARIABLE_HOLE_CARDS) {
+            status.innerText = "Draft: Keep up to 3 cards. Fewer cards = bigger bonuses, but fewer and shorter possible words!";
             btn.innerText = "Select at least one card to keep";
         } else {
+            status.innerText = "Draft Phase: Keep 3 Cards";
             btn.innerText = "Confirm Hand";
         }
         phaseIndex++;
