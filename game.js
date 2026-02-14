@@ -209,13 +209,34 @@ function updateRulesUI() {
 
     if (ENABLE_VARIABLE_HOLE_CARDS) {
         draftText = '<strong>Draft:</strong> Pick 1, 2, or 3 hole cards. Fewer cards = higher multipliers!';
-        scoringText += '<strong>Hole Multipliers:</strong> 1 Card = 3x, 2 Cards = 1.5x, 3 Cards = 1x.<br>';
+        
+        scoringText += '<div style="margin-bottom: 8px; font-weight: bold; color: #333;">Hole Card Multipliers</div>';
+        scoringText += '<div style="display: grid; grid-template-columns: 45px 1fr; gap: 8px; margin-bottom: 15px; align-items: center; font-size: 0.9rem;">';
+        
+        scoringText += '<div style="background:#ff5252; color:white; border-radius:4px; text-align:center; font-weight:bold; padding:2px;">3x</div>';
+        scoringText += '<div><span style="color:#d32f2f; font-weight:bold;">Feelin\' Lucky</span> (1 Card)</div>';
+        
+        scoringText += '<div style="background:#ff9800; color:white; border-radius:4px; text-align:center; font-weight:bold; padding:2px;">1.5x</div>';
+        scoringText += '<div><span style="color:#ef6c00; font-weight:bold;">Texas Two Step</span> (2 Cards)</div>';
+        
+        scoringText += '<div style="background:#bdbdbd; color:white; border-radius:4px; text-align:center; font-weight:bold; padding:2px;">1x</div>';
+        scoringText += '<div style="color:#666;">Standard Hand (3 Cards)</div>';
+        
+        scoringText += '</div>';
     } else {
         draftText = '<strong>Draft:</strong> Pick the best 3 hole cards from 5 options.';
     }
 
-    scoringText += '<strong>Scoring:</strong> Sum of (Letter Points × Card Multipliers) × Length Multiplier.<br>';
-    scoringText += '<span style="font-size:0.9em; color:#ccc;">Tip: Tap the deck to see letter values!</span>';
+    scoringText += '<div style="background:#f5f5f5; padding:12px; border-radius:8px; border:1px solid #e0e0e0; margin-bottom:10px;">';
+    scoringText += '<div style="font-weight:bold; color:#333; margin-bottom:4px;">Scoring Formula</div>';
+    scoringText += '<div style="color:#555; font-size:0.9rem;">Sum of (Points × <span style="color:#9c27b0; font-weight:bold;">Card Mults</span>) × <span style="color:#d32f2f; font-weight:bold;">Length Mult</span></div>';
+    scoringText += '<div style="font-size:0.8rem; color:#888; margin-top:4px;"><em>Card Mults = <span style="color:#9c27b0; font-weight:bold;">River (2x)</span> & Hole Bonuses applied to specific letters.</em></div>';
+    scoringText += '</div>';
+
+    scoringText += '<div style="font-size:0.9rem; color:#555;">';
+    scoringText += 'Letter points are shown on the cards.<br>';
+    scoringText += '<span style="color:#2e7d32; font-weight:bold; cursor:pointer; text-decoration:underline;" onclick="document.getElementById(\'rules-modal\').style.display=\'none\'; showDeckStats();">Tip: Tap the deck to see all values!</span>';
+    scoringText += '</div>';
 
     if (draftRule) draftRule.innerHTML = draftText;
     if (holeBonuses) {
