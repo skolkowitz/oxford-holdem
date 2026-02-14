@@ -182,6 +182,11 @@ async function initGame() {
     renderDistGrid();
     await initDictionary();
     checkDailyStatus();
+    
+    // Remove inline handlers to prevent conflicts with global keydown logic
+    const input = document.getElementById('word-input');
+    input.onkeydown = null;
+    input.oninput = null;
     document.addEventListener('keydown', handleGlobalKeydown);
 }
 
@@ -249,17 +254,60 @@ function handleStartClick(mode) {
 }
 
 function handleGlobalKeydown(e) {
-    if (e.target.tagName === 'INPUT') return;
+    const key = e.key.toUpperCase();
+
+    // 1. Enter Key (Global)
+    if (key === 'ENTER') {
+        if (phaseIndex === 5) calculateFinalScore();
+        else {
+            const btn = document.getElementById('main-btn');
+            if (!btn.disabled) nextPhase();
+        }
+        e.preventDefault();
+        return;
+    }
     
-    // Backspace support for Word Phase when not focused
-    if (phaseIndex === 5 && e.key === 'Backspace') {
+    // 2. Phase 5: Word Entry (Typing & Validation)
+    if (phaseIndex === 5) {
         const input = document.getElementById('word-input');
-        input.value = input.value.slice(0, -1);
-        handleTyping();
+        
+        if (key === 'BACKSPACE') {
+            // Handle backspace manually since we might preventDefault
+            if (document.activeElement !== input) {
+                 input.value = input.value.slice(0, -1);
+                 handleTyping();
+            }
+            return; 
+        }
+
+        if (!/^[A-Z*?]$/.test(key)) return; // Ignore non-letters
+        
+        const searchKey = key === '?' ? '*' : key;
+        const pool = [...hand, ...board];
+        const currentWord = input.value.toUpperCase();
+        const nextWord = currentWord + searchKey;
+
+        if (canFormWord(nextWord, pool)) {
+            // Valid: Append
+            input.value += searchKey;
+            handleTyping();
+        } else {
+            // Invalid: Check for Deselect (Toggle behavior)
+            const lastIndex = currentWord.lastIndexOf(searchKey);
+            if (lastIndex !== -1) {
+                input.value = currentWord.slice(0, lastIndex) + currentWord.slice(lastIndex + 1);
+                handleTyping();
+            } else {
+                SoundManager.play('error');
+            }
+        }
+        
+        e.preventDefault(); // Prevent default typing to enforce our validation
         return;
     }
 
-    const key = e.key.toUpperCase();
+    // 3. Other Phases: Selection Logic
+    if (e.target.tagName === 'INPUT') return;
     if (!/^[A-Z*?]$/.test(key)) return;
     const searchKey = key === '?' ? '*' : key;
 
@@ -280,13 +328,6 @@ function handleGlobalKeydown(e) {
             const selected = matches.find(i => selectedIndices.includes(i));
             if (selected !== undefined) toggleSelect(selected);
         }
-    } else if (phaseIndex === 5) {
-        // Auto-focus and type if in word phase
-        const input = document.getElementById('word-input');
-        input.value += searchKey;
-        handleTyping();
-        input.focus();
-        e.preventDefault();
     }
 }
 
@@ -402,6 +443,18 @@ function toggleSelect(i, isBoard = false) {
     if (phaseIndex === 5) {
         const char = isBoard ? board[i] : hand[i];
         const input = document.getElementById('word-input');
+        const card = document.getElementById(`card-${isBoard?'board':'hand'}-${i}`);
+        
+        // If card is already used, remove it (Deselect)
+        if (card.classList.contains('bumped')) {
+            const idx = parseInt(card.dataset.inputIndex);
+            if (!isNaN(idx)) {
+                const val = input.value;
+                input.value = val.slice(0, idx) + val.slice(idx + 1);
+                handleTyping();
+            }
+            return;
+        }
         
         if (char === '*') {
             const letter = prompt("What letter is this wildcard?");
@@ -666,7 +719,10 @@ function handleTyping() {
     
     // Get all cards and sort to prioritize River card (visually)
     const allCards = Array.from(document.querySelectorAll('.card'));
-    allCards.forEach(c => c.classList.remove('bumped'));
+    allCards.forEach(c => {
+        c.classList.remove('bumped');
+        delete c.dataset.inputIndex;
+    });
     
     allCards.sort((a, b) => {
         const aRiver = a.classList.contains('river-bonus') ? 1 : 0;
@@ -675,18 +731,29 @@ function handleTyping() {
     });
 
     let usedCards = new Set();
-    text.forEach(char => {
+    text.forEach((char, idx) => {
         let found = false;
         // 1. Exact Match
         for(let card of allCards) {
             if (usedCards.has(card)) continue;
-            if (card.getAttribute('data-letter') === char) { card.classList.add('bumped'); usedCards.add(card); found = true; break; }
+            if (card.getAttribute('data-letter') === char) { 
+                card.classList.add('bumped'); 
+                card.dataset.inputIndex = idx;
+                usedCards.add(card); 
+                found = true; 
+                break; 
+            }
         }
         // 2. Wildcard Match
         if (!found) {
             for(let card of allCards) {
                 if (usedCards.has(card)) continue;
-                if (card.getAttribute('data-letter') === '*') { card.classList.add('bumped'); usedCards.add(card); break; }
+                if (card.getAttribute('data-letter') === '*') { 
+                    card.classList.add('bumped'); 
+                    card.dataset.inputIndex = idx;
+                    usedCards.add(card); 
+                    break; 
+                }
             }
         }
     });
