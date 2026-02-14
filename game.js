@@ -544,7 +544,7 @@ async function calculateFinalScore() {
     const word = wordInput.value.toUpperCase().trim();
     if (word.length < 3) return;
     const pool = [...hand, ...board];
-    if (!canFormWord(word, pool)) { markInvalid("You can't make that word!"); return; }
+    if (!canFormWord(word, pool)) { markInvalid("Missing letters!"); return; }
     if (!dictionary.includes(word)) { markInvalid("Not in dictionary!"); return; }
     let userScore = scoreSpecificWord(word, pool);
     SoundManager.play('success');
@@ -633,18 +633,30 @@ function markInvalid(msg) {
 function handleTyping() {
     const input = document.getElementById('word-input'); if(input.style.display === 'none') return;
     input.classList.remove('invalid'); const text = input.value.toUpperCase().split('');
-    const allCards = document.querySelectorAll('.card'); allCards.forEach(c => c.classList.remove('bumped'));
-    let usedIndices = [];
+    
+    // Get all cards and sort to prioritize River card (visually)
+    const allCards = Array.from(document.querySelectorAll('.card'));
+    allCards.forEach(c => c.classList.remove('bumped'));
+    
+    allCards.sort((a, b) => {
+        const aRiver = a.classList.contains('river-bonus') ? 1 : 0;
+        const bRiver = b.classList.contains('river-bonus') ? 1 : 0;
+        return bRiver - aRiver;
+    });
+
+    let usedCards = new Set();
     text.forEach(char => {
         let found = false;
-        for(let i=0; i<allCards.length; i++) {
-            if (usedIndices.includes(i)) continue;
-            if (allCards[i].getAttribute('data-letter') === char) { allCards[i].classList.add('bumped'); usedIndices.push(i); found = true; break; }
+        // 1. Exact Match
+        for(let card of allCards) {
+            if (usedCards.has(card)) continue;
+            if (card.getAttribute('data-letter') === char) { card.classList.add('bumped'); usedCards.add(card); found = true; break; }
         }
+        // 2. Wildcard Match
         if (!found) {
-            for(let i=0; i<allCards.length; i++) {
-                if (usedIndices.includes(i)) continue;
-                if (allCards[i].getAttribute('data-letter') === '*') { allCards[i].classList.add('bumped'); usedIndices.push(i); break; }
+            for(let card of allCards) {
+                if (usedCards.has(card)) continue;
+                if (card.getAttribute('data-letter') === '*') { card.classList.add('bumped'); usedCards.add(card); break; }
             }
         }
     });
