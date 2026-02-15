@@ -85,16 +85,41 @@ const LeaderboardManager = {
             const q = await this.db.collection('leaderboard').where('date', '==', today).orderBy('score', 'desc').limit(10).get();
             if (q.empty) { container.innerHTML = "<p>No scores yet today. Be the first!</p>"; return; }
 
-            let html = `<table class="lb-table"><tr><th>#</th><th>Player</th><th>Word</th><th>Score</th></tr>`;
-            let rank = 1;
-            q.forEach(doc => {
-                const d = doc.data();
+            // Process data for ranking
+            let scores = [];
+            q.forEach(doc => scores.push(doc.data()));
+            
+            // Sort by score desc, then timestamp asc (earlier is better)
+            scores.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                const tA = a.timestamp ? a.timestamp.seconds : Number.MAX_SAFE_INTEGER;
+                const tB = b.timestamp ? b.timestamp.seconds : Number.MAX_SAFE_INTEGER;
+                return tA - tB;
+            });
+
+            let html = `<table class="lb-table"><tr><th style="width: 60px;">#</th><th>Player</th><th>Word</th><th>Score</th></tr>`;
+            
+            for (let i = 0; i < scores.length; i++) {
+                const d = scores[i];
+                let rank = i + 1;
+                if (i > 0 && d.score === scores[i-1].score) rank = scores[i-1].displayRank;
+                d.displayRank = rank;
+
+                const isTied = (i > 0 && d.score === scores[i-1].score) || (i < scores.length - 1 && d.score === scores[i+1].score);
+                
+                let rankSymbol = rank;
+                if (rank === 1) rankSymbol = '🥇';
+                else if (rank === 2) rankSymbol = '🥈';
+                else if (rank === 3) rankSymbol = '🥉';
+                
+                let rankStr = isTied ? `T-${rankSymbol}` : rankSymbol;
+                let rankStyle = (rank <= 3) ? '' : 'color: #ccc;';
+
                 // Hide word if user hasn't played today
                 const wordDisplay = userPlayedToday ? d.word : `<span class="hidden-word">🙈 HIDDEN</span>`;
                 
-                html += `<tr><td class="lb-rank">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank}</td><td>${d.name}</td><td style="font-size:0.8rem;">${wordDisplay}</td><td class="lb-score">${d.score}</td></tr>`;
-                rank++;
-            });
+                html += `<tr><td class="lb-rank" style="${rankStyle} white-space:nowrap;">${rankStr}</td><td>${d.name}</td><td style="font-size:0.8rem;">${wordDisplay}</td><td class="lb-score">${d.score}</td></tr>`;
+            }
             html += "</table>";
             if(!userPlayedToday) html += "<p style='font-size:0.7rem; color:#aaa; margin-top:10px;'>* Words hidden until you complete today's hand.</p>";
             
