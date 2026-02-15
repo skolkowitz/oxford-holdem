@@ -1254,6 +1254,22 @@ function injectStatsUI() {
     
     updateMuteUI();
 
+    // Add Stats Button to Home Menu (Start Overlay)
+    const startOverlay = document.getElementById('start-overlay');
+    if (startOverlay) {
+        const content = startOverlay.firstElementChild || startOverlay;
+        if (!document.getElementById('home-stats-btn')) {
+            const btn = document.createElement('button');
+            btn.id = 'home-stats-btn';
+            btn.innerText = "View Player Stats";
+            btn.style.cssText = "display:block; margin:20px auto 0; background:none; border:1px solid #777; color:#aaa; padding:10px 20px; border-radius:20px; cursor:pointer; font-size:0.9rem; font-family:inherit; transition:all 0.2s;";
+            btn.onmouseover = function(){ this.style.borderColor='#eee'; this.style.color='#eee'; };
+            btn.onmouseout = function(){ this.style.borderColor='#777'; this.style.color='#aaa'; };
+            btn.onclick = showStats;
+            content.appendChild(btn);
+        }
+    }
+
     const modal = document.createElement('div');
     modal.id = 'stats-modal';
     modal.style.cssText = "display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:2000; justify-content:center; align-items:center; flex-direction:column;";
