@@ -1316,11 +1316,15 @@ function injectStatsUI() {
 
     const modal = document.createElement('div');
     modal.id = 'stats-modal';
-    modal.style.cssText = "display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:2000; justify-content:center; align-items:center; flex-direction:column;";
-    modal.innerHTML = `<div style="background:#1e1e1e; padding:25px; border-radius:12px; border:1px solid #333; width:90%; max-width:400px; color:#eee; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-        <h2 style="margin-top:0; text-align:center; border-bottom:1px solid #333; padding-bottom:15px; margin-bottom:20px;">Player Statistics</h2>
-        <div id="stats-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:25px;"></div>
-        <div style="text-align:center;"><button onclick="document.getElementById('stats-modal').style.display='none'" style="padding:10px 20px; background:#444; color:#fff; border:none; border-radius:5px; cursor:pointer; font-size:1rem;">Close</button></div>
+    modal.className = 'modal-overlay';
+    modal.style.display = 'none';
+    modal.onclick = (e) => { if(e.target===modal) modal.style.display='none'; };
+    
+    modal.innerHTML = `<div class="modal-box">
+        <div class="close-btn" onclick="document.getElementById('stats-modal').style.display='none'">&times;</div>
+        <h2 style="color: #333; margin-top: 0;">Player Statistics</h2>
+        <div id="stats-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;"></div>
+        <button class="action-btn" onclick="document.getElementById('stats-modal').style.display='none'" style="width:100%; background: var(--wood); color: white;">Close</button>
     </div>`;
     document.body.appendChild(modal);
 }
@@ -1390,7 +1394,7 @@ function showStats() {
     const oracle = localStorage.getItem('oxford_stat_oracle') || 0;
     const streak = localStorage.getItem('oxford_daily_streak') || 0;
 
-    const item = (l, v, style='') => `<div style="background:#2a2a2a; padding:10px; border-radius:8px; text-align:center; ${style}"><div style="font-size:1.5rem; font-weight:bold; color:#fff; margin-bottom:5px;">${v}</div><div style="font-size:0.8rem; color:#aaa;">${l}</div></div>`;
+    const item = (l, v, style='') => `<div style="background:#f5f5f5; padding:10px; border-radius:8px; text-align:center; border:1px solid #eee; ${style}"><div style="font-size:1.5rem; font-weight:bold; color:#333; margin-bottom:5px;">${v}</div><div style="font-size:0.8rem; color:#666;">${l}</div></div>`;
     grid.innerHTML = item('Hands Played', hands) + item('Total Score', total) + item('Highest Score', displayHigh) + item('Lowest Score', displayLow) + item('Avg Score', avg) + item('Daily Draws', daily) + item('Podium Finishes', podiums) + item('Oracle Matches', oracle) + item('Daily Streak', streak + ' 🔥', 'grid-column: span 2; width: calc(50% - 7.5px); margin: 0 auto;');
     document.getElementById('stats-modal').style.display = 'flex';
 }
