@@ -652,7 +652,6 @@ function toggleSelect(i, isBoard = false) {
 function createCardElement(letter, index, isBoard, shouldAnimate) {
     const isSelected = !isBoard && selectedIndices.includes(index);
     const isRiver = isBoard && index === 4;
-    const isFace = ['J','Q','K','A'].includes(letter); 
     
     let bonusClass = '';
     if (ENABLE_VARIABLE_HOLE_CARDS && !isBoard && phaseIndex > 1) {
@@ -662,10 +661,10 @@ function createCardElement(letter, index, isBoard, shouldAnimate) {
 
     const card = document.createElement('div');
     card.id = `card-${isBoard?'board':'hand'}-${index}`;
-    card.className = `card ${isBoard ? 'communal' : ''} ${isSelected ? 'selected' : ''} ${shouldAnimate ? 'animate-deal' : ''} ${isRiver ? 'river-bonus' : ''} ${isFace ? 'face-card' : ''} ${bonusClass}`;
+    card.className = `card ${isBoard ? 'communal' : ''} ${isSelected ? 'selected' : ''} ${shouldAnimate ? 'animate-deal' : ''} ${isRiver ? 'river-bonus' : ''} ${bonusClass}`;
     card.setAttribute('data-letter', letter);
     const score = SCORES[letter];
-    const color = (letter === '*') ? '#e040fb' : (['J','Q','K','A'].includes(letter) ? '#000' : getScoreColor(letter));
+    const color = (letter === '*') ? '#e040fb' : getScoreColor(letter);
     const displayLetter = letter === '*' ? '?' : letter;
     const icon = ICONS[letter] || '❓';
 
