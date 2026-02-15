@@ -1228,30 +1228,31 @@ function updateScorePreview(word) {
 function injectStatsUI() {
     if (document.getElementById('stats-modal')) return;
 
-    const btnStyle = "background:none; border:2px solid #eee; border-radius:50%; width:42px; height:42px; padding:0; box-sizing:border-box; font-size:1.2rem; cursor:pointer; margin-left:10px; color:#eee; display:inline-flex; justify-content:center; align-items:center; transition: all 0.2s;";
+    // Unified Menu Button Style
+    const btnStyle = "background:none; border:2px solid #eee; border-radius:50%; width:44px; height:44px; padding:0; box-sizing:border-box; font-size:1.3rem; cursor:pointer; margin:0 6px; color:#eee; display:inline-flex; justify-content:center; align-items:center; transition: all 0.2s; vertical-align: middle; -webkit-appearance: none; appearance: none; line-height: 1; text-decoration: none;";
     
     const musicBtn = document.getElementById('music-btn');
-    if (musicBtn) {
-        musicBtn.style.cssText = btnStyle;
-        updateMuteUI(); // Re-apply opacity/icon state
+    if (musicBtn && musicBtn.parentNode) {
+        const statsBtn = document.createElement('button');
+        statsBtn.id = 'stats-btn';
+        statsBtn.innerText = '📊';
+        statsBtn.style.cssText = btnStyle;
+        statsBtn.onclick = showStats;
+        musicBtn.parentNode.insertBefore(statsBtn, musicBtn.nextSibling);
         
-        if (musicBtn.parentNode) {
-            const statsBtn = document.createElement('button');
-            statsBtn.innerText = '📊';
-            statsBtn.style.cssText = btnStyle;
-            statsBtn.onclick = showStats;
-            musicBtn.parentNode.insertBefore(statsBtn, musicBtn.nextSibling);
+        // Apply style to all buttons in the header container
+        const siblings = musicBtn.parentNode.children;
+        for (let el of siblings) {
+            if (el.id === 'mode-indicator') continue;
+            if (el.tagName === 'BUTTON' || el.id.includes('btn') || el.innerText.trim() === '?' || el.hasAttribute('onclick')) {
+                const isHidden = el.style.display === 'none';
+                el.style.cssText = btnStyle;
+                if (isHidden) el.style.display = 'none';
+            }
         }
     }
     
-    ['rules-btn', 'leaderboard-btn'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            const isHidden = el.style.display === 'none';
-            el.style.cssText = btnStyle;
-            if (isHidden) el.style.display = 'none';
-        }
-    });
+    updateMuteUI();
 
     const modal = document.createElement('div');
     modal.id = 'stats-modal';
