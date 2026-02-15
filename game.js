@@ -41,6 +41,7 @@ const LeaderboardManager = {
         const input = document.getElementById('username-input');
         const name = input.value.trim().toUpperCase().substring(0, 12);
         if (name.length < 3) return alert("Name too short!");
+        if (isProfane(name)) return alert("Please choose a different handle.");
         this.username = name;
         localStorage.setItem('oxford_username', name);
         document.getElementById('username-modal').style.display = 'none';
@@ -127,8 +128,9 @@ const LeaderboardManager = {
 
                 // Hide word if user hasn't played today
                 const wordDisplay = userPlayedToday ? d.word : `<span class="hidden-word">🙈 HIDDEN</span>`;
+                const safeName = isProfane(d.name) ? '******' : d.name;
                 
-                html += `<tr><td class="lb-rank" style="${rankStyle} white-space:nowrap;">${rankStr}</td><td>${d.name}</td><td style="font-size:0.8rem;">${wordDisplay}</td><td class="lb-score">${d.score}</td></tr>`;
+                html += `<tr><td class="lb-rank" style="${rankStyle} white-space:nowrap;">${rankStr}</td><td>${safeName}</td><td style="font-size:0.8rem;">${wordDisplay}</td><td class="lb-score">${d.score}</td></tr>`;
             }
             html += "</table>";
             if(!userPlayedToday) html += "<p style='font-size:0.7rem; color:#aaa; margin-top:10px;'>* Words hidden until you complete today's hand.</p>";
@@ -199,6 +201,7 @@ const FREQUENCIES = { 'E':12,'A':9,'I':9,'O':8,'N':6,'R':6,'T':6,'L':4,'S':4,'U'
 const SCORES = { 'E':1,'T':1,'A':1,'O':2,'I':2,'N':2,'S':3,'H':3,'R':3,'D':4,'L':4,'C':4,'U':5,'M':5,'W':5,'F':6,'G':6,'Y':6,'P':7,'B':7,'V':7,'K':8,'J':8,'X':8,'Q':9,'Z':9, '*':0 };
 const ICONS = { 'A':'♠️','B':'🐝','C':'🐱','D':'🐶','E':'🐘','F':'🦊','G':'🦒','H':'🦔','I':'🦎','J':'🫅','K':'👑','L':'🦁','M':'🐒','N':'🥷','O':'🦉','P':'🐼','Q':'👸','R':'🐰','S':'🐍','T':'🐯','U':'🦄','V':'🦅','W':'🐺','X':'⚔️','Y':'🐃','Z':'🦓','*':'🤡' };
 const DICT_URL = 'https://raw.githubusercontent.com/redbo/scrabble/master/dictionary.txt';
+const BAD_WORDS = ['FUCK', 'SHIT', 'BITCH', 'CUNT', 'NIGGA', 'NIGGER', 'WHORE', 'SLUT', 'PENIS', 'VAGINA', 'PUSSY', 'NAZI', 'HITLER', 'KKK', 'FAG', 'DYKE', 'RAPE', 'ASSHOLE', 'RETARD'];
 
 /* --- STATE --- */
 let deck = [], hand = [], board = [], discards = [], draftPool = [], selectedIndices = [], dictionary = [];
@@ -773,6 +776,7 @@ function render(isInteraction = false, redrawBoard = true) {
 }
 
 function getScoreColor(l) { const s = SCORES[l]; return s<=1 ? "#2196F3" : s<=3 ? "#4CAF50" : s<=6 ? "#FF9800" : "#E91E63"; }
+function isProfane(text) { if(!text) return false; const upper = text.toUpperCase(); return BAD_WORDS.some(bad => upper.includes(bad)); }
 function canFormWord(word, pool) { let tempPool = [...pool]; for (let char of word) { let idx = tempPool.indexOf(char); if (idx === -1) idx = tempPool.indexOf('*'); if (idx === -1) return false; tempPool.splice(idx, 1); } return true; }
 
 function calculateBaseScore(word, pool) {
