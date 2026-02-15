@@ -326,7 +326,7 @@
                     <div>Daily Draw</div>
                     <span class="mode-desc">One chance per day. Global competition.</span>
                 </div>
-                <div>🏆</div>
+                <div>📅</div>
             </button>
 
             <button id="daily-share-btn" class="mode-btn" style="display:none; background: #2196f3; box-shadow: 0 5px 0 #0d47a1;" onclick="shareDailyResult()">
@@ -345,12 +345,20 @@
                 <div>🎲</div>
             </button>
 
+            <button class="mode-btn mode-score" onclick="showStats()">
+                <div>
+                    <div>View Player Stats</div>
+                    <span class="mode-desc">Track your career performance.</span>
+                </div>
+                <div>📊</div>
+            </button>
+
             <button class="mode-btn mode-score" onclick="LeaderboardManager.show()">
                 <div>
                     <div>View Leaderboard</div>
                     <span class="mode-desc">See today's top players.</span>
                 </div>
-                <div>📊</div>
+                <div>🏆</div>
             </button>
             
             <div id="loading-dict-text" style="margin-top:20px; color:#888; font-size:0.8rem;">Connecting to Oracle...</div>

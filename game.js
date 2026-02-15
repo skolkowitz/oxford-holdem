@@ -1313,47 +1313,6 @@ function injectStatsUI() {
     targetIds.forEach(id => standardizeBtn(document.getElementById(id)));
     
     updateMuteUI();
-    
-    // Ensure header leaderboard button uses trophy
-    const headerLbBtn = document.getElementById('leaderboard-btn');
-    if (headerLbBtn) headerLbBtn.innerText = '🏆';
-
-    // Add Stats Button to Home Menu (Start Overlay)
-    const startOverlay = document.getElementById('start-overlay');
-    if (startOverlay) {
-        const content = startOverlay.firstElementChild || startOverlay;
-        let btn = document.getElementById('home-stats-btn');
-        
-        if (!btn) {
-            btn = document.createElement('button');
-            btn.id = 'home-stats-btn';
-            btn.onclick = showStats;
-            
-            const oracleText = document.getElementById('loading-dict-text');
-            if (oracleText && oracleText.parentNode === content) content.insertBefore(btn, oracleText);
-            else content.appendChild(btn);
-        }
-        
-        btn.innerHTML = "📊 View Player Stats";
-        
-        // Update icons for other menu buttons
-        const menuBtns = content.querySelectorAll('button');
-        menuBtns.forEach(b => {
-            if (b.id === 'home-stats-btn') return;
-            const t = b.innerText.toLowerCase();
-            if (t.includes('daily')) b.innerHTML = "📅 Daily Draw";
-            else if (t.includes('leaderboard')) b.innerHTML = "🏆 View Leaderboard";
-        });
-
-        const refBtn = content.querySelector('button:not(#home-stats-btn)');
-        if (refBtn) {
-            btn.className = refBtn.className;
-            btn.style.cssText = "margin-top: 10px; margin-bottom: 10px;";
-        } else {
-            btn.style.cssText = "display:block; margin:10px auto; background:#444; color:#fff; padding:15px; border-radius:8px; border:none; font-size:1.1rem; cursor:pointer; width:80%; max-width:300px;";
-        }
-        btn.onmouseover = null; btn.onmouseout = null;
-    }
 
     const modal = document.createElement('div');
     modal.id = 'stats-modal';
