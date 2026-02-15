@@ -1264,6 +1264,22 @@ function updateLocalStats(score, word, maxPossible, mode) {
     if (mode === 'daily') {
         let dailyCount = parseInt(localStorage.getItem('oxford_stat_daily_plays') || 0) + 1;
         localStorage.setItem('oxford_stat_daily_plays', dailyCount);
+        
+        // Streak Logic
+        const today = new Date().toISOString().split('T')[0];
+        const lastPlayed = localStorage.getItem('oxford_last_daily_played');
+        let streak = parseInt(localStorage.getItem('oxford_daily_streak') || 0);
+
+        if (lastPlayed !== today) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - 1);
+            const yesterday = d.toISOString().split('T')[0];
+            
+            if (lastPlayed === yesterday) streak++;
+            else streak = 1;
+            
+            localStorage.setItem('oxford_daily_streak', streak);
+        }
     }
 }
 
@@ -1285,8 +1301,9 @@ function showStats() {
     const daily = localStorage.getItem('oxford_stat_daily_plays') || 0;
     const podiums = localStorage.getItem('oxford_stat_podiums') || 0;
     const oracle = localStorage.getItem('oxford_stat_oracle') || 0;
+    const streak = localStorage.getItem('oxford_daily_streak') || 0;
 
     const item = (l, v) => `<div style="background:#2a2a2a; padding:10px; border-radius:8px; text-align:center;"><div style="font-size:1.5rem; font-weight:bold; color:#fff; margin-bottom:5px;">${v}</div><div style="font-size:0.8rem; color:#aaa;">${l}</div></div>`;
-    grid.innerHTML = item('Hands Played', hands) + item('Total Score', total) + item('Highest Score', displayHigh) + item('Lowest Score', displayLow) + item('Avg Score', avg) + item('Daily Draws', daily) + item('Podium Finishes', podiums) + item('Oracle Matches', oracle);
+    grid.innerHTML = item('Hands Played', hands) + item('Total Score', total) + item('Highest Score', displayHigh) + item('Lowest Score', displayLow) + item('Avg Score', avg) + item('Daily Draws', daily) + item('Daily Streak', streak + ' 🔥') + item('Podium Finishes', podiums) + item('Oracle Matches', oracle);
     document.getElementById('stats-modal').style.display = 'flex';
 }
