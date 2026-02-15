@@ -1307,21 +1307,46 @@ function injectStatsUI() {
     targetIds.forEach(id => standardizeBtn(document.getElementById(id)));
     
     updateMuteUI();
+    
+    // Ensure header leaderboard button uses trophy
+    const headerLbBtn = document.getElementById('leaderboard-btn');
+    if (headerLbBtn) headerLbBtn.innerText = '🏆';
 
     // Add Stats Button to Home Menu (Start Overlay)
     const startOverlay = document.getElementById('start-overlay');
     if (startOverlay) {
         const content = startOverlay.firstElementChild || startOverlay;
-        if (!document.getElementById('home-stats-btn')) {
-            const btn = document.createElement('button');
+        let btn = document.getElementById('home-stats-btn');
+        
+        if (!btn) {
+            btn = document.createElement('button');
             btn.id = 'home-stats-btn';
-            btn.innerText = "View Player Stats";
-            btn.style.cssText = "display:block; margin:20px auto 0; background:none; border:1px solid #777; color:#aaa; padding:10px 20px; border-radius:20px; cursor:pointer; font-size:0.9rem; font-family:inherit; transition:all 0.2s;";
-            btn.onmouseover = function(){ this.style.borderColor='#eee'; this.style.color='#eee'; };
-            btn.onmouseout = function(){ this.style.borderColor='#777'; this.style.color='#aaa'; };
             btn.onclick = showStats;
-            content.appendChild(btn);
+            
+            const oracleText = document.getElementById('loading-dict-text');
+            if (oracleText && oracleText.parentNode === content) content.insertBefore(btn, oracleText);
+            else content.appendChild(btn);
         }
+        
+        btn.innerHTML = "📊 View Player Stats";
+        
+        // Update icons for other menu buttons
+        const menuBtns = content.querySelectorAll('button');
+        menuBtns.forEach(b => {
+            if (b.id === 'home-stats-btn') return;
+            const t = b.innerText.toLowerCase();
+            if (t.includes('daily')) b.innerHTML = "📅 Daily Draw";
+            else if (t.includes('leaderboard')) b.innerHTML = "🏆 View Leaderboard";
+        });
+
+        const refBtn = content.querySelector('button:not(#home-stats-btn)');
+        if (refBtn) {
+            btn.className = refBtn.className;
+            btn.style.cssText = "margin-top: 10px; margin-bottom: 10px;";
+        } else {
+            btn.style.cssText = "display:block; margin:10px auto; background:#444; color:#fff; padding:15px; border-radius:8px; border:none; font-size:1.1rem; cursor:pointer; width:80%; max-width:300px;";
+        }
+        btn.onmouseover = null; btn.onmouseout = null;
     }
 
     const modal = document.createElement('div');
