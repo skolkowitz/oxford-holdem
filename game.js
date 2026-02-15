@@ -920,7 +920,7 @@ function softReset() {
     nextPhase();
 }
 
-function shareResult() {
+async function shareResult() {
     const score = document.getElementById('modal-score').innerText;
     let text;
     
@@ -931,6 +931,15 @@ function shareResult() {
         text = `🃏 Oxford Hold 'Em Freeplay\n🏆 Score: ${score}\n\n${window.location.href}`;
     }
     
+    if (navigator.share) {
+        try {
+            await navigator.share({ text: text });
+            return;
+        } catch (e) {
+            // Fallback to clipboard
+        }
+    }
+    
     copyToClipboard(text, () => {
         const btn = document.getElementById('share-btn');
         const orig = btn.innerText;
@@ -939,7 +948,7 @@ function shareResult() {
     });
 }
 
-function shareDailyResult() {
+async function shareDailyResult() {
     const score = localStorage.getItem('oxford_daily_score');
     if (!score) {
         alert("Score not found. Please play today's hand to generate a score.");
@@ -947,6 +956,15 @@ function shareDailyResult() {
     }
     const date = new Date().toISOString().split('T')[0];
     const text = `🃏 Oxford Hold 'Em ${date}\n🏆 Score: ${score}\n\n${window.location.href}`;
+    
+    if (navigator.share) {
+        try {
+            await navigator.share({ text: text });
+            return;
+        } catch (e) {
+            // Fallback to clipboard
+        }
+    }
     
     copyToClipboard(text, () => {
         const btn = document.getElementById('daily-share-btn');
