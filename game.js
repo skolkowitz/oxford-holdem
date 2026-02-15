@@ -105,6 +105,16 @@ const LeaderboardManager = {
                 if (i > 0 && d.score === scores[i-1].score) rank = scores[i-1].displayRank;
                 d.displayRank = rank;
 
+                // STATS: Check Podium Finish (Top 3)
+                if (d.name === this.username && rank <= 3) {
+                    const key = `oxford_podium_tracked_${today}`;
+                    if (!localStorage.getItem(key)) {
+                        localStorage.setItem(key, '1');
+                        let pods = parseInt(localStorage.getItem('oxford_stat_podiums') || 0) + 1;
+                        localStorage.setItem('oxford_stat_podiums', pods);
+                    }
+                }
+
                 const isTied = (i > 0 && d.score === scores[i-1].score) || (i < scores.length - 1 && d.score === scores[i+1].score);
                 
                 let rankSymbol = rank;
@@ -142,7 +152,7 @@ function initSeed(mode) {
         randomFunc = mulberry32(parseInt(seedStr));
         document.getElementById('mode-indicator').innerText = "DAILY: " + seedStr;
         document.getElementById('mode-indicator').style.background = "var(--mode-daily)";
-        document.getElementById('leaderboard-btn').style.display = "inline-block";
+        document.getElementById('leaderboard-btn').style.display = "inline-flex";
     } else {
         randomFunc = Math.random;
         document.getElementById('mode-indicator').innerText = "FREE PLAY";
@@ -206,6 +216,7 @@ const ENABLE_VARIABLE_HOLE_CARDS = true;
 async function initGame() {
     loadStats();
     LeaderboardManager.init();
+    injectStatsUI();
     await initDictionary();
     checkDailyStatus();
     
@@ -876,6 +887,8 @@ async function calculateFinalScore() {
     
     // STATS & DAILY LIMIT
     const today = new Date().toISOString().split('T')[0];
+    const best = findBestPossibleScore();
+    updateLocalStats(userScore, word, best.score, gameMode);
     if (gameMode === 'daily') {
         localStorage.setItem('oxford_last_daily_played', today);
         localStorage.setItem('oxford_daily_score', userScore);
@@ -892,7 +905,6 @@ async function calculateFinalScore() {
 
     document.getElementById('modal-word').innerText = word;
     document.getElementById('modal-score').innerText = userScore;
-    const best = findBestPossibleScore();
     document.getElementById('best-word-text').innerText = `${best.word} (${best.score} pts)`;
     const daily = parseInt(localStorage.getItem('oxford_total') || 0) + userScore;
     const high = parseInt(localStorage.getItem('oxford_high') || 0);
@@ -1186,4 +1198,95 @@ function updateScorePreview(word) {
     html += ` = <span style="color:white; font-weight:bold;">${total}</span>`;
     
     previewEl.innerHTML = html;
+}
+
+/* --- STATS UI & LOGIC --- */
+function injectStatsUI() {
+    const btnStyle = "background:none; border:1px solid #777; border-radius:50%; width:36px; height:36px; font-size:1.2rem; cursor:pointer; margin-left:10px; color:#eee; display:inline-flex; justify-content:center; align-items:center; transition: all 0.2s;";
+    
+    const musicBtn = document.getElementById('music-btn');
+    if (musicBtn) {
+        musicBtn.style.cssText = btnStyle;
+        updateMuteUI(); // Re-apply opacity/icon state
+        
+        if (musicBtn.parentNode) {
+            const statsBtn = document.createElement('button');
+            statsBtn.innerText = '📊';
+            statsBtn.style.cssText = btnStyle;
+            statsBtn.onclick = showStats;
+            musicBtn.parentNode.insertBefore(statsBtn, musicBtn.nextSibling);
+        }
+    }
+    
+    ['rules-btn', 'leaderboard-btn'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            const isHidden = el.style.display === 'none';
+            el.style.cssText = btnStyle;
+            if (isHidden) el.style.display = 'none';
+        }
+    });
+
+    const modal = document.createElement('div');
+    modal.id = 'stats-modal';
+    modal.style.cssText = "display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:2000; justify-content:center; align-items:center; flex-direction:column;";
+    modal.innerHTML = `<div style="background:#1e1e1e; padding:25px; border-radius:12px; border:1px solid #333; width:90%; max-width:400px; color:#eee; font-family:sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+        <h2 style="margin-top:0; text-align:center; border-bottom:1px solid #333; padding-bottom:15px; margin-bottom:20px;">Player Statistics</h2>
+        <div id="stats-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:25px;"></div>
+        <div style="text-align:center;"><button onclick="document.getElementById('stats-modal').style.display='none'" style="padding:10px 20px; background:#444; color:#fff; border:none; border-radius:5px; cursor:pointer; font-size:1rem;">Close</button></div>
+    </div>`;
+    document.body.appendChild(modal);
+}
+
+function updateLocalStats(score, word, maxPossible, mode) {
+    let hands = parseInt(localStorage.getItem('oxford_stat_hands') || 0) + 1;
+    localStorage.setItem('oxford_stat_hands', hands);
+
+    let lowest = localStorage.getItem('oxford_stat_lowest');
+    if (lowest === null || score < parseInt(lowest)) {
+        localStorage.setItem('oxford_stat_lowest', score);
+        localStorage.setItem('oxford_stat_lowest_word', word);
+    }
+
+    let high = parseInt(localStorage.getItem('oxford_high') || 0);
+    if (score > high) {
+        localStorage.setItem('oxford_high_word', word);
+    }
+
+    let sum = parseInt(localStorage.getItem('oxford_stat_sum') || 0) + score;
+    localStorage.setItem('oxford_stat_sum', sum);
+
+    if (score === maxPossible && maxPossible > 0) {
+        let oracle = parseInt(localStorage.getItem('oxford_stat_oracle') || 0) + 1;
+        localStorage.setItem('oxford_stat_oracle', oracle);
+    }
+
+    if (mode === 'daily') {
+        let dailyCount = parseInt(localStorage.getItem('oxford_stat_daily_plays') || 0) + 1;
+        localStorage.setItem('oxford_stat_daily_plays', dailyCount);
+    }
+}
+
+function showStats() {
+    const grid = document.getElementById('stats-grid');
+    const hands = parseInt(localStorage.getItem('oxford_stat_hands') || 0);
+    const total = localStorage.getItem('oxford_total') || 0;
+    
+    const high = parseInt(localStorage.getItem('oxford_high') || 0);
+    const highWord = localStorage.getItem('oxford_high_word') || '???';
+    const displayHigh = high > 0 ? `${high}<div style="font-size:0.8rem; font-weight:normal; color:#aaa; margin-top:-2px;">${highWord}</div>` : '-';
+
+    const lowestVal = localStorage.getItem('oxford_stat_lowest');
+    const lowestWord = localStorage.getItem('oxford_stat_lowest_word') || '???';
+    const displayLow = lowestVal === null ? '-' : `${lowestVal}<div style="font-size:0.8rem; font-weight:normal; color:#aaa; margin-top:-2px;">${lowestWord}</div>`;
+
+    const sum = parseInt(localStorage.getItem('oxford_stat_sum') || 0);
+    const avg = hands > 0 ? (sum / hands).toFixed(1) : 0;
+    const daily = localStorage.getItem('oxford_stat_daily_plays') || 0;
+    const podiums = localStorage.getItem('oxford_stat_podiums') || 0;
+    const oracle = localStorage.getItem('oxford_stat_oracle') || 0;
+
+    const item = (l, v) => `<div style="background:#2a2a2a; padding:10px; border-radius:8px; text-align:center;"><div style="font-size:1.5rem; font-weight:bold; color:#fff; margin-bottom:5px;">${v}</div><div style="font-size:0.8rem; color:#aaa;">${l}</div></div>`;
+    grid.innerHTML = item('Hands Played', hands) + item('Total Score', total) + item('Highest Score', displayHigh) + item('Lowest Score', displayLow) + item('Avg Score', avg) + item('Daily Draws', daily) + item('Podium Finishes', podiums) + item('Oracle Matches', oracle);
+    document.getElementById('stats-modal').style.display = 'flex';
 }
