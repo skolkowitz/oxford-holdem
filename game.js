@@ -3,8 +3,8 @@ let isMuted = true;
 function toggleMute() { isMuted = !isMuted; updateMuteUI(); }
 function updateMuteUI() {
     const btn = document.getElementById('music-btn');
-    if (isMuted) { MusicManager.pause(); btn.innerText = "🔇"; btn.style.color = "#777"; btn.style.opacity = "1"; } 
-    else { MusicManager.play(); btn.innerText = "🎵"; btn.style.color = "#eee"; btn.style.opacity = "1"; }
+    if (isMuted) { btn.innerText = "🔇"; btn.style.color = "#777"; btn.style.opacity = "1"; } 
+    else { btn.innerText = "🔊"; btn.style.color = "#eee"; btn.style.opacity = "1"; }
 }
 
 /* --- FIREBASE LEADERBOARD MANAGER --- */
@@ -193,14 +193,6 @@ const SoundManager = {
         if (osc) osc.onended = () => { osc.disconnect(); gain.disconnect(); };
     }
 };
-
-const MusicManager = {
-    audio: new Audio('gambler_8bit.mp3'), 
-    init() { this.audio.loop = true; this.audio.volume = 0.3; },
-    play() { if (!isMuted) this.audio.play().catch(e => {}); },
-    pause() { this.audio.pause(); }
-};
-MusicManager.init();
 
 /* --- CONFIG --- */
 const FREQUENCIES = { 'E':12,'A':9,'I':9,'O':8,'N':6,'R':6,'T':6,'L':4,'S':4,'U':4,'D':4,'G':3,'B':2,'C':2,'M':2,'P':2,'F':2,'H':2,'V':2,'W':2,'Y':2,'K':1,'J':1,'X':1,'Q':1,'Z':1, '*': 2 };
