@@ -175,6 +175,7 @@ const SoundManager = {
             const d = buf.getChannelData(0);
             for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
             const n = this.ctx.createBufferSource(); n.buffer=buf;
+            n.onended = () => { n.disconnect(); f.disconnect(); gain.disconnect(); };
             const f = this.ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(1000,t);
             gain.gain.setValueAtTime(0.3,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.1);
             n.connect(f); f.connect(gain); gain.connect(this.ctx.destination); n.start();
@@ -189,6 +190,7 @@ const SoundManager = {
             gain.gain.setValueAtTime(0.2,t); gain.gain.linearRampToValueAtTime(0,t+0.2);
             osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(t+0.2);
         }
+        if (osc) osc.onended = () => { osc.disconnect(); gain.disconnect(); };
     }
 };
 
@@ -222,15 +224,31 @@ async function initGame() {
     
     // Remove inline handlers to prevent conflicts with global keydown logic
     const input = document.getElementById('word-input');
-    input.onkeydown = null;
-    input.oninput = null;
+    input.removeEventListener('input', handleTyping);
     input.addEventListener('input', handleTyping);
     
     // Add focus listeners for mobile layout adjustment
     input.addEventListener('focus', () => document.body.classList.add('keyboard-active'));
     input.addEventListener('blur', () => document.body.classList.remove('keyboard-active'));
     
+    document.removeEventListener('keydown', handleGlobalKeydown);
     document.addEventListener('keydown', handleGlobalKeydown);
+    
+    // Event Delegation for Cards
+    const handDiv = document.getElementById('hand');
+    const boardDiv = document.getElementById('board');
+    // Remove old listeners if any (cloning node is a quick way to strip listeners if we don't have references, but here we just ensure we don't double add if init runs twice)
+    // Since we use anonymous functions, we can't easily remove. 
+    // However, initGame is usually run once. If run multiple times, we should guard.
+    if (!handDiv.hasAttribute('data-listening')) {
+        handDiv.addEventListener('click', (e) => handleDelegatedCardClick(e, false));
+        handDiv.setAttribute('data-listening', 'true');
+    }
+    if (!boardDiv.hasAttribute('data-listening')) {
+        boardDiv.addEventListener('click', (e) => handleDelegatedCardClick(e, true));
+        boardDiv.setAttribute('data-listening', 'true');
+    }
+
     updateRulesUI();
 }
 
@@ -663,6 +681,13 @@ function toggleSelect(i, isBoard = false) {
     render(true, false);
 }
 
+function handleDelegatedCardClick(e, isBoard) {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    const index = parseInt(card.id.split('-')[2]);
+    if (!isBoard || phaseIndex === 5) toggleSelect(index, isBoard);
+}
+
 function createCardElement(letter, index, isBoard, shouldAnimate) {
     const isSelected = !isBoard && selectedIndices.includes(index);
     const isRiver = isBoard && index === 4;
@@ -693,7 +718,6 @@ function createCardElement(letter, index, isBoard, shouldAnimate) {
         <div class="corner-score bottom-left" style="color: ${color}">${score}</div>
         <div class="corner-letter bottom-right" style="color: ${color}">${displayLetter}</div>
     `;
-    if (!isBoard || phaseIndex === 5) card.onclick = () => toggleSelect(index, isBoard);
     return card;
 }
 
@@ -1202,6 +1226,8 @@ function updateScorePreview(word) {
 
 /* --- STATS UI & LOGIC --- */
 function injectStatsUI() {
+    if (document.getElementById('stats-modal')) return;
+
     const btnStyle = "background:none; border:2px solid #eee; border-radius:50%; width:42px; height:42px; padding:0; box-sizing:border-box; font-size:1.2rem; cursor:pointer; margin-left:10px; color:#eee; display:inline-flex; justify-content:center; align-items:center; transition: all 0.2s;";
     
     const musicBtn = document.getElementById('music-btn');
