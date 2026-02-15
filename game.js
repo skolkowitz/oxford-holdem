@@ -1290,7 +1290,7 @@ function injectStatsUI() {
     if (musicBtn && musicBtn.parentNode) {
         const statsBtn = document.createElement('button');
         statsBtn.id = 'stats-btn';
-        statsBtn.innerText = '📊';
+        statsBtn.innerText = '';
         statsBtn.className = 'menu-btn';
         statsBtn.onclick = showStats;
         musicBtn.parentNode.insertBefore(statsBtn, musicBtn.nextSibling);
