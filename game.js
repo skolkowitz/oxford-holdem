@@ -550,6 +550,7 @@ function nextPhase() {
         phaseIndex++;
         render(false, true);
     } else if (phaseIndex === 3) {
+        selectedIndices = [];
         board.push(deck.pop());
         boardAnims = [3];
         status.innerText = "The Turn: select hole cards to swap (if you want to.)";
@@ -558,6 +559,7 @@ function nextPhase() {
         phaseIndex++;
         render(false, true);
     } else if (phaseIndex === 4) {
+        selectedIndices = [];
         board.push(deck.pop());
         boardAnims = [4];
         
