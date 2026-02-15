@@ -3,8 +3,8 @@ let isMuted = true;
 function toggleMute() { isMuted = !isMuted; updateMuteUI(); }
 function updateMuteUI() {
     const btn = document.getElementById('music-btn');
-    if (isMuted) { MusicManager.pause(); btn.innerText = "🔇"; btn.style.opacity = "0.5"; } 
-    else { MusicManager.play(); btn.innerText = "🎵"; btn.style.opacity = "1"; }
+    if (isMuted) { MusicManager.pause(); btn.innerText = "🔇"; btn.style.color = "#777"; btn.style.opacity = "1"; } 
+    else { MusicManager.play(); btn.innerText = "🎵"; btn.style.color = "#eee"; btn.style.opacity = "1"; }
 }
 
 /* --- FIREBASE LEADERBOARD MANAGER --- */
@@ -1202,7 +1202,7 @@ function updateScorePreview(word) {
 
 /* --- STATS UI & LOGIC --- */
 function injectStatsUI() {
-    const btnStyle = "background:none; border:1px solid #777; border-radius:50%; width:36px; height:36px; font-size:1.2rem; cursor:pointer; margin-left:10px; color:#eee; display:inline-flex; justify-content:center; align-items:center; transition: all 0.2s;";
+    const btnStyle = "background:none; border:2px solid #eee; border-radius:50%; width:42px; height:42px; padding:0; box-sizing:border-box; font-size:1.2rem; cursor:pointer; margin-left:10px; color:#eee; display:inline-flex; justify-content:center; align-items:center; transition: all 0.2s;";
     
     const musicBtn = document.getElementById('music-btn');
     if (musicBtn) {
@@ -1303,7 +1303,7 @@ function showStats() {
     const oracle = localStorage.getItem('oxford_stat_oracle') || 0;
     const streak = localStorage.getItem('oxford_daily_streak') || 0;
 
-    const item = (l, v) => `<div style="background:#2a2a2a; padding:10px; border-radius:8px; text-align:center;"><div style="font-size:1.5rem; font-weight:bold; color:#fff; margin-bottom:5px;">${v}</div><div style="font-size:0.8rem; color:#aaa;">${l}</div></div>`;
-    grid.innerHTML = item('Hands Played', hands) + item('Total Score', total) + item('Highest Score', displayHigh) + item('Lowest Score', displayLow) + item('Avg Score', avg) + item('Daily Draws', daily) + item('Daily Streak', streak + ' 🔥') + item('Podium Finishes', podiums) + item('Oracle Matches', oracle);
+    const item = (l, v, style='') => `<div style="background:#2a2a2a; padding:10px; border-radius:8px; text-align:center; ${style}"><div style="font-size:1.5rem; font-weight:bold; color:#fff; margin-bottom:5px;">${v}</div><div style="font-size:0.8rem; color:#aaa;">${l}</div></div>`;
+    grid.innerHTML = item('Hands Played', hands) + item('Total Score', total) + item('Highest Score', displayHigh) + item('Lowest Score', displayLow) + item('Avg Score', avg) + item('Daily Draws', daily) + item('Podium Finishes', podiums) + item('Oracle Matches', oracle) + item('Daily Streak', streak + ' 🔥', 'grid-column: span 2; width: calc(50% - 7.5px); margin: 0 auto;');
     document.getElementById('stats-modal').style.display = 'flex';
 }
