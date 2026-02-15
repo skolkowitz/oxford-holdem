@@ -1220,15 +1220,68 @@ function updateScorePreview(word) {
 function injectStatsUI() {
     if (document.getElementById('stats-modal')) return;
 
-    // Unified Menu Button Style
-    const btnStyle = "background:none; border:2px solid #eee; border-radius:50%; width:44px; height:44px; padding:0; box-sizing:border-box; font-size:1.3rem; cursor:pointer; margin:0 6px; color:#eee; display:inline-flex; justify-content:center; align-items:center; transition: all 0.2s; vertical-align: middle; -webkit-appearance: none; appearance: none; line-height: 1; text-decoration: none;";
+    // Inject CSS for unified menu buttons with responsive adjustments
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .menu-btn {
+            background: none;
+            border: 2px solid #eee;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            box-sizing: border-box;
+            font-size: 1.3rem;
+            cursor: pointer;
+            margin: 0 6px;
+            color: #eee;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+            vertical-align: middle;
+            -webkit-appearance: none;
+            appearance: none;
+            line-height: 1;
+            text-decoration: none;
+        }
+        @media (max-width: 600px) {
+            .menu-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 1.1rem;
+                margin: 0 3px;
+                border-width: 1.5px;
+            }
+        }
+    `;
+    document.head.appendChild(style);
     
+    // Helper to standardize button style
+    const standardizeBtn = (el) => {
+        if (!el) return;
+        const isHidden = el.style.display === 'none';
+        el.classList.add('menu-btn');
+        // Clear inline styles that conflict with class
+        el.style.background = '';
+        el.style.border = '';
+        el.style.borderRadius = '';
+        el.style.width = '';
+        el.style.height = '';
+        el.style.padding = '';
+        el.style.fontSize = '';
+        el.style.margin = ''; 
+        // Preserve display state
+        if (isHidden) el.style.display = 'none';
+        else el.style.display = ''; 
+    };
+
     const musicBtn = document.getElementById('music-btn');
     if (musicBtn && musicBtn.parentNode) {
         const statsBtn = document.createElement('button');
         statsBtn.id = 'stats-btn';
         statsBtn.innerText = '📊';
-        statsBtn.style.cssText = btnStyle;
+        statsBtn.className = 'menu-btn';
         statsBtn.onclick = showStats;
         musicBtn.parentNode.insertBefore(statsBtn, musicBtn.nextSibling);
         
@@ -1237,12 +1290,21 @@ function injectStatsUI() {
         for (let el of siblings) {
             if (el.id === 'mode-indicator') continue;
             if (el.tagName === 'BUTTON' || el.id.includes('btn') || el.innerText.trim() === '?' || el.hasAttribute('onclick')) {
-                const isHidden = el.style.display === 'none';
-                el.style.cssText = btnStyle;
-                if (isHidden) el.style.display = 'none';
+                standardizeBtn(el);
             }
         }
     }
+    
+    // Explicitly target all known menu buttons to ensure coverage
+    const targetIds = [
+        'home-btn', 
+        'username-btn', 'handle-btn', 'user-btn', 'profile-btn', 
+        'music-btn', 
+        'rules-btn', 'howto-btn', 'help-btn', 'how-to-btn', 'tutorial-btn',
+        'leaderboard-btn',
+        'stats-btn'
+    ];
+    targetIds.forEach(id => standardizeBtn(document.getElementById(id)));
     
     updateMuteUI();
 
