@@ -379,6 +379,12 @@ function checkDailyStatus() {
     if (lastPlayed === today && dailyScore) {
         const shareBtn = document.getElementById('daily-share-btn');
         if (shareBtn) shareBtn.style.display = 'flex';
+        
+        // Retroactive Streak Fix: If played today but streak is 0 (e.g. played before update), set to 1
+        let streak = parseInt(localStorage.getItem('oxford_daily_streak') || 0);
+        if (streak === 0) {
+            localStorage.setItem('oxford_daily_streak', 1);
+        }
     }
 }
 
