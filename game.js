@@ -1241,7 +1241,7 @@ function injectStatsUI() {
             height: 44px;
             padding: 0;
             box-sizing: border-box;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             cursor: pointer;
             margin: 0 6px;
             color: #eee;
@@ -1254,14 +1254,17 @@ function injectStatsUI() {
             appearance: none;
             line-height: 1;
             text-decoration: none;
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+            padding-top: 2px;
         }
         @media (max-width: 600px) {
             .menu-btn {
                 width: 38px;
                 height: 38px;
-                font-size: 1.1rem;
+                font-size: 1.0rem;
                 margin: 0 3px;
                 border-width: 1.5px;
+                padding-top: 1px;
             }
         }
     `;
@@ -1290,7 +1293,7 @@ function injectStatsUI() {
     if (musicBtn && musicBtn.parentNode) {
         const statsBtn = document.createElement('button');
         statsBtn.id = 'stats-btn';
-        statsBtn.innerText = '';
+        statsBtn.innerText = '🔥';
         statsBtn.className = 'menu-btn';
         statsBtn.onclick = showStats;
         musicBtn.parentNode.insertBefore(statsBtn, musicBtn.nextSibling);
