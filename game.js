@@ -571,7 +571,8 @@ function nextPhase() {
             status.innerText = "The River: Make a Word!";
             btn.innerText = "Submit Word";
             const inp = document.getElementById('word-input');
-            inp.style.display = "inline-block"; inp.focus();
+            inp.style.display = "inline-block"; 
+            if (window.innerWidth > 768) inp.focus();
         }
 
         document.getElementById('swap-btn').style.display = "none";
