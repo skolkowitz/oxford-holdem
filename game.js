@@ -214,6 +214,7 @@ async function initGame() {
     loadStats();
     LeaderboardManager.init();
     injectStatsUI();
+    injectClearButton();
     await initDictionary();
     checkDailyStatus();
     
@@ -609,6 +610,8 @@ function nextPhase() {
             btn.innerText = "Submit Word";
             const inp = document.getElementById('word-input');
             inp.style.display = "inline-block"; 
+            const clearBtn = document.getElementById('clear-btn');
+            if(clearBtn) clearBtn.style.display = "inline-block";
             if (window.innerWidth > 768) inp.focus();
         }
 
@@ -957,6 +960,8 @@ function softReset() {
     document.getElementById('result-modal').style.display = 'none';
     document.getElementById('word-input').value = "";
     document.getElementById('word-input').style.display = "none";
+    const clearBtn = document.getElementById('clear-btn');
+    if(clearBtn) clearBtn.style.display = "none";
     document.getElementById('swap-btn').style.display = "none";
     
     const preview = document.getElementById('score-preview');
@@ -1072,7 +1077,10 @@ function closeLeaderboard() {
 }
 
 function markInvalid(msg) {
-    const inp = document.getElementById('word-input'); inp.classList.add('invalid'); inp.value = ""; inp.placeholder = msg;
+    const inp = document.getElementById('word-input'); 
+    inp.classList.add('invalid'); inp.value = ""; inp.placeholder = msg;
+    currentCardAssignments = [];
+    handleTyping();
     SoundManager.play('error'); setTimeout(() => inp.placeholder = "Enter word...", 1500);
 }
 
@@ -1224,8 +1232,14 @@ function updateScorePreview(word) {
         previewEl.style.margin = '5px auto';
         previewEl.style.fontFamily = 'monospace';
         previewEl.style.display = 'none';
+        
         const input = document.getElementById('word-input');
-        input.insertAdjacentElement('afterend', previewEl);
+        const clearBtn = document.getElementById('clear-btn');
+        if (clearBtn) {
+            clearBtn.insertAdjacentElement('afterend', previewEl);
+        } else {
+            input.insertAdjacentElement('afterend', previewEl);
+        }
     }
     
     if (!word || word.length < 3) {
@@ -1467,4 +1481,35 @@ function showStats() {
     const item = (l, v, style='') => `<div style="background:#f5f5f5; padding:10px; border-radius:8px; text-align:center; border:1px solid #eee; ${style}"><div style="font-size:1.5rem; font-weight:bold; color:#333; margin-bottom:5px;">${v}</div><div style="font-size:0.8rem; color:#666;">${l}</div></div>`;
     grid.innerHTML = item('Hands Played', hands) + item('Total Score', total) + item('Highest Score', displayHigh) + item('Lowest Score', displayLow) + item('Avg Score', avg) + item('Daily Draws', daily) + item('Podium Finishes', podiums) + item('Oracle Matches', oracle) + item('Daily Streak', streak + ' 🔥', 'grid-column: span 2; width: calc(50% - 7.5px); margin: 0 auto;');
     document.getElementById('stats-modal').style.display = 'flex';
+}
+
+function injectClearButton() {
+    if (document.getElementById('clear-btn')) return;
+    const input = document.getElementById('word-input');
+    if (!input) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'clear-btn';
+    btn.innerHTML = '&#10005;';
+    btn.title = "Clear Word";
+    
+    Object.assign(btn.style, {
+        display: 'none', marginLeft: '8px', cursor: 'pointer',
+        background: 'rgba(255, 255, 255, 0.15)', border: 'none', color: '#eee',
+        borderRadius: '50%', width: '28px', height: '28px',
+        fontSize: '14px', lineHeight: '28px', textAlign: 'center', verticalAlign: 'middle', padding: '0'
+    });
+    
+    btn.onmouseover = () => btn.style.background = 'rgba(255, 255, 255, 0.3)';
+    btn.onmouseout = () => btn.style.background = 'rgba(255, 255, 255, 0.15)';
+    btn.onclick = () => {
+        input.value = "";
+        currentCardAssignments = [];
+        handleTyping();
+        input.focus();
+        SoundManager.play('chip');
+    };
+
+    if (input.nextSibling) input.parentNode.insertBefore(btn, input.nextSibling);
+    else input.parentNode.appendChild(btn);
 }
