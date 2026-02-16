@@ -859,25 +859,29 @@ function getCardObjects() {
 }
 
 function calculateOptimalScore(word, cardObjects) {
-    let pool = cardObjects.map(c => ({...c}));
+    // Optimization: Build a frequency map of available multipliers
+    const available = {};
+    for (let i = 0; i < cardObjects.length; i++) {
+        const c = cardObjects[i];
+        if (!available[c.char]) available[c.char] = [];
+        available[c.char].push(c.mult);
+    }
+
+    // Sort multipliers ascending so we can pop() the highest (greedy approach)
+    for (const char in available) {
+        available[char].sort((a, b) => a - b);
+    }
+
     let baseScore = 0;
     
-    for (let char of word) {
-        let matches = pool.filter(c => c.char === char);
-        if (matches.length > 0) {
-            matches.sort((a, b) => b.mult - a.mult);
-            let best = matches[0];
-            baseScore += SCORES[char] * best.mult;
-            let idx = pool.indexOf(best);
-            pool.splice(idx, 1);
+    for (let i = 0; i < word.length; i++) {
+        const char = word[i];
+        if (available[char] && available[char].length > 0) {
+            baseScore += SCORES[char] * available[char].pop();
+        } else if (available['*'] && available['*'].length > 0) {
+            available['*'].pop();
         } else {
-            let wildcards = pool.filter(c => c.char === '*');
-            if (wildcards.length > 0) {
-                let idx = pool.indexOf(wildcards[0]);
-                pool.splice(idx, 1);
-            } else {
-                return 0;
-            }
+            return 0;
         }
     }
     
@@ -891,13 +895,10 @@ function calculateOptimalScore(word, cardObjects) {
 
 function findBestPossibleScore() {
     let cardObjs = getCardObjects();
-    let simplePool = [...hand, ...board];
     let maxScore = 0; let bestWord = "NONE";
     for (let word of dictionary) {
-        if (canFormWord(word, simplePool)) { 
-            let s = calculateOptimalScore(word, cardObjs); 
-            if (s > maxScore) { maxScore = s; bestWord = word; } 
-        }
+        let s = calculateOptimalScore(word, cardObjs); 
+        if (s > maxScore) { maxScore = s; bestWord = word; } 
     }
     return { word: bestWord, score: maxScore };
 }
