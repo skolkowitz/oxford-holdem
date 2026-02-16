@@ -271,7 +271,7 @@ function updateRulesUI() {
         draftText = '<strong>Draft:</strong> Pick the best 3 hole cards from 5 options.';
     }
 
-    scoringText += '<div style="margin-bottom: 5px; font-weight: bold; color: #333;">Word Bonuses</div>';
+    scoringText += '<div style="margin-bottom: 5px; font-weight: bold; color: #333;">Race Car Bonus <span style="font-size:1.5rem;">🏎️</span></div>';
     scoringText += '<ul style="margin-top: 5px; padding-left: 20px; margin-bottom: 15px; font-size: 0.9rem; color: #555;">';
     scoringText += '<li><strong>Palindrome:</strong> <span style="color:#f9a825; font-weight:bold;">Score + Reverse Score</span> (e.g. 31 + 13 = 44).</li>';
     scoringText += '</ul>';
@@ -1236,7 +1236,7 @@ function updateScorePreview(word) {
 
     if (isPalindrome(word)) {
         let reversed = parseInt(total.toString().split('').reverse().join(''));
-        calculationHtml += ` + <span style="color:#FFD700; font-weight:bold;">${reversed} (Palindrome)</span>`;
+        calculationHtml += ` + <span style="color:#FFD700; font-weight:bold;">${reversed} <span style="font-size:1.5rem;">🏎️</span></span>`;
         total += reversed;
     }
     
