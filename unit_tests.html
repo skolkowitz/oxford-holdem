@@ -138,6 +138,14 @@
             assertEqual(score, 5, "CAT with wildcard should be 5 points");
         });
 
+        test("Feature: Palindrome Bonus", () => {
+            // DAD: D=4, A=1, D=4. Total 9.
+            // Palindrome bonus: 9 reversed is 9. Total 18.
+            const cards = makeCards(['D', 'A', 'D'], ['X', 'Y', 'Z', 'Q', 'J']);
+            const score = calculateOptimalScore("DAD", cards);
+            assertEqual(score, 18, "DAD (9) + 9 reversed = 18");
+        });
+
         // 3. AI Tests
         test("AI: Find Best Word", () => {
             // Setup global variables that findBestPossibleScore uses
@@ -152,6 +160,21 @@
             const result = findBestPossibleScore();
             assertEqual(result.word, "CAB", "Best word should be CAB");
             assertEqual(result.score, 12, "Best score should be 12");
+        });
+
+        test("AI: Palindrome Strategy", () => {
+            // Setup globals
+            // Hand has 3 cards, so hole mult is 1x.
+            hand = ['D', 'A', 'D']; 
+            board = ['F', 'E', 'R', 'X', 'Y']; 
+            
+            // FEAR: F(6)+E(1)+A(1)+R(3) = 11. Length 4 (1x) = 11.
+            // DAD: D(4)+A(1)+D(4) = 9. Length 3 (1x) = 9. Palindrome Bonus (9+9) = 18.
+            dictionary = ['FEAR', 'DAD'];
+            
+            const result = findBestPossibleScore();
+            assertEqual(result.word, "DAD", "Should choose DAD (18) over FEAR (11)");
+            assertEqual(result.score, 18, "Score should be 18");
         });
 
         test("AI: Go Bust (No words possible)", () => {

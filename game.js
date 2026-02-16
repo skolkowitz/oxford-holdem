@@ -271,6 +271,11 @@ function updateRulesUI() {
         draftText = '<strong>Draft:</strong> Pick the best 3 hole cards from 5 options.';
     }
 
+    scoringText += '<div style="margin-bottom: 5px; font-weight: bold; color: #333;">Word Bonuses</div>';
+    scoringText += '<ul style="margin-top: 5px; padding-left: 20px; margin-bottom: 15px; font-size: 0.9rem; color: #555;">';
+    scoringText += '<li><strong>Palindrome:</strong> <span style="color:#f9a825; font-weight:bold;">Score + Reverse Score</span> (e.g. 31 + 13 = 44).</li>';
+    scoringText += '</ul>';
+
     scoringText += '<div style="background:#f5f5f5; padding:10px; border-radius:8px; border:1px solid #e0e0e0; margin-bottom:10px;">';
     scoringText += '<div style="font-weight:bold; color:#333; margin-bottom:4px;">Formula</div>';
     scoringText += '<div style="color:#555; font-size:0.9rem;">(Points × <span style="color:#9c27b0; font-weight:bold;">Card Mults</span>) × <span style="color:#d32f2f; font-weight:bold;">Length Mult</span></div>';
@@ -778,6 +783,7 @@ function render(isInteraction = false, redrawBoard = true) {
 function getScoreColor(l) { const s = SCORES[l]; return s<=1 ? "#2196F3" : s<=3 ? "#4CAF50" : s<=6 ? "#FF9800" : "#E91E63"; }
 function isProfane(text) { if(!text) return false; const upper = text.toUpperCase(); return BAD_WORDS.some(bad => upper.includes(bad)); }
 function canFormWord(word, pool) { let tempPool = [...pool]; for (let char of word) { let idx = tempPool.indexOf(char); if (idx === -1) idx = tempPool.indexOf('*'); if (idx === -1) return false; tempPool.splice(idx, 1); } return true; }
+function isPalindrome(word) { if (!word || word.length < 3) return false; for (let i = 0; i < Math.floor(word.length / 2); i++) { if (word[i] !== word[word.length - 1 - i]) return false; } return true; }
 
 function calculateBaseScore(word, pool) {
     let currentPool = [...pool];
@@ -876,7 +882,11 @@ function calculateOptimalScore(word, cardObjects) {
     }
     
     let mult = word.length >= 8 ? 3 : word.length >= 7 ? 2 : word.length >= 5 ? 1.5 : 1;
-    return Math.floor(baseScore * mult);
+    let total = Math.floor(baseScore * mult);
+    if (isPalindrome(word)) {
+        total += parseInt(total.toString().split('').reverse().join(''));
+    }
+    return total;
 }
 
 function findBestPossibleScore() {
@@ -1149,7 +1159,11 @@ function calculateScoreWithMultipliers(word) {
     }
     
     let mult = word.length >= 8 ? 3 : word.length >= 7 ? 2 : word.length >= 5 ? 1.5 : 1;
-    return Math.floor(baseScore * mult);
+    let total = Math.floor(baseScore * mult);
+    if (isPalindrome(word)) {
+        total += parseInt(total.toString().split('').reverse().join(''));
+    }
+    return total;
 }
 
 function updateScorePreview(word) {
@@ -1215,8 +1229,15 @@ function updateScorePreview(word) {
     
     let calculationHtml = breakdown.join('+');
     if (mult > 1) {
+        calculationHtml = `(${calculationHtml})`;
         let color = mult >= 3 ? '#d32f2f' : mult >= 2 ? '#1565c0' : '#2e7d32';
-        calculationHtml = `(${calculationHtml}) <span style="color:${color}; font-weight:bold;">x${mult}</span>`;
+        calculationHtml += ` <span style="color:${color}; font-weight:bold;">x${mult}</span>`;
+    }
+
+    if (isPalindrome(word)) {
+        let reversed = parseInt(total.toString().split('').reverse().join(''));
+        calculationHtml += ` + <span style="color:#FFD700; font-weight:bold;">${reversed} (Palindrome)</span>`;
+        total += reversed;
     }
     
     let html = '<span style="color:#ccc; margin-right:8px;">Score Preview:</span>';
