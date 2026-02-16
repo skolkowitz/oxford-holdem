@@ -204,7 +204,7 @@ const DICT_URL = 'https://raw.githubusercontent.com/redbo/scrabble/master/dictio
 const BAD_WORDS = ['FUCK', 'SHIT', 'BITCH', 'CUNT', 'NIGGA', 'NIGGER', 'WHORE', 'SLUT', 'PENIS', 'VAGINA', 'PUSSY', 'NAZI', 'HITLER', 'KKK', 'FAG', 'DYKE', 'RAPE', 'ASSHOLE', 'RETARD'];
 
 /* --- STATE --- */
-let deck = [], hand = [], board = [], discards = [], draftPool = [], selectedIndices = [], dictionary = [];
+let deck = [], hand = [], board = [], discards = [], draftPool = [], selectedIndices = [], dictionary = [], currentCardAssignments = [];
 let phaseIndex = 0, swapsDoneThisHand = 0, swapLockedThisRound = false;
 let handAnims = [], boardAnims = [];
 let currentDeckSort = { field: 'left', dir: 'desc' };
@@ -649,6 +649,7 @@ function toggleSelect(i, isBoard = false) {
             if (!isNaN(idx)) {
                 const val = input.value;
                 input.value = val.slice(0, idx) + val.slice(idx + 1);
+                currentCardAssignments.splice(idx, 1);
                 handleTyping();
             }
             return;
@@ -658,11 +659,12 @@ function toggleSelect(i, isBoard = false) {
             const letter = prompt("What letter is this wildcard?");
             if (letter && /^[a-zA-Z]$/.test(letter.trim())) {
                 input.value += letter.trim().toUpperCase();
+                handleTyping(card);
             }
         } else {
             input.value += char;
+            handleTyping(card);
         }
-        handleTyping();
         return;
     }
     if (isBoard) return;
@@ -963,7 +965,7 @@ function softReset() {
         preview.style.display = "none";
     }
     
-    deck = []; hand = []; board = []; discards = []; draftPool = []; selectedIndices = [];
+    deck = []; hand = []; board = []; discards = []; draftPool = []; selectedIndices = []; currentCardAssignments = [];
     phaseIndex = 0; swapsDoneThisHand = 0; swapLockedThisRound = false;
     
     nextPhase();
@@ -1074,7 +1076,10 @@ function markInvalid(msg) {
     SoundManager.play('error'); setTimeout(() => inp.placeholder = "Enter word...", 1500);
 }
 
-function handleTyping() {
+function handleTyping(forcedCard = null) {
+    // If called from event listener, forcedCard is an Event object. Ignore it.
+    if (forcedCard && forcedCard.type === 'input') forcedCard = null;
+
     const input = document.getElementById('word-input'); if(input.style.display === 'none') return;
     input.classList.remove('invalid'); const text = input.value.toUpperCase().split('');
     
@@ -1084,6 +1089,18 @@ function handleTyping() {
         mainBtn.disabled = !valid;
         mainBtn.style.opacity = valid ? "1" : "0.5";
         mainBtn.style.cursor = valid ? "pointer" : "not-allowed";
+    }
+
+    // Sync assignments array size
+    if (currentCardAssignments.length > text.length) {
+        currentCardAssignments.length = text.length;
+    } else {
+        while (currentCardAssignments.length < text.length) currentCardAssignments.push(null);
+    }
+
+    // Handle forced card (User clicked a specific card for the last character)
+    if (forcedCard && text.length > 0) {
+        currentCardAssignments[text.length - 1] = forcedCard.id;
     }
     
     // Get all cards and sort to prioritize River card (visually)
@@ -1104,7 +1121,29 @@ function handleTyping() {
     });
 
     let usedCards = new Set();
+
+    // Pass 1: Apply Locked Assignments
     text.forEach((char, idx) => {
+        const lockedId = currentCardAssignments[idx];
+        if (lockedId) {
+            const card = document.getElementById(lockedId);
+            if (card && !usedCards.has(card)) {
+                const cardChar = card.getAttribute('data-letter');
+                if (cardChar === char || cardChar === '*') {
+                    card.classList.add('bumped');
+                    card.dataset.inputIndex = idx;
+                    usedCards.add(card);
+                    return;
+                }
+            }
+            currentCardAssignments[idx] = null; // Invalid assignment
+        }
+    });
+
+    // Pass 2: Fill Gaps with Best Available
+    text.forEach((char, idx) => {
+        if (currentCardAssignments[idx]) return;
+
         let found = false;
         // 1. Exact Match
         for(let card of allCards) {
@@ -1113,6 +1152,7 @@ function handleTyping() {
                 card.classList.add('bumped'); 
                 card.dataset.inputIndex = idx;
                 usedCards.add(card); 
+                currentCardAssignments[idx] = card.id; // Lock it
                 found = true; 
                 break; 
             }
@@ -1125,6 +1165,7 @@ function handleTyping() {
                     card.classList.add('bumped'); 
                     card.dataset.inputIndex = idx;
                     usedCards.add(card); 
+                    currentCardAssignments[idx] = card.id; // Lock it
                     break; 
                 }
             }
