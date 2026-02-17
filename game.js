@@ -1018,7 +1018,21 @@ async function calculateFinalScore() {
 
     document.getElementById('modal-word').innerText = word;
     document.getElementById('modal-score').innerText = userScore;
-    document.getElementById('best-word-text').innerText = `${best.word} (${best.score} pts)`;
+    
+    let oracleText = `${best.word} (${best.score} pts)`;
+    if (isReplayMode) {
+        const phrases = [
+            "Wait, this feels familiar...",
+            "Wow, deja vu!",
+            "Haven't we done this before...?",
+            "I feel like I've seen this hand...",
+            "Trying for a better result?",
+            "Time loop detected!",
+            "Groundhog Day?"
+        ];
+        oracleText += `\n"${phrases[Math.floor(Math.random() * phrases.length)]}"`;
+    }
+    document.getElementById('best-word-text').innerText = oracleText;
     
     if (!isReplayMode) {
         const daily = parseInt(localStorage.getItem('oxford_total') || 0) + userScore;
