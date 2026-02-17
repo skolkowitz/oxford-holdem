@@ -3,8 +3,13 @@ let isMuted = true;
 function toggleMute() { isMuted = !isMuted; updateMuteUI(); }
 function updateMuteUI() {
     const btn = document.getElementById('music-btn');
-    if (isMuted) { btn.innerText = "🔇"; btn.style.color = "#777"; btn.style.opacity = "1"; } 
-    else { btn.innerText = "🔊"; btn.style.color = "#eee"; btn.style.opacity = "1"; }
+    if (!btn) return;
+    btn.innerText = "🔊";
+    if (isMuted) btn.classList.add('crossed-out');
+    else btn.classList.remove('crossed-out');
+    
+    // Clear legacy inline styles
+    btn.style.color = ""; btn.style.opacity = "";
 }
 
 function toggleHiddenBonuses() {
@@ -25,8 +30,11 @@ function updateBonusUI() {
         btn.style.display = 'none';
     } else {
         btn.style.display = 'inline-flex';
-        btn.style.opacity = hiddenBonusesActive ? "1" : "0.4";
-        btn.style.filter = hiddenBonusesActive ? "none" : "grayscale(100%)";
+        // Clear legacy inline styles
+        btn.style.opacity = ""; btn.style.filter = "";
+        
+        if (!hiddenBonusesActive) btn.classList.add('crossed-out');
+        else btn.classList.remove('crossed-out');
     }
 }
 
@@ -1586,6 +1594,18 @@ function injectStatsUI() {
                 padding-top: 1px;
             }
         }
+        .crossed-out {
+            color: rgba(255, 255, 255, 0.3) !important;
+            position: relative;
+        }
+        .crossed-out::after, .crossed-out::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%; width: 60%; height: 2px;
+            background: #ff5252; border-radius: 2px;
+        }
+        .crossed-out::after { transform: translate(-50%, -50%) rotate(45deg); }
+        .crossed-out::before { transform: translate(-50%, -50%) rotate(-45deg); }
     `;
     document.head.appendChild(style);
     
