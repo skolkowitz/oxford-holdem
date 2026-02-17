@@ -39,27 +39,18 @@
         /* --- LAYOUT --- */
         #main-container { 
             display: flex; gap: 30px; align-items: flex-start; justify-content: center; 
-            width: 100%; max-width: 1250px; 
-            flex-wrap: wrap; 
+            width: 100%; max-width: 850px; 
         }
 
-        /* SIDEBAR */
-        #distribution-sidebar { 
-            background: var(--ui-dark); padding: 15px; border-radius: 15px; 
-            border: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; min-width: 180px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        #distribution-sidebar h4 { margin-top: 0; color: var(--gold); text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; }
-        .dist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 20px;}
-        .dist-item { display: flex; justify-content: space-between; padding: 2px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-
-        .pile-container { display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
         .mini-card {
             width: 60px; height: 85px; border-radius: 6px; 
             display: flex; justify-content: center; align-items: center;
             font-weight: bold; font-size: 1.2rem;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.5); position: relative;
+            transition: transform 0.1s;
         }
+        .mini-card:active { transform: scale(0.95); }
+        
         .deck-back {
             background: #b71c1c;
             background-image: repeating-linear-gradient(45deg, #c62828 0, #c62828 5px, #b71c1c 5px, #b71c1c 10px);
@@ -103,8 +94,16 @@
         button.action-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #bbb; }
         button.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+        .table-action-row { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; margin-top: 15px; }
+        .pile-group { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 70px; cursor: pointer; }
+        .pile-label { font-size: 0.65rem; color: rgba(255,255,255,0.4); font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
+        
+        #controls { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 0 10px; }
+        .button-group { display: flex; justify-content: center; flex-wrap: wrap; }
+
         #word-input { 
-            padding: 12px; border-radius: 8px; border: 2px solid var(--gold); width: 220px; 
+            padding: 12px; border-radius: 8px; border: 2px solid var(--gold); 
+            width: 100%; max-width: 220px; box-sizing: border-box;
             font-size: 1.4rem; text-transform: uppercase; text-align: center; display: none; 
             background: #222; color: white; margin-bottom: 10px;
         }
@@ -182,15 +181,18 @@
         
         @media (max-width: 768px) {
             body { padding: 5px; }
-            #main-container { flex-direction: column-reverse; align-items: center; }
-            #distribution-sidebar { width: 90%; display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 10px 20px; }
-            #distribution-sidebar h4, .dist-grid, #discard-list { display: none; } 
-            .pile-container { flex-direction: row; border-top: none; padding-top: 0; margin-top: 0; width: 100%; justify-content: space-around; }
+            #main-container { flex-direction: column; align-items: center; }
             
             #game-table { 
                 padding: 10px; border-width: 6px; width: 100%; 
                 box-sizing: border-box; margin: 0 auto;
             }
+            
+            .table-action-row { align-items: center; }
+            .pile-group { min-width: 50px; }
+            .mini-card { width: 45px; height: 64px; font-size: 0.9rem; }
+            #controls { padding: 0 5px; }
+            button.action-btn { padding: 10px 15px; font-size: 0.9rem; }
             
             .header-row { flex-direction: column; gap: 10px; margin-bottom: 15px; }
             .stats-group { width: 100%; justify-content: center; flex-wrap: wrap; gap: 8px; }
@@ -234,7 +236,6 @@
             /* Keyboard Active State (Mobile) */
             body.keyboard-active { padding: 0; }
             body.keyboard-active #main-container { margin: 0; width: 100%; }
-            body.keyboard-active #distribution-sidebar,
             body.keyboard-active .header-row,
             body.keyboard-active #credits,
             body.keyboard-active #status-msg { display: none !important; }
@@ -250,6 +251,9 @@
             
             body.keyboard-active .game-area { margin-bottom: 2px; }
 
+            /* Hide piles when keyboard is open to save space */
+            body.keyboard-active .pile-group { display: none !important; }
+
             body.keyboard-active h3 { display: none; }
             .modal-box { padding: 20px; max-height: 85vh; }
         }
@@ -258,21 +262,6 @@
 <body>
 
     <div id="main-container">
-        <div id="distribution-sidebar">
-            
-            <div class="pile-container">
-                <div onclick="showDeckStats()" style="cursor:pointer; display:flex; flex-direction:column; align-items:center;">
-                    <div style="font-size:0.6rem; color:#aaa; margin-bottom:3px; text-align:center;">DECK</div>
-                    <div class="mini-card deck-back" id="deck-count-display">100</div>
-                    <div style="font-size:0.6rem; color:var(--gold); margin-top:5px; text-align:center; line-height:1.1; opacity:0.8; max-width:80px;">Tap to see<br>remaining</div>
-                </div>
-                <div>
-                    <div style="font-size:0.6rem; color:#aaa; margin-bottom:3px; text-align:center;">DISCARDS</div>
-                    <div class="mini-card discard-pile" id="discard-display">0</div>
-                </div>
-            </div>
-            <div id="discard-list" style="margin-top:10px; font-size:0.7rem; color:#888; text-align:center; word-wrap:break-word;"></div>
-        </div>
 
         <div id="game-table">
             
@@ -305,11 +294,24 @@
                 <h3 id="hand-label" style="color: rgba(255,255,255,0.3); font-size: 0.7rem; letter-spacing: 2px; margin: 5px 0 0 0;">HOLE CARDS</h3>
             </div>
 
-            <div id="controls">
-                <input type="text" id="word-input" placeholder="Type word..." oninput="handleTyping()" onkeydown="if(event.key === 'Enter') calculateFinalScore()">
-                <br>
-                <button id="main-btn" class="action-btn" onclick="nextPhase()" disabled>Start</button>
-                <button id="swap-btn" class="action-btn" onclick="executeSwap()" style="display:none">Confirm Swap</button>
+            <div class="table-action-row">
+                <div class="pile-group" onclick="showDeckStats()" title="View Deck Stats">
+                    <div class="mini-card deck-back" id="deck-count-display">100</div>
+                    <div class="pile-label">DECK</div>
+                </div>
+
+                <div id="controls">
+                    <input type="text" id="word-input" placeholder="Type word..." oninput="handleTyping()" onkeydown="if(event.key === 'Enter') calculateFinalScore()">
+                    <div class="button-group">
+                        <button id="main-btn" class="action-btn" onclick="nextPhase()" disabled>Start</button>
+                        <button id="swap-btn" class="action-btn" onclick="executeSwap()" style="display:none">Confirm Swap</button>
+                    </div>
+                </div>
+
+                <div class="pile-group" style="cursor: default;">
+                    <div class="mini-card discard-pile" id="discard-display">0</div>
+                    <div class="pile-label">DISCARD</div>
+                </div>
             </div>
         </div>
     </div>

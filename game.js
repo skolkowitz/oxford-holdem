@@ -679,7 +679,6 @@ function initDeck() {
 function updatePileCounts() {
     document.getElementById('deck-count-display').innerText = deck.length;
     document.getElementById('discard-display').innerText = discards.length;
-    document.getElementById('discard-list').innerText = discards.join(', ');
 }
 
 // Advances the game state machine
