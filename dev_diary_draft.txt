@@ -3,4 +3,5 @@ Visual updates and polish:
 - Changed "Dev Diary" button color to Teal.
 - Improved spacing of main menu buttons.
 - Added clearer visual separators between diary entries.
+- Mobile Layout Fix: Moved deck and discard piles to their own row to prevent overlapping with the score preview.
 ---

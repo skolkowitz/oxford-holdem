@@ -191,10 +191,10 @@ OK, as a reminder, my brother and I are getting your help coding a web app game 
                 box-sizing: border-box; margin: 0 auto;
             }
             
-            .table-action-row { align-items: center; }
-            .pile-group { min-width: 50px; }
+            .table-action-row { align-items: center; flex-wrap: wrap; }
+            .pile-group { min-width: 50px; order: 1; }
             .mini-card { width: 45px; height: 64px; font-size: 0.9rem; }
-            #controls { padding: 0 5px; }
+            #controls { padding: 0 5px; order: 2; width: 100%; margin-top: 10px; }
             button.action-btn { padding: 10px 15px; font-size: 0.9rem; }
             
             .header-row { flex-direction: column; gap: 10px; margin-bottom: 15px; }
