@@ -7,6 +7,29 @@ function updateMuteUI() {
     else { btn.innerText = "🔊"; btn.style.color = "#eee"; btn.style.opacity = "1"; }
 }
 
+function toggleHiddenBonuses() {
+    if (gameMode === 'daily') return;
+    userHiddenBonusPref = !userHiddenBonusPref;
+    hiddenBonusesActive = userHiddenBonusPref;
+    localStorage.setItem('oxford_hidden_bonuses', userHiddenBonusPref);
+    updateBonusUI();
+    updateRulesUI();
+    if (phaseIndex === 5) handleTyping();
+    SoundManager.play('chip');
+}
+
+function updateBonusUI() {
+    const btn = document.getElementById('bonus-btn');
+    if (!btn) return;
+    if (gameMode === 'daily') {
+        btn.style.display = 'none';
+    } else {
+        btn.style.display = 'inline-flex';
+        btn.style.opacity = hiddenBonusesActive ? "1" : "0.4";
+        btn.style.filter = hiddenBonusesActive ? "none" : "grayscale(100%)";
+    }
+}
+
 /* --- FIREBASE LEADERBOARD MANAGER --- */
 const LeaderboardManager = {
     db: null,
@@ -128,7 +151,6 @@ const LeaderboardManager = {
 
                 // Hide word if user hasn't played today
                 let wordDisplay = userPlayedToday ? d.word : `<span class="hidden-word">🙈 HIDDEN</span>`;
-                if (userPlayedToday && isPalindrome(d.word)) wordDisplay += ' 🏎️';
                 const safeName = isProfane(d.name) ? '******' : d.name;
                 
                 html += `<tr><td class="lb-rank" style="${rankStyle} white-space:nowrap;">${rankStr}</td><td>${safeName}</td><td style="font-size:0.8rem;">${wordDisplay}</td><td class="lb-score">${d.score}</td></tr>`;
@@ -212,6 +234,8 @@ let phaseIndex = 0, swapsDoneThisHand = 0, swapLockedThisRound = false;
 let handAnims = [], boardAnims = [];
 let currentDeckSort = { field: 'left', dir: 'desc' };
 const ENABLE_VARIABLE_HOLE_CARDS = true;
+let hiddenBonusesActive = false;
+let userHiddenBonusPref = localStorage.getItem('oxford_hidden_bonuses') === 'true';
 
 async function initGame() {
     loadStats();
@@ -276,10 +300,12 @@ function updateRulesUI() {
         draftText = '<strong>Draft:</strong> Pick the best 3 hole cards from 5 options.';
     }
 
-    scoringText += '<div style="margin-bottom: 5px; font-weight: bold; color: #333;">Race Car Bonus <span style="font-size:1.5rem;">🏎️</span></div>';
-    scoringText += '<ul style="margin-top: 5px; padding-left: 20px; margin-bottom: 15px; font-size: 0.9rem; color: #555;">';
-    scoringText += '<li><strong>Palindrome:</strong> <span style="color:#f9a825; font-weight:bold;">Score + Reverse Score</span> (e.g. 31 + 13 = 44).</li>';
-    scoringText += '</ul>';
+    if (hiddenBonusesActive) {
+        scoringText += '<div style="margin-bottom: 5px; font-weight: bold; color: #333;">Race Car Bonus <span style="font-size:1.5rem;">🏎️</span></div>';
+        scoringText += '<ul style="margin-top: 5px; padding-left: 20px; margin-bottom: 15px; font-size: 0.9rem; color: #555;">';
+        scoringText += '<li><strong>Palindrome:</strong> <span style="color:#f9a825; font-weight:bold;">Score + Reverse Score</span> (e.g. 31 + 13 = 44).</li>';
+        scoringText += '</ul>';
+    }
 
     scoringText += '<div style="background:#f5f5f5; padding:10px; border-radius:8px; border:1px solid #e0e0e0; margin-bottom:10px;">';
     scoringText += '<div style="font-weight:bold; color:#333; margin-bottom:4px;">Formula</div>';
@@ -563,6 +589,12 @@ function startGame(mode) {
     document.getElementById('start-overlay').style.display = 'none';
     updateMuteUI();
     document.getElementById('main-btn').disabled = false;
+    if (mode === 'daily') {
+        hiddenBonusesActive = false;
+    } else {
+        hiddenBonusesActive = userHiddenBonusPref;
+    }
+    updateBonusUI();
     nextPhase();
 }
 
@@ -967,7 +999,7 @@ function calculateOptimalScore(word, cardObjects) {
     
     let mult = word.length >= 8 ? 3 : word.length >= 7 ? 2 : word.length >= 5 ? 1.5 : 1;
     let total = Math.floor(baseScore * mult);
-    if (isPalindrome(word)) {
+    if (hiddenBonusesActive && isPalindrome(word)) {
         total += parseInt(total.toString().split('').reverse().join(''));
     }
     return total;
@@ -1041,7 +1073,7 @@ async function calculateFinalScore() {
     document.getElementById('modal-score').innerText = userScore;
     
     let oracleText = `${best.word}`;
-    if (isPalindrome(best.word)) oracleText += ' 🏎️';
+    if (hiddenBonusesActive && isPalindrome(best.word)) oracleText += ' 🏎️';
     oracleText += ` (${best.score} pts)`;
     if (isReplayMode) {
         const phrases = [
@@ -1420,7 +1452,7 @@ function calculateScoreWithMultipliers(word) {
     
     let mult = word.length >= 8 ? 3 : word.length >= 7 ? 2 : word.length >= 5 ? 1.5 : 1;
     let total = Math.floor(baseScore * mult);
-    if (isPalindrome(word)) {
+    if (hiddenBonusesActive && isPalindrome(word)) {
         total += parseInt(total.toString().split('').reverse().join(''));
     }
     return total;
@@ -1500,7 +1532,7 @@ function updateScorePreview(word) {
         calculationHtml += ` <span style="color:${color}; font-weight:bold;">x${mult}</span>`;
     }
 
-    if (isPalindrome(word)) {
+    if (hiddenBonusesActive && isPalindrome(word)) {
         let reversed = parseInt(total.toString().split('').reverse().join(''));
         calculationHtml += ` + <span style="color:#FFD700; font-weight:bold;">${reversed} <span style="font-size:1.5rem;">🏎️</span></span>`;
         total += reversed;
@@ -1585,6 +1617,13 @@ function injectStatsUI() {
         statsBtn.onclick = showStats;
         musicBtn.parentNode.insertBefore(statsBtn, musicBtn.nextSibling);
         
+        const bonusBtn = document.createElement('button');
+        bonusBtn.id = 'bonus-btn';
+        bonusBtn.innerText = '🃏';
+        bonusBtn.className = 'menu-btn';
+        bonusBtn.onclick = toggleHiddenBonuses;
+        musicBtn.parentNode.insertBefore(bonusBtn, statsBtn.nextSibling);
+        
         // Apply style to all buttons in the header container
         const siblings = musicBtn.parentNode.children;
         for (let el of siblings) {
@@ -1602,7 +1641,7 @@ function injectStatsUI() {
         'music-btn', 
         'rules-btn', 'howto-btn', 'help-btn', 'how-to-btn', 'tutorial-btn',
         'leaderboard-btn',
-        'stats-btn'
+        'stats-btn', 'bonus-btn'
     ];
     targetIds.forEach(id => standardizeBtn(document.getElementById(id)));
     

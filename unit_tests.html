@@ -123,6 +123,24 @@
             assertEqual(score, 16, "STEAM (5 letters) should be 16 points");
         });
 
+        test("Score: Palindrome Bonus (Flag OFF)", () => {
+            // MOM (M=5, O=2, M=5) = 12.
+            // Flag OFF -> 12.
+            hiddenBonusesActive = false;
+            const cards = makeCards(['M', 'O', 'M'], ['X', 'Y', 'Z', 'Q', 'J']);
+            const score = calculateOptimalScore("MOM", cards);
+            assertEqual(score, 12, "MOM should be 12 points (no bonus)");
+        });
+
+        test("Score: Palindrome Bonus (Flag ON)", () => {
+            // MOM (M=5, O=2, M=5) = 12.
+            // Flag ON -> 12 + 21 = 33.
+            hiddenBonusesActive = true;
+            const cards = makeCards(['M', 'O', 'M'], ['X', 'Y', 'Z', 'Q', 'J']);
+            const score = calculateOptimalScore("MOM", cards);
+            assertEqual(score, 33, "MOM should be 33 points (12 + 21)");
+        });
+
         // 2. Validation Tests
         test("Validation: Missing Letter", () => {
             const cards = makeCards(['C', 'A'], ['X', 'Y', 'Z', 'Q', 'J']); // Missing T
@@ -136,14 +154,6 @@
             const cards = makeCards(['C', 'A', '*'], ['X', 'Y', 'Z', 'Q', 'J']);
             const score = calculateOptimalScore("CAT", cards);
             assertEqual(score, 5, "CAT with wildcard should be 5 points");
-        });
-
-        test("Feature: Palindrome Bonus", () => {
-            // DAD: D=4, A=1, D=4. Total 9.
-            // Palindrome bonus: 9 reversed is 9. Total 18.
-            const cards = makeCards(['D', 'A', 'D'], ['X', 'Y', 'Z', 'Q', 'J']);
-            const score = calculateOptimalScore("DAD", cards);
-            assertEqual(score, 18, "DAD (9) + 9 reversed = 18");
         });
 
         // 3. AI Tests
@@ -162,21 +172,6 @@
             assertEqual(result.score, 12, "Best score should be 12");
         });
 
-        test("AI: Palindrome Strategy", () => {
-            // Setup globals
-            // Hand has 3 cards, so hole mult is 1x.
-            hand = ['D', 'A', 'D']; 
-            board = ['F', 'E', 'R', 'X', 'Y']; 
-            
-            // FEAR: F(6)+E(1)+A(1)+R(3) = 11. Length 4 (1x) = 11.
-            // DAD: D(4)+A(1)+D(4) = 9. Length 3 (1x) = 9. Palindrome Bonus (9+9) = 18.
-            dictionary = ['FEAR', 'DAD'];
-            
-            const result = findBestPossibleScore();
-            assertEqual(result.word, "DAD", "Should choose DAD (18) over FEAR (11)");
-            assertEqual(result.score, 18, "Score should be 18");
-        });
-
         test("AI: Go Bust (No words possible)", () => {
             // Setup global variables
             hand = ['Q', 'Q', 'Q'];
@@ -186,6 +181,23 @@
             const result = findBestPossibleScore();
             assertEqual(result.word, "NONE", "Best word should be NONE");
             assertEqual(result.score, 0, "Best score should be 0");
+        });
+
+        test("AI: Best Word with Hidden Bonus", () => {
+            // Setup global variables
+            hand = ['Z', 'A', 'P', 'M', 'O'];
+            board = ['M', 'X', 'Y', 'Z', 'Q']; 
+            dictionary = ['ZAP', 'MOM'];
+            
+            // Case 1: OFF (ZAP=17, MOM=12)
+            hiddenBonusesActive = false;
+            let result = findBestPossibleScore();
+            assertEqual(result.word, "ZAP", "Should pick highest base score (ZAP) when OFF");
+            
+            // Case 2: ON (ZAP=17, MOM=12+21=33)
+            hiddenBonusesActive = true;
+            result = findBestPossibleScore();
+            assertEqual(result.word, "MOM", "Should pick palindrome (MOM) when ON");
         });
 
         // Summary
