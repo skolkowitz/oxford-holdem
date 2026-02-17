@@ -1,0 +1,8 @@
+DATE: Latest Update
+Welcome to the Dev Diary!
+We've added this section to keep you updated on the latest changes, bug fixes, and fun new features coming to Oxford Hold 'Em.
+Recent changes include:
+- Added this Dev Diary!
+- UI improvements for mobile devices.
+- Switched Dev Diary to use simple text files.
+- ShyMonk & Koko

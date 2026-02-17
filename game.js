@@ -1934,16 +1934,52 @@ async function showDevDiary() {
     modal.style.display = 'flex';
     
     try {
-        const res = await fetch('dev_diary.html');
+        const res = await fetch('dev_diary.txt');
         if (res.ok) {
             const text = await res.text();
-            content.innerHTML = text;
+            content.innerHTML = parseDiaryText(text);
         } else {
             content.innerHTML = "<p>Could not load diary entries.</p>";
         }
     } catch (e) {
         content.innerHTML = "<p>Error loading diary.</p>";
     }
+}
+
+function parseDiaryText(text) {
+    const entries = text.split('---').map(e => e.trim()).filter(e => e);
+    let html = '';
+    
+    entries.forEach(entry => {
+        const lines = entry.split('\n');
+        let entryHtml = '<div class="diary-entry" style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee;">';
+        let inList = false;
+        let hasDate = false;
+
+        lines.forEach(line => {
+            line = line.trim();
+            if (!line) return;
+
+            if (line.toUpperCase().startsWith('DATE:')) {
+                if (inList) { entryHtml += '</ul>'; inList = false; }
+                const dateStr = line.substring(5).trim();
+                entryHtml += `<div class="diary-date" style="font-weight: bold; color: #5d4037; margin-bottom: 5px; font-size: 1.1rem;">📅 ${dateStr}</div><div class="diary-content">`;
+                hasDate = true;
+            } else if (line.startsWith('-')) {
+                if (!inList) { entryHtml += '<ul style="margin: 5px 0; padding-left: 20px;">'; inList = true; }
+                entryHtml += `<li>${line.substring(1).trim()}</li>`;
+            } else {
+                if (inList) { entryHtml += '</ul>'; inList = false; }
+                entryHtml += `<p style="margin: 5px 0;">${line}</p>`;
+            }
+        });
+        
+        if (inList) entryHtml += '</ul>';
+        if (hasDate) entryHtml += '</div>';
+        entryHtml += '</div>';
+        html += entryHtml;
+    });
+    return html || '<p>No entries found.</p>';
 }
 
 // Shows a one-time announcement (Legacy)

@@ -1,6 +1,6 @@
-DRAFT SUMMARY OF RECENT CHANGES:
---------------------------------
 DATE: [Current Date]
+Summary of changes...
 - Added "Dev Diary" button to the home screen.
 - Implemented Dev Diary modal to view updates from the developers.
-- Created dev_diary.html for storing update history.
+- Switched Dev Diary to use simple text files (.txt) instead of HTML.
+---
