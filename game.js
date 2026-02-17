@@ -1123,10 +1123,19 @@ async function calculateFinalScore() {
             "This feels familiar...",
             "Wow, deja vu!",
             "Haven't we done this before...?",
-            "I feel like I've seen this hand...",
+            "I feel like I've already seen this hand...",
             "Trying for a better result?",
             "Time loop detected!",
-            "Is it Groundhog Day?"
+            "Great Scott!",
+            "1.21 gigawatts!",
+            "Run Lola, run!",
+            "Are you here to save the whales?",
+            "Oh, you’re like Bill Murray in that one movie… Caddyshack?",
+            "Hey, this is just like Palm Springs, that other movie about time loops!",  
+            "A glitch in the Matrix!",
+            "This still makes a lot more sense than Primer.", 
+            "Don’t step on anything! Even the tiniest change can alter the future in ways you can't imagine…",
+            "I was a player just like you once... but then I spent too much time replaying the same hand over and over..."
         ];
         oracleText += `\n"${phrases[Math.floor(Math.random() * phrases.length)]}"`;
     }
