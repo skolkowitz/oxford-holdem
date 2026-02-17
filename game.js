@@ -1022,13 +1022,13 @@ async function calculateFinalScore() {
     let oracleText = `${best.word} (${best.score} pts)`;
     if (isReplayMode) {
         const phrases = [
-            "Wait, this feels familiar...",
+            "This feels familiar...",
             "Wow, deja vu!",
             "Haven't we done this before...?",
             "I feel like I've seen this hand...",
             "Trying for a better result?",
             "Time loop detected!",
-            "Groundhog Day?"
+            "Is it Groundhog Day?"
         ];
         oracleText += `\n"${phrases[Math.floor(Math.random() * phrases.length)]}"`;
     }
