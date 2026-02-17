@@ -511,7 +511,7 @@ function showDailyReplayMenu() {
     modal.innerHTML = `
         <div class="modal-box" style="text-align:center; max-width: 300px;">
             <h3 style="color:#333; margin-top:0;">You already drew today.</h3>
-            <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">Replaying will not affect your stats or leaderboard standing.</p>
+            <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">There will be a new <strong>Daily Draw</strong> at midnight GMT. In the mean time, you can replay today's <strong>Daily Draw</strong> as many times as you want, but it will not affect your stats or leaderboard standing.</p>
             <button class="action-btn" id="daily-menu-lb" style="width:100%; margin-bottom:10px;">🏆 View Leaderboard</button>
             <button class="action-btn" id="daily-menu-replay" style="width:100%; margin-bottom:10px; background:#5d4037;">⏳ Replay Daily Draw</button>
             <button class="action-btn" onclick="document.getElementById('daily-replay-modal').style.display='none'" style="width:100%; background:#777;">Close</button>
