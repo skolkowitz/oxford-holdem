@@ -1128,7 +1128,7 @@ async function calculateFinalScore() {
     document.getElementById('modal-word').innerText = word;
     document.getElementById('modal-score').innerText = userScore;
     
-    let oracleText = `${best.word}`;
+    let oracleText = `${best.word} 🔮`;
     if (hiddenBonusesActive && isPalindrome(best.word)) oracleText += ' 🏎️';
     oracleText += ` (${best.score} pts)`;
     if (isReplayMode) {
