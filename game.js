@@ -294,6 +294,7 @@ async function initGame() {
 
     updateBonusUI();
     updateRulesUI();
+    showAnnouncement();
 }
 
 function showRules() { updateRulesUI(); document.getElementById('rules-modal').style.display = 'flex'; }
@@ -1942,4 +1943,56 @@ function injectDevUI() {
     panel.appendChild(btnClose);
 
     document.body.appendChild(panel);
+}
+
+function showAnnouncement() {
+    // --- ANNOUNCEMENT CONFIG ---
+    const active = true; // Toggle to false to disable
+    const id = 'oxford_announcement_racecar'; // Unique ID for localStorage
+    const htmlContent = `
+        <p><strong>Dear Oxford Hold 'Em community,</strong></p>
+        <p>The last 24 hours have been a time of great learning for us. We know that in these heady times, in which few things can be trusted, you have come to look upon Oxford Hold 'Em as a source of constancy, a leeward cove in these tempestuous times.</p>
+        <p>The Race Car controversy has affected the whole community, and sent ripples over the surface of our previously placid lake. As a result, we have currently placed on hold the Race Car bonus in the Daily Draw, but is still available in the Free Play environment.</p>
+        <p>In the future, we will be proactive, and update you with any rule changes before they are instituted, to avoid any further cataclysms. While our game is based on chance, your trust in us should not be.</p>
+        <p>That being said... due to some information that was brought to our attention, Oxford Hold 'Em will soon be renamed, so please make sure to emotionally prepare yourselves for that change.</p>
+        <p style="text-align:right; font-weight:bold; margin-top:20px;">Sincerely,<br>ShyMonk & Koko</p>
+    `;
+    // ---------------------------
+
+    if (!active) return;
+    if (localStorage.getItem(id)) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'announcement-modal';
+    modal.className = 'modal-overlay';
+    modal.style.zIndex = '10000';
+    modal.style.display = 'flex';
+    
+    const content = document.createElement('div');
+    content.className = 'modal-box';
+    Object.assign(content.style, {
+        background: '#fdf5e6',
+        color: '#4e342e',
+        border: '6px double #8b4513',
+        borderRadius: '4px',
+        maxWidth: '550px',
+        padding: '30px',
+        fontFamily: '"Times New Roman", serif',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.7)',
+        lineHeight: '1.5'
+    });
+
+    const close = () => {
+        localStorage.setItem(id, 'true');
+        modal.style.display = 'none';
+    };
+
+    content.innerHTML = htmlContent + `
+        <button id="announce-close-btn" style="display:block; width:100%; padding:12px; margin-top:25px; background:#5d4037; color:#fdf5e6; border:none; font-weight:bold; font-size:1rem; cursor:pointer;">I Understand</button>
+    `;
+
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+    
+    document.getElementById('announce-close-btn').onclick = close;
 }
