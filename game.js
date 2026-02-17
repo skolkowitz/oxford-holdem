@@ -242,8 +242,8 @@ let phaseIndex = 0, swapsDoneThisHand = 0, swapLockedThisRound = false;
 let handAnims = [], boardAnims = [];
 let currentDeckSort = { field: 'left', dir: 'desc' };
 const ENABLE_VARIABLE_HOLE_CARDS = true;
-let hiddenBonusesActive = false;
 let userHiddenBonusPref = localStorage.getItem('oxford_hidden_bonuses') === 'true';
+let hiddenBonusesActive = userHiddenBonusPref;
 let isDevMode = localStorage.getItem('oxford_dev_mode') === 'true';
 let forceJoker = false;
 let resultModalOpenTime = 0;
@@ -292,10 +292,11 @@ async function initGame() {
         boardDiv.setAttribute('data-listening', 'true');
     }
 
+    updateBonusUI();
     updateRulesUI();
 }
 
-function showRules() { document.getElementById('rules-modal').style.display = 'flex'; }
+function showRules() { updateRulesUI(); document.getElementById('rules-modal').style.display = 'flex'; }
 
 function updateRulesUI() {
     const draftRule = document.getElementById('rule-draft');
@@ -326,13 +327,6 @@ function updateRulesUI() {
     scoringText += '<span>8 Letters: <span style="color:#d32f2f">3.0x</span></span>';
     scoringText += '</div>';
 
-    if (false && hiddenBonusesActive) {
-        scoringText += '<div style="margin-bottom: 5px; font-weight: bold; color: #333;">Race Car Bonus <span style="font-size:1.5rem;">🏎️</span></div>';
-        scoringText += '<ul style="margin-top: 5px; padding-left: 20px; margin-bottom: 15px; font-size: 0.9rem; color: #555;">';
-        scoringText += '<li><strong>Palindrome:</strong> <span style="color:#f9a825; font-weight:bold;">Score + Reverse Score</span> (e.g. 31 + 13 = 44).</li>';
-        scoringText += '</ul>';
-    }
-
     scoringText += '<div style="background:#f5f5f5; padding:10px; border-radius:8px; border:1px solid #e0e0e0; margin-bottom:10px;">';
     scoringText += '<div style="font-weight:bold; color:#333; margin-bottom:4px;">Formula</div>';
     scoringText += '<div style="color:#555; font-size:0.9rem;">(Sum of (Points × <span style="color:#9c27b0; font-weight:bold;">Card Mults</span>)) × <span style="color:#d32f2f; font-weight:bold;">Length Mult</span></div>';
@@ -348,6 +342,7 @@ function updateRulesUI() {
             scoringText += '<p style="margin:5px 0;">Tap the Joker Button 🃏 to turn on "Hidden Bonuses".</p>';
         } else {
             scoringText += '<p style="margin:5px 0;">Keep your eye out for hidden bonuses! Tap the Joker Button 🃏 to disable them and play in "Classic mode".</p>';
+            scoringText += '<button class="action-btn" onclick="document.getElementById(\'hidden-bonuses-modal\').style.display=\'flex\'" style="width:100%; margin-top:10px; background:#5d4037; font-size:0.9rem; padding: 8px;">Hidden bonuses...?</button>';
         }
     }
     scoringText += '<p style="margin:5px 0;">Daily Draw is always played in classic mode, with no hidden bonuses.</p>';

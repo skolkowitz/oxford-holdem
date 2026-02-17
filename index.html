@@ -415,6 +415,19 @@
         </div>
     </div>
 
+    <div id="hidden-bonuses-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) this.style.display='none'">
+        <div class="modal-box" style="text-align: left;">
+            <div class="close-btn" onclick="document.getElementById('hidden-bonuses-modal').style.display='none'">&times;</div>
+            <h2 style="color: var(--bonus-purple); margin-top: 0; text-align: center;">Hidden Bonuses</h2>
+            
+            <div style="margin-bottom: 5px; font-weight: bold; color: #333;">Race Car Bonus <span style="font-size:1.5rem;">🏎️</span></div>
+            <ul style="margin-top: 5px; padding-left: 20px; margin-bottom: 15px; font-size: 0.9rem; color: #555;">
+                <li><strong>Palindrome:</strong> <span style="color:#f9a825; font-weight:bold;">Score + Reverse Score</span> (e.g. 31 + 13 = 44).</li>
+            </ul>
+            <button class="action-btn" onclick="document.getElementById('hidden-bonuses-modal').style.display='none'" style="width:100%; margin: 20px 0 0 0; background: var(--wood); color: white;">Close</button>
+        </div>
+    </div>
+
     <div id="result-modal" class="modal-overlay" style="display:none; z-index:200;">
         <div class="modal-box">
             <h2 style="text-transform: uppercase; color: #888; font-size: 0.9rem;">Word Score</h2>
