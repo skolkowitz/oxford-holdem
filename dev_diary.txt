@@ -1,10 +1,16 @@
-DATE: February 2nd, 2026
-Welcome to the Dev Diary!
-We've added this section to keep you updated on all the latest changes, bug fixes, gameplay tweaks, and fun new features coming to Oxford Hold 'Em.
+DATE: February 17th, 2026
+Welcome to the Developer Diary!
+We've added this section to keep you updated on all the latest changes, bug fixes, gameplay tweaks, and controversial game balance breaking bonuses we're bringing to Oxford Hold 'Em (note: this is now a working title...).
+(Because apparently we've somehow turned into game developers now, and this is the kind of thing they seem to do...?)
 Recent changes include:
-- Added this Dev Diary!
+- Added this Developer Diary
 - UI improvements for mobile devices.
 ---
-DATE: February 1st, 2026
-Test test test.
+DATE: February 16th, 2026
+- Added Player Stats menu. 
+- Added the ability to replay hands! Your stats and leaderboard position are not affected while replaying. 
+- Posted mea culpa regarding Race Car Bonus fiasco. 
 ---
+DATE: February 15th, 2026
+- Implemented a really creative and cool new scoring bonus called the "Race Car Bonus" that we're sure you're all going to absolutely love!
+- Made a bunch of UI and quality of life tweaks and improvements that almost certainly went completely unnoticed.  
