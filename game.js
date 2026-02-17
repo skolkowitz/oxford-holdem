@@ -342,7 +342,7 @@ function updateRulesUI() {
             scoringText += '<p style="margin:5px 0;">Tap the Joker Button 🃏 to turn on "Hidden Bonuses".</p>';
         } else {
             scoringText += '<p style="margin:5px 0;">Keep your eye out for hidden bonuses! Tap the Joker Button 🃏 to disable them and play in "Classic mode".</p>';
-            scoringText += '<button class="action-btn" onclick="document.getElementById(\'hidden-bonuses-modal\').style.display=\'flex\'" style="width:100%; margin-top:10px; background:#5d4037; font-size:0.9rem; padding: 8px;">Hidden bonuses...?</button>';
+            scoringText += '<button class="action-btn" onclick="document.getElementById(\'rules-modal\').style.display=\'none\'; document.getElementById(\'hidden-bonuses-modal\').style.display=\'flex\'" style="width:100%; margin-top:15px; background: #9c27b0; color: white; font-size:0.9rem; padding: 10px; box-shadow: 0 4px 0 #7b1fa2;">Hidden bonuses...?</button>';
         }
     }
     scoringText += '<p style="margin:5px 0;">Daily Draw is always played in classic mode, with no hidden bonuses.</p>';
