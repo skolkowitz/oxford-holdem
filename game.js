@@ -428,7 +428,7 @@ function showDailyReplayMenu() {
             <h3 style="color:#333; margin-top:0;">You already drew today.</h3>
             <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">Replaying will not affect your stats or leaderboard standing.</p>
             <button class="action-btn" id="daily-menu-lb" style="width:100%; margin-bottom:10px;">🏆 View Leaderboard</button>
-            <button class="action-btn" id="daily-menu-replay" style="width:100%; margin-bottom:10px; background:#5d4037;">↺ Replay Daily Draw</button>
+            <button class="action-btn" id="daily-menu-replay" style="width:100%; margin-bottom:10px; background:#5d4037;">⏳ Replay Daily Draw</button>
             <button class="action-btn" onclick="document.getElementById('daily-replay-modal').style.display='none'" style="width:100%; background:#777;">Close</button>
         </div>
     `;
@@ -1077,7 +1077,7 @@ function injectReplayButton() {
     const btn = document.createElement('button');
     btn.id = 'replay-btn';
     btn.className = 'action-btn'; 
-    btn.innerText = "↺ Replay Hand";
+    btn.innerText = "⏳ Replay Hand";
     btn.style.backgroundColor = "#5d4037"; 
     btn.style.color = "#fff";
     btn.style.marginRight = "10px";
