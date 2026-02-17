@@ -244,8 +244,18 @@ let currentDeckSort = { field: 'left', dir: 'desc' };
 const ENABLE_VARIABLE_HOLE_CARDS = true;
 let hiddenBonusesActive = false;
 let userHiddenBonusPref = localStorage.getItem('oxford_hidden_bonuses') === 'true';
+let isDevMode = localStorage.getItem('oxford_dev_mode') === 'true';
+let forceJoker = false;
 
 async function initGame() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('dev')) {
+        isDevMode = true;
+        localStorage.setItem('oxford_dev_mode', 'true');
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    if (isDevMode) injectDevUI();
+
     loadStats();
     LeaderboardManager.init();
     injectStatsUI();
@@ -659,6 +669,16 @@ function nextPhase() {
             initDeck(); discards = [];
             draftPool = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
         } while (!draftPool.some(card => vowels.includes(card) || card === '*'));
+        
+        // DEV: Force Joker
+        if (forceJoker && !draftPool.includes('*')) {
+            const jokerIdx = deck.indexOf('*');
+            if (jokerIdx !== -1) {
+                const swapCard = draftPool[4];
+                draftPool[4] = deck[jokerIdx];
+                deck[jokerIdx] = swapCard;
+            }
+        }
         
         // Capture state for replay
         lastHandState = { deck: [...deck], draftPool: [...draftPool] };
@@ -1881,4 +1901,36 @@ function showWildcardSelector(onSelect) {
         grid.appendChild(card);
     });
     modal.style.display = 'flex';
+}
+
+function injectDevUI() {
+    if (document.getElementById('dev-panel')) return;
+    const panel = document.createElement('div');
+    panel.id = 'dev-panel';
+    Object.assign(panel.style, {
+        position: 'fixed', bottom: '10px', left: '10px', zIndex: '9999',
+        background: 'rgba(0,0,0,0.8)', padding: '10px', borderRadius: '8px',
+        display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '0.8rem',
+        border: '1px solid #0f0'
+    });
+    
+    const btnJoker = document.createElement('button');
+    btnJoker.innerText = 'Force Joker: OFF';
+    Object.assign(btnJoker.style, { background: '#333', color: '#fff', border: '1px solid #555', padding: '5px', cursor: 'pointer' });
+    btnJoker.onclick = () => {
+        forceJoker = !forceJoker;
+        btnJoker.innerText = `Force Joker: ${forceJoker ? 'ON' : 'OFF'}`;
+        btnJoker.style.color = forceJoker ? '#0f0' : '#fff';
+    };
+    panel.appendChild(btnJoker);
+    
+    const btnClose = document.createElement('button');
+    btnClose.innerText = 'Exit Dev Mode';
+    Object.assign(btnClose.style, { background: '#500', color: '#fff', border: 'none', padding: '5px', cursor: 'pointer', marginTop: '5px' });
+    btnClose.onclick = () => {
+        isDevMode = false; localStorage.removeItem('oxford_dev_mode'); panel.remove();
+    };
+    panel.appendChild(btnClose);
+
+    document.body.appendChild(panel);
 }
