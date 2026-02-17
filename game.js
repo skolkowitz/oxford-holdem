@@ -1874,7 +1874,7 @@ function showWildcardSelector(onSelect) {
         const color = getScoreColor(letter);
         const icon = ICONS[letter];
         
-        inner.innerHTML = `<div class="corner-letter top-left" style="color:${color}; font-size:0.8em;">${letter}</div><div class="corner-score top-right" style="color:${color}; font-size:0.7em;">${score}</div><div class="main-content" style="transform:scale(0.8);"><div class="animal-icon">${icon}</div><div class="main-letter">${letter}</div></div><div class="corner-score bottom-left" style="color:${color}; font-size:0.7em;">${score}</div><div class="corner-letter bottom-right" style="color:${color}; font-size:0.8em;">${letter}</div>`;
+        inner.innerHTML = `<div class="corner-letter top-left" style="color:${color}; font-size:0.8em;">${letter}</div><div class="corner-score top-right" style="color:${color}; font-size:0.7em;">${score}</div><div class="main-content" style="transform:scale(0.8);"><div class="animal-icon">${icon}</div><div class="main-letter">${letter}</div><div class="animal-icon" style="transform: rotate(180deg);">${icon}</div></div><div class="corner-score bottom-left" style="color:${color}; font-size:0.7em;">${score}</div><div class="corner-letter bottom-right" style="color:${color}; font-size:0.8em;">${letter}</div>`;
         
         card.appendChild(inner);
         card.onclick = () => { onSelect(letter); modal.style.display = 'none'; };
