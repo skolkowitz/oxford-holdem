@@ -4,4 +4,6 @@ Visual updates and polish:
 - Improved spacing of main menu buttons.
 - Added clearer visual separators between diary entries.
 - Mobile Layout Fix: Moved deck and discard piles to their own row to prevent overlapping with the score preview.
+- Mobile UX: Auto-scroll to top when typing to keep cards visible.
+- Mobile UX: Hide deck/discard piles during the River phase to save screen space (Mobile only).
 ---

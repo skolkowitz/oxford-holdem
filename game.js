@@ -281,7 +281,10 @@ async function initGame() {
     input.addEventListener('input', handleTyping);
     
     // Add focus listeners for mobile layout adjustment
-    input.addEventListener('focus', () => document.body.classList.add('keyboard-active'));
+    input.addEventListener('focus', () => {
+        document.body.classList.add('keyboard-active');
+        setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 300);
+    });
     input.addEventListener('blur', () => document.body.classList.remove('keyboard-active'));
     
     document.removeEventListener('keydown', handleGlobalKeydown);
@@ -915,6 +918,13 @@ function createCardElement(letter, index, isBoard, shouldAnimate) {
 // Renders the game state to the DOM
 function render(isInteraction = false, redrawBoard = true) {
     updatePileCounts();
+    
+    // Mobile optimization: Hide piles during River phase to save space
+    const piles = document.querySelectorAll('.pile-group');
+    const isMobile = window.innerWidth <= 768;
+    const hidePiles = isMobile && phaseIndex === 5;
+    piles.forEach(p => p.style.display = hidePiles ? 'none' : '');
+
     const handDiv = document.getElementById('hand');
     const boardDiv = document.getElementById('board');
     handDiv.innerHTML = '';
