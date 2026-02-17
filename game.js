@@ -1,5 +1,5 @@
 /*
-OK, as a reminder, my brother and I are getting your help coding a web app game with the working title "Oxford Hold 'em." The game is a fun mashup of poker with word games like Scrabble, NY Times Spelling Bee, and Boggle with a dash of inspiration from Balatro.  We really care about making the game fun and easy to play, and keeping the user interface elegant, with a consistent aesthetic that is visually pleasing, and avoiding any bugs that can break the game or ruin a player's experience. My brother and I also like to include lots of little jokes and easter eggs in the game.
+OK, as a reminder, my brother and I are getting your help coding a web app game with the working title "Oxford Hold 'em." The game is a fun mashup of poker with word games like Scrabble, NY Times Spelling Bee, and Boggle with a dash of inspiration from Balatro.  We really care about making the game fun and easy to play, and keeping the user interface elegant, with a consistent aesthetic that is visually pleasing, and avoiding any bugs that can break the game or ruin a player's experience. My brother and I also like to include lots of little jokes and easter eggs in the game. Also, please remember to update the 'dev_diary_draft.txt' file with a summary of changes whenever we make code updates, and include a reminder to do so in this comment block.
 */
 
 /* --- GLOBAL AUDIO STATE --- */
@@ -1926,6 +1926,24 @@ function injectDevUI() {
     panel.appendChild(btnClose);
 
     document.body.appendChild(panel);
+}
+
+async function showDevDiary() {
+    const modal = document.getElementById('dev-diary-modal');
+    const content = document.getElementById('dev-diary-content');
+    modal.style.display = 'flex';
+    
+    try {
+        const res = await fetch('dev_diary.html');
+        if (res.ok) {
+            const text = await res.text();
+            content.innerHTML = text;
+        } else {
+            content.innerHTML = "<p>Could not load diary entries.</p>";
+        }
+    } catch (e) {
+        content.innerHTML = "<p>Error loading diary.</p>";
+    }
 }
 
 // Shows a one-time announcement (Legacy)
