@@ -1813,7 +1813,6 @@ function injectClearButton() {
         input.value = "";
         currentCardAssignments = [];
         handleTyping();
-        input.focus();
         SoundManager.play('chip');
     };
 
