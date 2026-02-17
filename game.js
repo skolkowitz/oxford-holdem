@@ -1897,7 +1897,7 @@ function showWildcardSelector(onSelect) {
         const inner = document.createElement('div');
         Object.assign(inner.style, { position: 'absolute', top: '0', left: '0', width: '100%', height: '100%' });
         
-        const score = SCORES[letter];
+        const score = 0;
         const color = getScoreColor(letter);
         const icon = ICONS[letter];
         
