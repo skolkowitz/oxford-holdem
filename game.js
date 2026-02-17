@@ -246,6 +246,7 @@ let hiddenBonusesActive = false;
 let userHiddenBonusPref = localStorage.getItem('oxford_hidden_bonuses') === 'true';
 let isDevMode = localStorage.getItem('oxford_dev_mode') === 'true';
 let forceJoker = false;
+let resultModalOpenTime = 0;
 
 async function initGame() {
     const params = new URLSearchParams(window.location.search);
@@ -536,6 +537,10 @@ function handleGlobalKeydown(e) {
     if (key === 'ENTER') {
         const resultModal = document.getElementById('result-modal');
         if (resultModal && resultModal.style.display === 'flex') {
+            if (Date.now() - resultModalOpenTime < 500) {
+                e.preventDefault();
+                return;
+            }
             const nextBtn = document.getElementById('next-hand-btn');
             if (nextBtn) nextBtn.click();
             e.preventDefault();
@@ -1086,6 +1091,7 @@ async function calculateFinalScore() {
         if (!dictionary.includes(word)) { markInvalid("Not in dictionary!"); return; }
         userScore = calculateScoreWithMultipliers(word);
         SoundManager.play('success');
+        wordInput.blur();
     }
     
     // STATS & DAILY LIMIT
@@ -1151,6 +1157,7 @@ async function calculateFinalScore() {
     }
     
     document.getElementById('result-modal').style.display = 'flex';
+    resultModalOpenTime = Date.now();
 }
 
 function resetUI() {
@@ -1794,7 +1801,7 @@ function showStats() {
     const streak = localStorage.getItem('oxford_daily_streak') || 0;
 
     const item = (l, v, style='') => `<div style="background:#f5f5f5; padding:10px; border-radius:8px; text-align:center; border:1px solid #eee; ${style}"><div style="font-size:1.5rem; font-weight:bold; color:#333; margin-bottom:5px;">${v}</div><div style="font-size:0.8rem; color:#666;">${l}</div></div>`;
-    grid.innerHTML = item('Hands Played', hands) + item('Total Score', total) + item('Highest Score', displayHigh) + item('Lowest Score', displayLow) + item('Avg Score', avg) + item('Daily Draws', daily) + item('Podium Finishes', podiums) + item('Oracle Matches', oracle) + item('Daily Streak', streak + ' 🔥', 'grid-column: span 2; width: calc(50% - 7.5px); margin: 0 auto;');
+    grid.innerHTML = item('Hands Played', hands) + item('Total Score', total) + item('Highest Score', displayHigh) + item('Lowest Score', displayLow) + item('Avg Score', avg) + item('Daily Draws', daily) + item('Podium Finishes', podiums + ' 🥇🥈🥉') + item('Oracle Matches', oracle + ' 🔮') + item('Daily Streak', streak + ' 🔥', 'grid-column: span 2; width: calc(50% - 7.5px); margin: 0 auto;');
     document.getElementById('stats-modal').style.display = 'flex';
 }
 
