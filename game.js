@@ -205,6 +205,7 @@ const BAD_WORDS = ['FUCK', 'SHIT', 'BITCH', 'CUNT', 'NIGGA', 'NIGGER', 'WHORE', 
 
 /* --- STATE --- */
 let deck = [], hand = [], board = [], discards = [], draftPool = [], selectedIndices = [], dictionary = [], currentCardAssignments = [];
+let lastHandState = null, isReplayMode = false;
 let phaseIndex = 0, swapsDoneThisHand = 0, swapLockedThisRound = false;
 let handAnims = [], boardAnims = [];
 let currentDeckSort = { field: 'left', dir: 'desc' };
@@ -545,6 +546,11 @@ function nextPhase() {
             initDeck(); discards = [];
             draftPool = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
         } while (!draftPool.some(card => vowels.includes(card) || card === '*'));
+        
+        // Capture state for replay
+        lastHandState = { deck: [...deck], draftPool: [...draftPool] };
+        isReplayMode = false;
+        updateReplayIndicator();
         
         handAnims = [0,1,2,3,4];
         if (ENABLE_VARIABLE_HOLE_CARDS) {
@@ -930,36 +936,57 @@ async function calculateFinalScore() {
     // STATS & DAILY LIMIT
     const today = new Date().toISOString().split('T')[0];
     const best = findBestPossibleScore();
-    updateLocalStats(userScore, word, best.score, gameMode);
-    if (gameMode === 'daily') {
-        localStorage.setItem('oxford_last_daily_played', today);
-        localStorage.setItem('oxford_daily_score', userScore);
-        LeaderboardManager.submitScore(userScore, word);
-        document.getElementById('next-hand-btn').innerText = "See Leaderboard";
-        document.getElementById('next-hand-btn').onclick = function() { 
-            document.getElementById('result-modal').style.display = 'none';
-            LeaderboardManager.show(); 
-        };
+    
+    if (!isReplayMode) {
+        updateLocalStats(userScore, word, best.score, gameMode);
+        if (gameMode === 'daily') {
+            localStorage.setItem('oxford_last_daily_played', today);
+            localStorage.setItem('oxford_daily_score', userScore);
+            LeaderboardManager.submitScore(userScore, word);
+            document.getElementById('next-hand-btn').innerText = "See Leaderboard";
+            document.getElementById('next-hand-btn').onclick = function() { 
+                document.getElementById('result-modal').style.display = 'none';
+                LeaderboardManager.show(); 
+            };
+        } else {
+            document.getElementById('next-hand-btn').innerText = "Next Hand";
+            document.getElementById('next-hand-btn').onclick = softReset;
+        }
     } else {
-        document.getElementById('next-hand-btn').innerText = "Next Hand";
-        document.getElementById('next-hand-btn').onclick = softReset;
+        // Replay Mode: No stats, just navigation
+        document.getElementById('next-hand-btn').innerText = "See Leaderboard";
+        if (gameMode === 'daily') {
+            document.getElementById('next-hand-btn').onclick = function() { 
+                document.getElementById('result-modal').style.display = 'none';
+                LeaderboardManager.show(); 
+            };
+        } else {
+            document.getElementById('next-hand-btn').innerText = "Next Hand";
+            document.getElementById('next-hand-btn').onclick = softReset;
+        }
     }
+
+    injectReplayButton();
 
     document.getElementById('modal-word').innerText = word;
     document.getElementById('modal-score').innerText = userScore;
     document.getElementById('best-word-text').innerText = `${best.word} (${best.score} pts)`;
-    const daily = parseInt(localStorage.getItem('oxford_total') || 0) + userScore;
-    const high = parseInt(localStorage.getItem('oxford_high') || 0);
-    localStorage.setItem('oxford_total', daily); localStorage.setItem('oxford_last', userScore);
-    if(userScore > high) localStorage.setItem('oxford_high', userScore);
+    
+    if (!isReplayMode) {
+        const daily = parseInt(localStorage.getItem('oxford_total') || 0) + userScore;
+        const high = parseInt(localStorage.getItem('oxford_high') || 0);
+        localStorage.setItem('oxford_total', daily); localStorage.setItem('oxford_last', userScore);
+        if(userScore > high) localStorage.setItem('oxford_high', userScore);
+    }
     
     document.getElementById('result-modal').style.display = 'flex';
 }
 
-function softReset() {
+function resetUI() {
     document.getElementById('result-modal').style.display = 'none';
-    document.getElementById('word-input').value = "";
-    document.getElementById('word-input').style.display = "none";
+    const inp = document.getElementById('word-input');
+    inp.value = "";
+    inp.style.display = "none";
     const clearBtn = document.getElementById('clear-btn');
     if(clearBtn) clearBtn.style.display = "none";
     document.getElementById('swap-btn').style.display = "none";
@@ -969,11 +996,109 @@ function softReset() {
         preview.innerHTML = "";
         preview.style.display = "none";
     }
+}
+
+function softReset() {
+    resetUI();
     
     deck = []; hand = []; board = []; discards = []; draftPool = []; selectedIndices = []; currentCardAssignments = [];
     phaseIndex = 0; swapsDoneThisHand = 0; swapLockedThisRound = false;
     
     nextPhase();
+}
+
+function injectReplayButton() {
+    if (document.getElementById('replay-btn')) return;
+    const nextBtn = document.getElementById('next-hand-btn');
+    if (!nextBtn) return;
+    
+    const btn = document.createElement('button');
+    btn.id = 'replay-btn';
+    btn.className = 'action-btn'; 
+    btn.innerText = "↺ Replay Hand";
+    btn.style.backgroundColor = "#5d4037"; 
+    btn.style.color = "#fff";
+    btn.style.marginRight = "10px";
+    btn.onclick = replayCurrentHand;
+    
+    nextBtn.parentNode.insertBefore(btn, nextBtn);
+}
+
+function replayCurrentHand() {
+    if (!lastHandState) return;
+    resetUI();
+    
+    isReplayMode = true;
+    updateReplayIndicator();
+    
+    // Restore State
+    deck = [...lastHandState.deck];
+    draftPool = [...lastHandState.draftPool];
+    hand = []; board = []; discards = []; selectedIndices = []; currentCardAssignments = [];
+    
+    phaseIndex = 1; // Jump to Draft
+    swapsDoneThisHand = 0;
+    swapLockedThisRound = false;
+    handAnims = [0,1,2,3,4];
+    boardAnims = [];
+    
+    const status = document.getElementById('status-msg');
+    const btn = document.getElementById('main-btn');
+    
+    if (ENABLE_VARIABLE_HOLE_CARDS) {
+        status.innerText = "Draft: Keep up to 3 hole cards. Fewer cards = bigger bonuses, but shorter words!";
+        btn.innerText = "Select hole cards to keep";
+    } else {
+        status.innerText = "Draft Phase: Keep 3 Hole Cards";
+        btn.innerText = "Confirm Hole Cards";
+    }
+    
+    // Reset button state for Phase 1
+    btn.disabled = true;
+    btn.style.opacity = "0.5";
+    btn.style.cursor = "not-allowed";
+    
+    render(false, true);
+}
+
+function updateReplayIndicator() {
+    const el = document.getElementById('mode-indicator');
+    if (!el) return;
+    
+    const statsBtn = document.getElementById('stats-btn');
+    const statIds = ['daily-total', 'high-score', 'last-score'];
+    
+    let text = el.innerText.replace(' ⏳ REPLAY', '');
+    
+    if (isReplayMode) {
+        text += ' ⏳ REPLAY';
+        el.style.border = "1px solid #FFD700";
+        el.style.boxShadow = "0 0 5px #FFD700";
+        
+        if (statsBtn) statsBtn.innerText = '🧊';
+        
+        statIds.forEach(id => {
+            const elem = document.getElementById(id);
+            if (elem) {
+                if (elem.parentElement) elem.parentElement.style.opacity = "0.4";
+                else elem.style.opacity = "0.4";
+            }
+        });
+    } else {
+        el.style.border = "none";
+        el.style.boxShadow = "none";
+        
+        if (statsBtn) statsBtn.innerText = '🔥';
+        
+        statIds.forEach(id => {
+            const elem = document.getElementById(id);
+            if (elem) {
+                if (elem.parentElement) elem.parentElement.style.opacity = "1";
+                else elem.style.opacity = "1";
+            }
+        });
+    }
+    el.innerText = text;
 }
 
 async function shareResult() {
