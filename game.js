@@ -534,6 +534,14 @@ function handleGlobalKeydown(e) {
 
     // 1. Enter Key (Global)
     if (key === 'ENTER') {
+        const resultModal = document.getElementById('result-modal');
+        if (resultModal && resultModal.style.display === 'flex') {
+            const nextBtn = document.getElementById('next-hand-btn');
+            if (nextBtn) nextBtn.click();
+            e.preventDefault();
+            return;
+        }
+
         if (phaseIndex === 5) calculateFinalScore();
         else {
             const btn = document.getElementById('main-btn');
