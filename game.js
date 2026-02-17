@@ -202,7 +202,8 @@ const FREQUENCIES = { 'E':12,'A':9,'I':9,'O':8,'N':6,'R':6,'T':6,'L':4,'S':4,'U'
 const SCORES = { 'E':1,'T':1,'A':1,'O':2,'I':2,'N':2,'S':3,'H':3,'R':3,'D':4,'L':4,'C':4,'U':5,'M':5,'W':5,'F':6,'G':6,'Y':6,'P':7,'B':7,'V':7,'K':8,'J':8,'X':8,'Q':9,'Z':9, '*':0 };
 const ICONS = { 'A':'♠️','B':'🐝','C':'🐱','D':'🐶','E':'🐘','F':'🦊','G':'🦒','H':'🦔','I':'🦎','J':'🫅','K':'👑','L':'🦁','M':'🐒','N':'🥷','O':'🦉','P':'🐼','Q':'👸','R':'🐰','S':'🐍','T':'🐯','U':'🦄','V':'🦅','W':'🐺','X':'⚔️','Y':'🐃','Z':'🦓','*':'🤡' };
 const DICT_URL = 'https://raw.githubusercontent.com/redbo/scrabble/master/dictionary.txt';
-const BAD_WORDS = ['FUCK', 'SHIT', 'BITCH', 'CUNT', 'NIGGA', 'NIGGER', 'WHORE', 'SLUT', 'PENIS', 'VAGINA', 'PUSSY', 'NAZI', 'HITLER', 'KKK', 'FAG', 'DYKE', 'RAPE', 'ASSHOLE', 'RETARD'];
+const PROFANITY_URL = 'https://raw.githubusercontent.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/master/en';
+let BAD_WORDS = [];
 
 /* --- STATE --- */
 let deck = [], hand = [], board = [], discards = [], draftPool = [], selectedIndices = [], dictionary = [], currentCardAssignments = [];
@@ -217,6 +218,7 @@ async function initGame() {
     LeaderboardManager.init();
     injectStatsUI();
     injectClearButton();
+    initProfanity();
     await initDictionary();
     checkDailyStatus();
     
@@ -380,6 +382,17 @@ async function initDictionary() {
         } catch (e) { alert("Dictionary Error"); return; }
     }
     loadingText.innerText = `Oracle Online: ${dictionary.length} words. Ready.`;
+}
+
+async function initProfanity() {
+    try {
+        const res = await fetch(PROFANITY_URL);
+        if (res.ok) {
+            const text = await res.text();
+            // Filter short words to prevent aggressive substring matching (e.g. 'HO', 'HE')
+            BAD_WORDS = text.split('\n').map(w => w.trim().toUpperCase()).filter(w => w.length > 2);
+        }
+    } catch (e) { console.warn("Profanity list failed to load"); }
 }
 
 function checkDailyStatus() {
@@ -841,7 +854,15 @@ function render(isInteraction = false, redrawBoard = true) {
 }
 
 function getScoreColor(l) { const s = SCORES[l]; return s<=1 ? "#2196F3" : s<=3 ? "#4CAF50" : s<=6 ? "#FF9800" : "#E91E63"; }
-function isProfane(text) { if(!text) return false; const upper = text.toUpperCase(); return BAD_WORDS.some(bad => upper.includes(bad)); }
+function isProfane(text) { 
+    if(!text) return false; 
+    let norm = text.toUpperCase();
+    // Leetspeak normalization
+    norm = norm.replace(/1/g, 'I').replace(/!/g, 'I').replace(/3/g, 'E')
+               .replace(/4/g, 'A').replace(/@/g, 'A').replace(/5/g, 'S')
+               .replace(/7/g, 'T').replace(/0/g, 'O').replace(/\$/g, 'S');
+    return BAD_WORDS.some(bad => norm.includes(bad)); 
+}
 function canFormWord(word, pool) { let tempPool = [...pool]; for (let char of word) { let idx = tempPool.indexOf(char); if (idx === -1) idx = tempPool.indexOf('*'); if (idx === -1) return false; tempPool.splice(idx, 1); } return true; }
 function isPalindrome(word) { if (!word || word.length < 3) return false; for (let i = 0; i < Math.floor(word.length / 2); i++) { if (word[i] !== word[word.length - 1 - i]) return false; } return true; }
 
