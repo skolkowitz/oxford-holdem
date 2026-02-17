@@ -1953,7 +1953,7 @@ function showAnnouncement() {
         <p><strong>Dear Oxford Hold 'Em community,</strong></p>
         <p>The last 24 hours have been a time of great learning for us. We know that in these turbulent times, in which few things are certain, you have come to look upon Oxford Hold 'Em as a source of constancy, a leeward cove in these tempestuous waters.</p>
         <p>The Race Car controversy has divided what was once united, and sent ripples out over the surface of our previously placid lake. As a result, we have disabled the Race Car Bonus in the Daily Draw, but it is still available in the Free Play environment, and can be toggled on or off at any time.</p>
-        <p>Please know that we have heard you. In the future, we will be proactive, and update you with any major scoring or rule changes to the Daily Draw before they are instituted, to avoid any further disasters. While our game may have elements of chance, your faith in us should not be risked again.</p>
+        <p>Please know that we have heard you. In the future, we will be proactive, and update you with any major scoring or rule changes to the Daily Draw before they are instituted. While our game may have elements of chance, your faith in us must never be risked again.</p>
         <p>That being said... due to some information that was recently brought to our attention, Oxford Hold 'Em will soon be renamed, so please make sure to emotionally prepare yourselves for that change.</p>
         <p style="text-align:right; font-weight:bold; margin-top:20px;">Sincerely,<br>ShyMonk & Koko</p>
     `;
