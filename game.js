@@ -1115,9 +1115,9 @@ async function calculateFinalScore() {
     document.getElementById('modal-word').innerText = word;
     document.getElementById('modal-score').innerText = userScore;
     
-    let oracleText = `🔮 ${best.word}`;
-    if (hiddenBonusesActive && isPalindrome(best.word)) oracleText += ' 🏎️';
-    oracleText += ` (${best.score} pts)`;
+    let oracleHTML = `🔮 ${best.word}`;
+    if (hiddenBonusesActive && isPalindrome(best.word)) oracleHTML += ' 🏎️';
+    oracleHTML += ` (${best.score} pts)`;
     if (isReplayMode) {
         const phrases = [
             "This feels familiar...",
@@ -1137,9 +1137,16 @@ async function calculateFinalScore() {
             "Don’t step on anything! Even the tiniest change can alter the future in ways you can't imagine…",
             "I was a player just like you once... but then I spent too much time replaying the same hand over and over..."
         ];
-        oracleText += `\n"${phrases[Math.floor(Math.random() * phrases.length)]}"`;
+        const quote = phrases[Math.floor(Math.random() * phrases.length)];
+        oracleHTML += `<div style="font-family: 'Georgia', serif; font-style: italic; font-size: 0.9rem; color: #666; margin-top: 8px; font-weight: normal;">"${quote}"</div>`;
+    } else if (userScore === best.score) {
+        if (word === best.word) {
+            oracleHTML += `<div style="font-family: 'Georgia', serif; font-style: italic; font-size: 0.9rem; color: #2e7d32; margin-top: 8px; font-weight: normal;">"Jinx! Buy me some coke!"</div>`;
+        } else {
+            oracleHTML += `<div style="font-family: 'Georgia', serif; font-style: italic; font-size: 0.9rem; color: #2e7d32; margin-top: 8px; font-weight: normal;">"Oh yeah, I hadn't thought of that one..."</div>`;
+        }
     }
-    document.getElementById('best-word-text').innerText = oracleText;
+    document.getElementById('best-word-text').innerHTML = oracleHTML;
     
     if (!isReplayMode) {
         const daily = parseInt(localStorage.getItem('oxford_total') || 0) + userScore;

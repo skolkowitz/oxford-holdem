@@ -6,4 +6,6 @@ Visual updates and polish:
 - Mobile Layout Fix: Moved deck and discard piles to their own row to prevent overlapping with the score preview.
 - Mobile UX: Auto-scroll to top when typing to keep cards visible.
 - Mobile UX: Hide deck/discard piles during the River phase to save screen space (Mobile only).
+- Added Oracle reactions for matching the best score/word.
+- Styled Oracle time loop quotes to be more ethereal.
 ---
