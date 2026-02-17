@@ -1,6 +1,6 @@
-DATE: [Current Date]
-Summary of changes...
-- Added "Dev Diary" button to the home screen.
-- Implemented Dev Diary modal to view updates from the developers.
-- Switched Dev Diary to use simple text files (.txt) instead of HTML.
+DATE: May 24, 2024
+Visual updates and polish:
+- Changed "Dev Diary" button color to Teal.
+- Improved spacing of main menu buttons.
+- Added clearer visual separators between diary entries.
 ---

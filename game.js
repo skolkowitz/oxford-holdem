@@ -1932,17 +1932,37 @@ async function showDevDiary() {
     const modal = document.getElementById('dev-diary-modal');
     const content = document.getElementById('dev-diary-content');
     modal.style.display = 'flex';
+    content.innerHTML = "Loading updates...";
     
     try {
-        const res = await fetch('dev_diary.txt');
+        // Add timestamp to prevent caching of the text file
+        const res = await fetch('dev_diary.txt?t=' + Date.now());
         if (res.ok) {
             const text = await res.text();
             content.innerHTML = parseDiaryText(text);
         } else {
-            content.innerHTML = "<p>Could not load diary entries.</p>";
+            throw new Error(`Status: ${res.status}`);
         }
     } catch (e) {
-        content.innerHTML = "<p>Error loading diary.</p>";
+        console.warn("Dev Diary Load Error:", e);
+        content.innerHTML = `
+            <div style="text-align:center; padding:10px;">
+                <p style="color:#d32f2f; font-weight:bold;">⚠️ Local Preview Mode</p>
+                <p style="font-size:0.9rem; color:#555;">Browsers cannot auto-load local text files. To preview your diary, select the file manually:</p>
+                <button class="action-btn" onclick="document.getElementById('diary-upload').click()" style="background:var(--wood); color:white; margin-top:10px;">📂 Load dev_diary.txt</button>
+                <input type="file" id="diary-upload" style="display:none" accept=".txt" onchange="handleDiaryUpload(this)">
+            </div>
+        `;
+    }
+}
+
+function handleDiaryUpload(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('dev-diary-content').innerHTML = parseDiaryText(e.target.result);
+        };
+        reader.readAsText(input.files[0]);
     }
 }
 
@@ -1952,7 +1972,7 @@ function parseDiaryText(text) {
     
     entries.forEach(entry => {
         const lines = entry.split('\n');
-        let entryHtml = '<div class="diary-entry" style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee;">';
+        let entryHtml = '<div class="diary-entry" style="margin-bottom: 30px; padding-bottom: 30px; border-bottom: 2px dashed #ccc;">';
         let inList = false;
         let hasDate = false;
 
