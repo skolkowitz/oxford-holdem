@@ -127,7 +127,8 @@ const LeaderboardManager = {
                 let rankStyle = (rank <= 3) ? '' : 'color: #ccc;';
 
                 // Hide word if user hasn't played today
-                const wordDisplay = userPlayedToday ? d.word : `<span class="hidden-word">🙈 HIDDEN</span>`;
+                let wordDisplay = userPlayedToday ? d.word : `<span class="hidden-word">🙈 HIDDEN</span>`;
+                if (userPlayedToday && isPalindrome(d.word)) wordDisplay += ' 🏎️';
                 const safeName = isProfane(d.name) ? '******' : d.name;
                 
                 html += `<tr><td class="lb-rank" style="${rankStyle} white-space:nowrap;">${rankStr}</td><td>${safeName}</td><td style="font-size:0.8rem;">${wordDisplay}</td><td class="lb-score">${d.score}</td></tr>`;
@@ -1019,7 +1020,9 @@ async function calculateFinalScore() {
     document.getElementById('modal-word').innerText = word;
     document.getElementById('modal-score').innerText = userScore;
     
-    let oracleText = `${best.word} (${best.score} pts)`;
+    let oracleText = `${best.word}`;
+    if (isPalindrome(best.word)) oracleText += ' 🏎️';
+    oracleText += ` (${best.score} pts)`;
     if (isReplayMode) {
         const phrases = [
             "This feels familiar...",
