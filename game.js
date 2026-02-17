@@ -308,7 +308,14 @@ function updateRulesUI() {
         draftText = '<strong>Draft:</strong> Pick the best 3 hole cards from 5 options.';
     }
 
-    if (hiddenBonusesActive) {
+    scoringText += '<div style="margin-bottom: 5px; font-weight: bold; color: #333;">Length Multipliers</div>';
+    scoringText += '<div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold; margin-bottom: 15px;">';
+    scoringText += '<span>5-6 Letters: <span style="color:#2e7d32">1.5x</span></span>';
+    scoringText += '<span>7 Letters: <span style="color:#1565c0">2.0x</span></span>';
+    scoringText += '<span>8 Letters: <span style="color:#d32f2f">3.0x</span></span>';
+    scoringText += '</div>';
+
+    if (false && hiddenBonusesActive) {
         scoringText += '<div style="margin-bottom: 5px; font-weight: bold; color: #333;">Race Car Bonus <span style="font-size:1.5rem;">🏎️</span></div>';
         scoringText += '<ul style="margin-top: 5px; padding-left: 20px; margin-bottom: 15px; font-size: 0.9rem; color: #555;">';
         scoringText += '<li><strong>Palindrome:</strong> <span style="color:#f9a825; font-weight:bold;">Score + Reverse Score</span> (e.g. 31 + 13 = 44).</li>';
@@ -317,11 +324,22 @@ function updateRulesUI() {
 
     scoringText += '<div style="background:#f5f5f5; padding:10px; border-radius:8px; border:1px solid #e0e0e0; margin-bottom:10px;">';
     scoringText += '<div style="font-weight:bold; color:#333; margin-bottom:4px;">Formula</div>';
-    scoringText += '<div style="color:#555; font-size:0.9rem;">(Points × <span style="color:#9c27b0; font-weight:bold;">Card Mults</span>) × <span style="color:#d32f2f; font-weight:bold;">Length Mult</span></div>';
+    scoringText += '<div style="color:#555; font-size:0.9rem;">(Sum of (Points × <span style="color:#9c27b0; font-weight:bold;">Card Mults</span>)) × <span style="color:#d32f2f; font-weight:bold;">Length Mult</span></div>';
     scoringText += '</div>';
 
     scoringText += '<div style="font-size:0.9rem; color:#555;">';
     scoringText += '<span style="color:#2e7d32; font-weight:bold; cursor:pointer; text-decoration:underline;" onclick="document.getElementById(\'rules-modal\').style.display=\'none\'; showDeckStats();">Tip: Tap deck for letter values!</span>';
+    scoringText += '</div>';
+
+    scoringText += '<div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; font-size: 0.9rem; color: #555;">';
+    if (gameMode !== 'daily') {
+        if (!hiddenBonusesActive) {
+            scoringText += '<p style="margin:5px 0;">Tap the Joker Button 🃏 to turn on "Hidden Bonuses".</p>';
+        } else {
+            scoringText += '<p style="margin:5px 0;">Keep your eye out for hidden bonuses! Tap the Joker Button 🃏 to disable them and play in "Classic mode".</p>';
+        }
+    }
+    scoringText += '<p style="margin:5px 0;">Daily Draw is always played in classic mode, with no hidden bonuses.</p>';
     scoringText += '</div>';
 
     if (draftRule) draftRule.innerHTML = draftText;
