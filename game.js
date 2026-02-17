@@ -205,7 +205,7 @@ const BAD_WORDS = ['FUCK', 'SHIT', 'BITCH', 'CUNT', 'NIGGA', 'NIGGER', 'WHORE', 
 
 /* --- STATE --- */
 let deck = [], hand = [], board = [], discards = [], draftPool = [], selectedIndices = [], dictionary = [], currentCardAssignments = [];
-let lastHandState = null, isReplayMode = false;
+let lastHandState = null, isReplayMode = false, forceDailyReplay = false;
 let phaseIndex = 0, swapsDoneThisHand = 0, swapLockedThisRound = false;
 let handAnims = [], boardAnims = [];
 let currentDeckSort = { field: 'left', dir: 'desc' };
@@ -403,13 +403,54 @@ function handleStartClick(mode) {
         const today = new Date().toISOString().split('T')[0];
         const lastPlayed = localStorage.getItem('oxford_last_daily_played');
         if (lastPlayed === today) {
-            LeaderboardManager.show();
+            showDailyReplayMenu();
             return;
         }
         LeaderboardManager.checkName(); 
     } else {
         startGame('free');
     }
+}
+
+function showDailyReplayMenu() {
+    if (document.getElementById('daily-replay-modal')) {
+        document.getElementById('daily-replay-modal').style.display = 'flex';
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.id = 'daily-replay-modal';
+    modal.className = 'modal-overlay';
+    modal.onclick = (e) => { if(e.target===modal) modal.style.display='none'; };
+    
+    modal.innerHTML = `
+        <div class="modal-box" style="text-align:center; max-width: 300px;">
+            <h3 style="color:#333; margin-top:0;">You already drew today.</h3>
+            <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">Replaying will not affect your stats or leaderboard standing.</p>
+            <button class="action-btn" id="daily-menu-lb" style="width:100%; margin-bottom:10px;">🏆 View Leaderboard</button>
+            <button class="action-btn" id="daily-menu-replay" style="width:100%; margin-bottom:10px; background:#5d4037;">↺ Replay Daily Draw</button>
+            <button class="action-btn" onclick="document.getElementById('daily-replay-modal').style.display='none'" style="width:100%; background:#777;">Close</button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    document.getElementById('daily-menu-lb').onclick = () => {
+        document.getElementById('daily-replay-modal').style.display = 'none';
+        LeaderboardManager.show();
+    };
+    
+    document.getElementById('daily-menu-replay').onclick = () => {
+        document.getElementById('daily-replay-modal').style.display = 'none';
+        startDailyReplay();
+    };
+    
+    modal.style.display = 'flex';
+}
+
+function startDailyReplay() {
+    forceDailyReplay = true;
+    startGame('daily');
 }
 
 function handleGlobalKeydown(e) {
@@ -549,7 +590,14 @@ function nextPhase() {
         
         // Capture state for replay
         lastHandState = { deck: [...deck], draftPool: [...draftPool] };
-        isReplayMode = false;
+        
+        if (forceDailyReplay) {
+            isReplayMode = true;
+            forceDailyReplay = false;
+        } else {
+            isReplayMode = false;
+        }
+        
         updateReplayIndicator();
         
         handAnims = [0,1,2,3,4];
