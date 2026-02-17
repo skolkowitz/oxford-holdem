@@ -513,7 +513,7 @@ function showDailyReplayMenu() {
             <h3 style="color:#333; margin-top:0;">You already drew today.</h3>
             <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">There will be a new <strong>Daily Draw</strong> at midnight GMT. In the mean time, you can replay today's <strong>Daily Draw</strong> as many times as you want, but it will not affect your stats or leaderboard standing.</p>
             <button class="action-btn" id="daily-menu-lb" style="width:100%; margin-bottom:10px;">🏆 View Leaderboard</button>
-            <button class="action-btn" id="daily-menu-replay" style="width:100%; margin-bottom:10px; background:#5d4037;">⏳ Replay Daily Draw</button>
+            <button class="action-btn" id="daily-menu-replay" style="width:100%; margin-bottom:10px; background:#3F51B5;">⏳ Replay Daily Draw</button>
             <button class="action-btn" onclick="document.getElementById('daily-replay-modal').style.display='none'" style="width:100%; background:#777;">Close</button>
         </div>
     `;
@@ -1170,7 +1170,7 @@ function injectReplayButton() {
     btn.id = 'replay-btn';
     btn.className = 'action-btn'; 
     btn.innerText = "⏳ Replay Hand";
-    btn.style.backgroundColor = "#5d4037"; 
+    btn.style.backgroundColor = "#3F51B5"; 
     btn.style.color = "#fff";
     btn.style.marginRight = "10px";
     btn.onclick = replayCurrentHand;
@@ -1710,7 +1710,7 @@ function injectStatsUI() {
         <div class="close-btn" onclick="document.getElementById('stats-modal').style.display='none'">&times;</div>
         <h2 style="color: #333; margin-top: 0;">Player Statistics</h2>
         <div id="stats-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;"></div>
-        <button class="action-btn" onclick="document.getElementById('stats-modal').style.display='none'" style="width:100%; background: var(--wood); color: white;">Close</button>
+        <button class="action-btn" onclick="document.getElementById('stats-modal').style.display='none'" style="width:100%; background: #555; color: white;">Close</button>
     </div>`;
     document.body.appendChild(modal);
 }
@@ -1973,7 +1973,7 @@ function showAnnouncement() {
     };
 
     content.innerHTML = htmlContent + `
-        <button id="announce-close-btn" style="display:block; width:100%; padding:12px; margin-top:25px; background:#5d4037; color:#fdf5e6; border:none; font-weight:bold; font-size:1rem; cursor:pointer;">I Understand</button>
+        <button id="announce-close-btn" style="display:block; width:100%; padding:12px; margin-top:25px; background:#333; color:#fdf5e6; border:none; font-weight:bold; font-size:1rem; cursor:pointer;">I Understand</button>
     `;
 
     modal.appendChild(content);
