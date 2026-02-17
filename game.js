@@ -1,6 +1,7 @@
 /*
 OK, as a reminder, my brother and I are getting your help coding a web app game with the working title "Oxford Hold 'em." The game is a fun mashup of poker with word games like Scrabble, NY Times Spelling Bee, and Boggle with a dash of inspiration from Balatro.  We really care about making the game fun and easy to play, and keeping the user interface elegant, with a consistent aesthetic that is visually pleasing, and avoiding any bugs that can break the game or ruin a player's experience. My brother and I also like to include lots of little jokes and easter eggs in the game.
 */
+
 /* --- GLOBAL AUDIO STATE --- */
 let isMuted = true;
 function toggleMute() { isMuted = !isMuted; updateMuteUI(); }
@@ -15,6 +16,7 @@ function updateMuteUI() {
     btn.style.color = ""; btn.style.opacity = "";
 }
 
+// Toggles the "Hidden Bonuses" (Palindrome) feature
 function toggleHiddenBonuses() {
     if (gameMode === 'daily') return;
     userHiddenBonusPref = !userHiddenBonusPref;
@@ -42,6 +44,7 @@ function updateBonusUI() {
 }
 
 /* --- FIREBASE LEADERBOARD MANAGER --- */
+// Handles all interactions with Firestore for the Daily Leaderboard
 const LeaderboardManager = {
     db: null,
     username: localStorage.getItem('oxford_username'),
@@ -175,6 +178,7 @@ const LeaderboardManager = {
 };
 
 /* --- RNG --- */
+// Seeded RNG for Daily Challenges to ensure everyone gets the same hand
 let currentSeed = 1;
 let gameMode = 'free';
 function mulberry32(a) { return function() { var t=a+=0x6D2B79F5; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61); return ((t^t>>>14)>>>0)/4294967296; } }
@@ -198,6 +202,7 @@ function initSeed(mode) {
 }
 
 /* --- AUDIO --- */
+// Simple synthesizer for sound effects (no external assets required)
 const SoundManager = {
     init() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
     play(type) {
@@ -231,6 +236,7 @@ const SoundManager = {
 };
 
 /* --- CONFIG --- */
+// Letter distribution and scoring values (Scrabble-ish)
 const FREQUENCIES = { 'E':12,'A':9,'I':9,'O':8,'N':6,'R':6,'T':6,'L':4,'S':4,'U':4,'D':4,'G':3,'B':2,'C':2,'M':2,'P':2,'F':2,'H':2,'V':2,'W':2,'Y':2,'K':1,'J':1,'X':1,'Q':1,'Z':1, '*': 2 };
 const SCORES = { 'E':1,'T':1,'A':1,'O':2,'I':2,'N':2,'S':3,'H':3,'R':3,'D':4,'L':4,'C':4,'U':5,'M':5,'W':5,'F':6,'G':6,'Y':6,'P':7,'B':7,'V':7,'K':8,'J':8,'X':8,'Q':9,'Z':9, '*':0 };
 const ICONS = { 'A':'♠️','B':'🐝','C':'🐱','D':'🐶','E':'🐘','F':'🦊','G':'🦒','H':'🦔','I':'🦎','J':'🫅','K':'👑','L':'🦁','M':'🐒','N':'🥷','O':'🦉','P':'🐼','Q':'👸','R':'🐰','S':'🐍','T':'🐯','U':'🦄','V':'🦅','W':'🐺','X':'⚔️','Y':'🐃','Z':'🦓','*':'🤡' };
@@ -251,6 +257,7 @@ let isDevMode = localStorage.getItem('oxford_dev_mode') === 'true';
 let forceJoker = false;
 let resultModalOpenTime = 0;
 
+// Main initialization function
 async function initGame() {
     const params = new URLSearchParams(window.location.search);
     if (params.has('dev')) {
@@ -446,6 +453,7 @@ async function initDictionary() {
     loadingText.innerText = `Oracle Online: ${dictionary.length} words. Ready.`;
 }
 
+// Loads profanity list to filter usernames
 async function initProfanity() {
     try {
         const res = await fetch(PROFANITY_URL);
@@ -457,6 +465,7 @@ async function initProfanity() {
     } catch (e) { console.warn("Profanity list failed to load"); }
 }
 
+// Checks if the user has already played the daily challenge today
 function checkDailyStatus() {
     const today = new Date().toISOString().split('T')[0];
     const lastPlayed = localStorage.getItem('oxford_last_daily_played');
@@ -529,6 +538,7 @@ function startDailyReplay() {
     startGame('daily');
 }
 
+// Global key handler for keyboard shortcuts and typing
 function handleGlobalKeydown(e) {
     const key = e.key.toUpperCase();
 
@@ -566,6 +576,7 @@ function handleGlobalKeydown(e) {
             if (document.activeElement !== input) {
                  input.value = input.value.slice(0, -1);
                  handleTyping();
+                 e.preventDefault();
             }
             return; 
         }
@@ -632,6 +643,7 @@ function handleGlobalKeydown(e) {
     }
 }
 
+// Starts the game loop
 function startGame(mode) {
     initSeed(mode);
     document.getElementById('start-overlay').style.display = 'none';
@@ -653,6 +665,7 @@ function returnToMenu() {
 }
 
 /* --- GAME LOGIC --- */
+// Initializes the deck based on frequencies and shuffles it
 function initDeck() {
     deck = [];
     Object.keys(FREQUENCIES).forEach(l => { for(let i=0; i<FREQUENCIES[l]; i++) deck.push(l); });
@@ -669,6 +682,7 @@ function updatePileCounts() {
     document.getElementById('discard-list').innerText = discards.join(', ');
 }
 
+// Advances the game state machine
 function nextPhase() {
     const btn = document.getElementById('main-btn');
     const status = document.getElementById('status-msg');
@@ -676,6 +690,7 @@ function nextPhase() {
     SoundManager.play('flip');
 
     if (phaseIndex === 0) {
+        // Phase 0: Initial Deal (Draft)
         const vowels = ['A','E','I','O','U','Y'];
         do {
             initDeck(); discards = [];
@@ -715,6 +730,7 @@ function nextPhase() {
         phaseIndex++;
         render(false, true);
     } else if (phaseIndex === 1) {
+        // Phase 1: Confirm Draft / Deal Flop
         if (ENABLE_VARIABLE_HOLE_CARDS) {
             if (selectedIndices.length < 1 || selectedIndices.length > 3) return alert("Select 1, 2, or 3 hole cards to keep.");
         } else {
@@ -735,6 +751,7 @@ function nextPhase() {
         render(false, true); 
         setTimeout(nextPhase, 600);
     } else if (phaseIndex === 2) {
+        // Phase 2: The Flop
         board.push(deck.pop(), deck.pop(), deck.pop());
         boardAnims = [0, 1, 2];
         status.innerText = "The Flop: select hole cards to swap (if you want to.)";
@@ -744,6 +761,7 @@ function nextPhase() {
         phaseIndex++;
         render(false, true);
     } else if (phaseIndex === 3) {
+        // Phase 3: The Turn
         selectedIndices = [];
         board.push(deck.pop());
         boardAnims = [3];
@@ -753,6 +771,7 @@ function nextPhase() {
         phaseIndex++;
         render(false, true);
     } else if (phaseIndex === 4) {
+        // Phase 4: The River
         selectedIndices = [];
         board.push(deck.pop());
         boardAnims = [4];
@@ -777,10 +796,12 @@ function nextPhase() {
         phaseIndex++;
         render(false, true);
     } else if (phaseIndex === 5) { 
+        // Phase 5: Scoring
         calculateFinalScore(); 
     }
 }
 
+// Swaps selected hole cards with new ones from the deck
 function executeSwap() {
     if (selectedIndices.length === 0) return alert("Select hole cards to discard first.");
     selectedIndices.forEach(idx => discards.push(hand[idx]));
@@ -796,6 +817,7 @@ function executeSwap() {
     render(false, false); 
 }
 
+// Handles card selection/deselection logic
 function toggleSelect(i, isBoard = false) {
     SoundManager.play('chip');
     
@@ -849,6 +871,7 @@ function toggleSelect(i, isBoard = false) {
     render(true, false);
 }
 
+// Event delegation handler
 function handleDelegatedCardClick(e, isBoard) {
     const card = e.target.closest('.card');
     if (!card) return;
@@ -856,6 +879,7 @@ function handleDelegatedCardClick(e, isBoard) {
     if (!isBoard || phaseIndex === 5) toggleSelect(index, isBoard);
 }
 
+// Creates the HTML structure for a card
 function createCardElement(letter, index, isBoard, shouldAnimate) {
     const isSelected = !isBoard && selectedIndices.includes(index);
     const isRiver = isBoard && index === 4;
@@ -889,6 +913,7 @@ function createCardElement(letter, index, isBoard, shouldAnimate) {
     return card;
 }
 
+// Renders the game state to the DOM
 function render(isInteraction = false, redrawBoard = true) {
     updatePileCounts();
     const handDiv = document.getElementById('hand');
@@ -955,60 +980,7 @@ function isProfane(text) {
 function canFormWord(word, pool) { let tempPool = [...pool]; for (let char of word) { let idx = tempPool.indexOf(char); if (idx === -1) idx = tempPool.indexOf('*'); if (idx === -1) return false; tempPool.splice(idx, 1); } return true; }
 function isPalindrome(word) { if (!word || word.length < 3) return false; for (let i = 0; i < Math.floor(word.length / 2); i++) { if (word[i] !== word[word.length - 1 - i]) return false; } return true; }
 
-function calculateBaseScore(word, pool) {
-    let currentPool = [...pool];
-    let score = 0;
-    for (let char of word) {
-        let idx = currentPool.indexOf(char);
-        if (idx !== -1) {
-            score += SCORES[char];
-            currentPool.splice(idx, 1);
-        } else {
-            idx = currentPool.indexOf('*');
-            if (idx !== -1) {
-                score += 0; 
-                currentPool.splice(idx, 1);
-            } else {
-                return -1; 
-            }
-        }
-    }
-    return score;
-}
-
-function scoreSpecificWord(word, letterPool) {
-    const riverIndex = letterPool.length - 1; 
-    const riverCard = letterPool[riverIndex];
-    const regularPool = letterPool.slice(0, riverIndex);
-    
-    let maxScore = -1;
-    const mult = word.length >= 8 ? 3 : word.length >= 7 ? 2 : word.length >= 5 ? 1.5 : 1;
-
-    // 1. Try forming word WITHOUT River card
-    let scoreNoRiver = calculateBaseScore(word, regularPool);
-    if (scoreNoRiver !== -1) {
-        maxScore = Math.floor(scoreNoRiver * mult);
-    }
-
-    // 2. Try using River card for each position
-    for (let i = 0; i < word.length; i++) {
-        const char = word[i];
-        if (riverCard === char || riverCard === '*') {
-            const remainingWord = word.slice(0, i) + word.slice(i + 1);
-            let restScore = calculateBaseScore(remainingWord, regularPool);
-            
-            if (restScore !== -1) {
-                let riverVal = (riverCard === '*') ? 0 : SCORES[char];
-                let totalBase = (riverVal * 2) + restScore;
-                let total = Math.floor(totalBase * mult);
-                if (total > maxScore) maxScore = total;
-            }
-        }
-    }
-    
-    return maxScore;
-}
-
+// Prepares card objects with multipliers for the solver
 function getCardObjects() {
     let cards = [];
     // Hole cards
@@ -1028,6 +1000,7 @@ function getCardObjects() {
     return cards;
 }
 
+// Calculates the maximum possible score for a word given the available cards and multipliers
 function calculateOptimalScore(word, cardObjects) {
     // Optimization: Build a frequency map of available multipliers
     const available = {};
@@ -1063,6 +1036,7 @@ function calculateOptimalScore(word, cardObjects) {
     return total;
 }
 
+// AI Solver: Finds the best word in the dictionary
 function findBestPossibleScore() {
     let cardObjs = getCardObjects();
     let maxScore = 0; let bestWord = "NONE";
@@ -1073,6 +1047,7 @@ function findBestPossibleScore() {
     return { word: bestWord, score: maxScore };
 }
 
+// Processes the user's submitted word
 async function calculateFinalScore() {
     const btn = document.getElementById('main-btn');
     let word = "";
@@ -1159,6 +1134,7 @@ async function calculateFinalScore() {
     resultModalOpenTime = Date.now();
 }
 
+// Resets UI elements for the next hand
 function resetUI() {
     document.getElementById('result-modal').style.display = 'none';
     const inp = document.getElementById('word-input');
@@ -1175,6 +1151,7 @@ function resetUI() {
     }
 }
 
+// Resets game state for a new hand (Free Play)
 function softReset() {
     resetUI();
     
@@ -1201,6 +1178,7 @@ function injectReplayButton() {
     nextBtn.parentNode.insertBefore(btn, nextBtn);
 }
 
+// Replays the current hand (Daily or Free)
 function replayCurrentHand() {
     if (!lastHandState) return;
     resetUI();
@@ -1386,6 +1364,7 @@ function markInvalid(msg) {
     SoundManager.play('error'); setTimeout(() => inp.placeholder = "Enter word...", 1500);
 }
 
+// Handles the visual assignment of cards to the typed word
 function handleTyping(forcedCard = null) {
     // If called from event listener, forcedCard is an Event object. Ignore it.
     if (forcedCard && forcedCard.type === 'input') forcedCard = null;
@@ -1484,6 +1463,7 @@ function handleTyping(forcedCard = null) {
     updateScorePreview(input.value.toUpperCase());
 }
 
+// Calculates the score based on the visual card assignments
 function calculateScoreWithMultipliers(word) {
     let baseScore = 0;
     const allCards = Array.from(document.querySelectorAll('.card.bumped'));
@@ -1518,6 +1498,7 @@ function calculateScoreWithMultipliers(word) {
     return total;
 }
 
+// Shows a live preview of the score calculation
 function updateScorePreview(word) {
     let previewEl = document.getElementById('score-preview');
     if (!previewEl) {
@@ -1948,6 +1929,7 @@ function injectDevUI() {
     document.body.appendChild(panel);
 }
 
+// Shows a one-time announcement (Legacy)
 function showAnnouncement() {
     // --- ANNOUNCEMENT CONFIG ---
     const active = true; // Toggle to false to disable
