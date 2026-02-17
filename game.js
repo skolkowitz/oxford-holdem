@@ -90,6 +90,10 @@ const LeaderboardManager = {
 
     async submitScore(score, word) {
         if (!this.db || gameMode !== 'daily') return;
+        if (devBlockLeaderboard) {
+            console.log("Dev Mode: Leaderboard submission blocked.");
+            return;
+        }
         const today = new Date().toISOString().split('T')[0];
         const docId = `${today}_${this.username}`;
         const docRef = this.db.collection('leaderboard').doc(docId);
@@ -255,6 +259,8 @@ let userHiddenBonusPref = localStorage.getItem('oxford_hidden_bonuses') === 'tru
 let hiddenBonusesActive = userHiddenBonusPref;
 let isDevMode = localStorage.getItem('oxford_dev_mode') === 'true';
 let forceJoker = false;
+let forceDoubleJoker = false;
+let devBlockLeaderboard = false;
 let resultModalOpenTime = 0;
 
 // Main initialization function
@@ -699,8 +705,24 @@ function nextPhase() {
             draftPool = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
         } while (!draftPool.some(card => vowels.includes(card) || card === '*'));
         
-        // DEV: Force Joker
-        if (forceJoker && !draftPool.includes('*')) {
+        // DEV: Force Jokers
+        if (forceDoubleJoker) {
+            let jokersInHand = draftPool.filter(c => c === '*').length;
+            let needed = 2 - jokersInHand;
+            
+            for (let i = 0; i < deck.length && needed > 0; i++) {
+                if (deck[i] === '*') {
+                    // Swap into draftPool (replace first non-joker)
+                    for (let j = 0; j < draftPool.length; j++) {
+                        if (draftPool[j] !== '*') {
+                            [draftPool[j], deck[i]] = [deck[i], draftPool[j]];
+                            needed--;
+                            break;
+                        }
+                    }
+                }
+            }
+        } else if (forceJoker && !draftPool.includes('*')) {
             const jokerIdx = deck.indexOf('*');
             if (jokerIdx !== -1) {
                 const swapCard = draftPool[4];
@@ -1942,6 +1964,45 @@ function injectDevUI() {
         btnJoker.style.color = forceJoker ? '#0f0' : '#fff';
     };
     panel.appendChild(btnJoker);
+
+    const btn2Joker = document.createElement('button');
+    btn2Joker.innerText = 'Force 2 Jokers: OFF';
+    Object.assign(btn2Joker.style, { background: '#333', color: '#fff', border: '1px solid #555', padding: '5px', cursor: 'pointer' });
+    btn2Joker.onclick = () => {
+        forceDoubleJoker = !forceDoubleJoker;
+        btn2Joker.innerText = `Force 2 Jokers: ${forceDoubleJoker ? 'ON' : 'OFF'}`;
+        btn2Joker.style.color = forceDoubleJoker ? '#0f0' : '#fff';
+    };
+    panel.appendChild(btn2Joker);
+
+    const btnDaily = document.createElement('button');
+    const today = new Date().toISOString().split('T')[0];
+    const isDailyDone = localStorage.getItem('oxford_last_daily_played') === today;
+    btnDaily.innerText = isDailyDone ? 'Reset Daily Status' : 'Mark Daily Complete';
+    Object.assign(btnDaily.style, { background: '#333', color: '#fff', border: '1px solid #555', padding: '5px', cursor: 'pointer' });
+    btnDaily.onclick = () => {
+        if (localStorage.getItem('oxford_last_daily_played') === today) {
+            localStorage.removeItem('oxford_last_daily_played');
+            localStorage.removeItem('oxford_daily_score');
+            alert("Daily reset. Reloading...");
+        } else {
+            localStorage.setItem('oxford_last_daily_played', today);
+            localStorage.setItem('oxford_daily_score', '0');
+            alert("Daily marked complete. Reloading...");
+        }
+        location.reload();
+    };
+    panel.appendChild(btnDaily);
+
+    const btnLb = document.createElement('button');
+    btnLb.innerText = 'LB Submit: ON';
+    Object.assign(btnLb.style, { background: '#333', color: '#fff', border: '1px solid #555', padding: '5px', cursor: 'pointer' });
+    btnLb.onclick = () => {
+        devBlockLeaderboard = !devBlockLeaderboard;
+        btnLb.innerText = `LB Submit: ${devBlockLeaderboard ? 'OFF' : 'ON'}`;
+        btnLb.style.color = devBlockLeaderboard ? '#f00' : '#0f0';
+    };
+    panel.appendChild(btnLb);
     
     const btnClose = document.createElement('button');
     btnClose.innerText = 'Exit Dev Mode';

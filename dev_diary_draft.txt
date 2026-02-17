@@ -8,4 +8,5 @@ Visual updates and polish:
 - Mobile UX: Hide deck/discard piles during the River phase to save screen space (Mobile only).
 - Added Oracle reactions for matching the best score/word.
 - Styled Oracle time loop quotes to be more ethereal.
+- Enhanced Dev Mode: Added toggles for Daily Status, Leaderboard Submission, and Double Jokers.
 ---
