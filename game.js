@@ -727,11 +727,10 @@ function toggleSelect(i, isBoard = false) {
         }
         
         if (char === '*') {
-            const letter = prompt("What letter is this wildcard?");
-            if (letter && /^[a-zA-Z]$/.test(letter.trim())) {
-                input.value += letter.trim().toUpperCase();
+            showWildcardSelector((letter) => {
+                input.value += letter;
                 handleTyping(card);
-            }
+            });
         } else {
             input.value += char;
             handleTyping(card);
@@ -1723,4 +1722,86 @@ function injectClearButton() {
 
     if (input.nextSibling) input.parentNode.insertBefore(btn, input.nextSibling);
     else input.parentNode.appendChild(btn);
+}
+
+function injectWildcardUI() {
+    if (document.getElementById('wildcard-modal')) return;
+    
+    const modal = document.createElement('div');
+    modal.id = 'wildcard-modal';
+    modal.className = 'modal-overlay';
+    modal.style.zIndex = '2000';
+    modal.style.display = 'none';
+    
+    const box = document.createElement('div');
+    box.className = 'modal-box';
+    box.style.maxWidth = '600px';
+    box.style.width = '95%';
+    box.style.padding = '15px';
+    box.style.maxHeight = '90vh';
+    box.style.display = 'flex';
+    box.style.flexDirection = 'column';
+    
+    const header = document.createElement('div');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.marginBottom = '10px';
+    
+    const title = document.createElement('h3');
+    title.innerText = "Select a Letter";
+    title.style.margin = '0';
+    title.style.color = '#333';
+    
+    const closeX = document.createElement('div');
+    closeX.innerHTML = '&times;';
+    closeX.style.fontSize = '24px';
+    closeX.style.cursor = 'pointer';
+    closeX.style.color = '#666';
+    closeX.onclick = () => { modal.style.display = 'none'; };
+    
+    header.appendChild(title);
+    header.appendChild(closeX);
+    
+    const grid = document.createElement('div');
+    grid.id = 'wildcard-grid';
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(60px, 1fr))';
+    grid.style.gap = '8px';
+    grid.style.overflowY = 'auto';
+    grid.style.padding = '5px';
+    
+    box.appendChild(header);
+    box.appendChild(grid);
+    modal.appendChild(box);
+    document.body.appendChild(modal);
+}
+
+function showWildcardSelector(onSelect) {
+    injectWildcardUI();
+    const modal = document.getElementById('wildcard-modal');
+    const grid = document.getElementById('wildcard-grid');
+    grid.innerHTML = '';
+    
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
+    
+    alphabet.forEach(letter => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        Object.assign(card.style, { position: 'relative', width: '100%', height: '0', paddingBottom: '140%', left: 'auto', top: 'auto', transform: 'none', margin: '0', cursor: 'pointer' });
+        
+        const inner = document.createElement('div');
+        Object.assign(inner.style, { position: 'absolute', top: '0', left: '0', width: '100%', height: '100%' });
+        
+        const score = SCORES[letter];
+        const color = getScoreColor(letter);
+        const icon = ICONS[letter];
+        
+        inner.innerHTML = `<div class="corner-letter top-left" style="color:${color}; font-size:0.8em;">${letter}</div><div class="corner-score top-right" style="color:${color}; font-size:0.7em;">${score}</div><div class="main-content" style="transform:scale(0.8);"><div class="animal-icon">${icon}</div><div class="main-letter">${letter}</div></div><div class="corner-score bottom-left" style="color:${color}; font-size:0.7em;">${score}</div><div class="corner-letter bottom-right" style="color:${color}; font-size:0.8em;">${letter}</div>`;
+        
+        card.appendChild(inner);
+        card.onclick = () => { onSelect(letter); modal.style.display = 'none'; };
+        grid.appendChild(card);
+    });
+    modal.style.display = 'flex';
 }
