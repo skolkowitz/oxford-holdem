@@ -1951,10 +1951,10 @@ function showAnnouncement() {
     const id = 'oxford_announcement_racecar'; // Unique ID for localStorage
     const htmlContent = `
         <p><strong>Dear Oxford Hold 'Em community,</strong></p>
-        <p>The last 24 hours have been a time of great learning for us. We know that in these heady times, in which few things can be trusted, you have come to look upon Oxford Hold 'Em as a source of constancy, a leeward cove in these tempestuous times.</p>
-        <p>The Race Car controversy has affected the whole community, and sent ripples over the surface of our previously placid lake. As a result, we have currently placed on hold the Race Car bonus in the Daily Draw, but is still available in the Free Play environment.</p>
-        <p>In the future, we will be proactive, and update you with any rule changes before they are instituted, to avoid any further cataclysms. While our game is based on chance, your trust in us should not be.</p>
-        <p>That being said... due to some information that was brought to our attention, Oxford Hold 'Em will soon be renamed, so please make sure to emotionally prepare yourselves for that change.</p>
+        <p>The last 24 hours have been a time of great learning for us. We know that in these turbulent times, in which few things are certain, you have come to look upon Oxford Hold 'Em as a source of constancy, a leeward cove in these tempestuous waters.</p>
+        <p>The Race Car controversy has divided what was once united, and sent ripples out over the surface of our previously placid lake. As a result, we have disabled the Race Car Bonus in the Daily Draw, but it is still available in the Free Play environment, and can be toggled.</p>
+        <p>Please know that we have heard you. In the future, we will be proactive, and update you with any major scoring or rule changes to the Daily Draw before they are instituted, to avoid any further disasters. While our game has components of chance, your faith in us should not be.</p>
+        <p>That being said... due to some information that was recently brought to our attention, Oxford Hold 'Em will soon be renamed, so please make sure to emotionally prepare yourselves for that change.</p>
         <p style="text-align:right; font-weight:bold; margin-top:20px;">Sincerely,<br>ShyMonk & Koko</p>
     `;
     // ---------------------------
