@@ -1,5 +1,5 @@
 /*
-OK, as a reminder, my brother and I are getting your help coding a web app game with the working title "Oxford Hold 'em." The game is a fun mashup of poker with word games like Scrabble, NY Times Spelling Bee, and Boggle with a dash of inspiration from Balatro.  We really care about making the game fun and easy to play, and keeping the user interface elegant, with a consistent aesthetic that is visually pleasing, and avoiding any bugs that can break the game or ruin a player's experience. My brother and I also like to include lots of little jokes and easter eggs in the game. Also, please remember to update the 'dev_diary_draft.txt' file with a summary of changes whenever we make code updates, and include a reminder to do so in this comment block.
+OK, as a reminder, my brother and I are getting your help coding a web app game with the title "Oxford Shuffle." The game is a fun mashup of poker with word games like Scrabble, NY Times Spelling Bee, and Boggle with a dash of inspiration from Balatro.  We really care about making the game fun and easy to play, and keeping the user interface elegant, with a consistent aesthetic that is visually pleasing, and avoiding any bugs that can break the game or ruin a player's experience. My brother and I also like to include lots of little jokes and easter eggs in the game. Also, please remember to update the 'dev_diary_draft.txt' file with a summary of changes whenever we make code updates, and include a reminder to do so in this comment block.
 */
 
 /* --- GLOBAL AUDIO STATE --- */
@@ -1315,9 +1315,9 @@ async function shareResult() {
     
     if (gameMode === 'daily') {
         const date = new Date().toISOString().split('T')[0];
-        text = `🃏 Oxford Hold 'Em ${date}\n🏆 Score: ${score}\n\n${window.location.href}`;
+        text = `🃏 Oxford Shuffle ${date}\n🏆 Score: ${score}\n\n${window.location.href}`;
     } else {
-        text = `🃏 Oxford Hold 'Em Freeplay\n🏆 Score: ${score}\n\n${window.location.href}`;
+        text = `🃏 Oxford Shuffle Freeplay\n🏆 Score: ${score}\n\n${window.location.href}`;
     }
     
     if (navigator.share) {
@@ -1344,7 +1344,7 @@ async function shareDailyResult() {
         return;
     }
     const date = new Date().toISOString().split('T')[0];
-    const text = `🃏 Oxford Hold 'Em ${date}\n🏆 Score: ${score}\n\n${window.location.href}`;
+    const text = `🃏 Oxford Shuffle ${date}\n🏆 Score: ${score}\n\n${window.location.href}`;
     
     if (navigator.share) {
         try {

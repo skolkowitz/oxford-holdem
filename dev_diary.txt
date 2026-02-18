@@ -1,13 +1,14 @@
 DATE: February 17th, 2026
 Welcome to the Developer Diary!
-We've added this section to keep you updated on all the latest changes, bug fixes, gameplay tweaks, and controversial game balance breaking bonuses we're bringing to Oxford Hold 'Em (note: this is now a working title...).
+We've added this section to keep you updated on all the latest changes, bug fixes, gameplay tweaks, and controversial game balance breaking bonuses we're bringing to Oxford Shuffle (note: this is now a working title...).
 (Because apparently we've somehow turned into game developers now, and this is the kind of thing they seem to do...?)
 Recent changes include:
+- Changed the name of the game to Oxford Shuffle!!!
 - Added this Developer Diary
 - UI improvements for mobile devices.
 - Added "Gameplay Settings" menu (Gear icon).
 - Moved "Hidden Bonuses" toggle to the new "Gameplay Settings" menu, and made sure this is switched off by default. 
-- Added a brand new "Xtreme Mode" (Skull icon): If you enter an invalid word you score a 0 on the hand immediately. This mode is off by default, but can be switched on for both Daily Draw and Free Play. Impress your friends, live life on the edge, and take Oxford Hold 'em to the XTREME!!!
+- Added a brand new "Xtreme Mode" (Skull icon): If you enter an invalid word you score a 0 on the hand immediately. This mode is off by default, but can be switched on for both Daily Draw and Free Play. Impress your friends, live life on the edge, and take Oxford Shuffle to the XTREME!!!
 - Added visual indicators for active modes (Joker/Skull) to the game board.
 ---
 DATE: February 16th, 2026
