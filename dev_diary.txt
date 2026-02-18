@@ -3,7 +3,7 @@ Welcome to the Developer Diary!
 We've added this section to keep you updated on all the latest changes, bug fixes, gameplay tweaks, and controversial game balance breaking bonuses we're bringing to Oxford Shuffle (note: this is now a working title...).
 (Because apparently we've somehow turned into game developers now, and this is the kind of thing they seem to do...?)
 Recent changes include:
-- Changed the name of the game to Oxford Shuffle!!!
+- Changed the name of the game to Oxford Shuffle, and migrated to a new website!!!!
 - Added this Developer Diary
 - UI improvements for mobile devices.
 - Added "Gameplay Settings" menu (Gear icon).

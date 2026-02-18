@@ -1,3 +1,7 @@
+DATE: February 19th, 2026
+- Decommissioned the old game repository.
+- Added a redirect message to point all players to the new home of Oxford Shuffle at www.oxfordshuffle.com.
+---
 DATE: February 18th, 2026
 - Added "Gameplay Settings" menu (Gear icon).
 - Moved "Hidden Bonuses" toggle to Settings menu.
