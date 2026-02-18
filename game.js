@@ -1152,12 +1152,13 @@ async function calculateFinalScore() {
             "1.21 gigawatts!",
             "Run Lola, run!",
             "Are you here to save the whales?",
-            "Oh, you’re like Bill Murray in that one movie… Caddyshack?",
+            "Oh, I get it, you’re like Bill Murray in that one movie… Caddyshack?",
             "Hey, this is just like Palm Springs, that other movie about time loops!",  
             "A glitch in the Matrix!",
             "This still makes a lot more sense than Primer.", 
-            "Don’t step on anything! Even the tiniest change can alter the future in ways you can't imagine…",
-            "I was a player just like you once... but then I spent too much time replaying the same hand over and over..."
+            "Don’t step on anything! Even the tiniest change can alter the future in ways you can't imagine...",
+            "I was a player just like you once... but then I spent too much time replaying the same hand over and over...",
+            "For of all sad words of tongue or pen, the saddest are these: 'It might have been!'"
         ];
         const quote = phrases[Math.floor(Math.random() * phrases.length)];
         oracleHTML += `<div style="font-family: 'Georgia', serif; font-style: italic; font-size: 0.9rem; color: #666; margin-top: 8px; font-weight: normal;">"${quote}"</div>`;
