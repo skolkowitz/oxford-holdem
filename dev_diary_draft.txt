@@ -1,4 +1,12 @@
-DATE: May 24, 2024
+DATE: February 18th, 2026
+- Added "Gameplay Settings" menu (Gear icon).
+- Moved "Hidden Bonuses" toggle to Settings menu.
+- Added "Xtreme Mode" (Skull icon): Invalid words score 0 immediately!
+- Added visual indicators for active modes (Joker/Skull) on the game board.
+- Improved Settings UI with clearer toggle states.
+- Fixed bug where submitting an invalid word in Xtreme Mode caused a crash.
+---
+DATE: May 24th, 2024
 Visual updates and polish:
 - Changed "Dev Diary" button color to Teal.
 - Improved spacing of main menu buttons.

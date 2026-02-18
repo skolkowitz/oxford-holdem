@@ -5,6 +5,10 @@ We've added this section to keep you updated on all the latest changes, bug fixe
 Recent changes include:
 - Added this Developer Diary
 - UI improvements for mobile devices.
+- Added "Gameplay Settings" menu (Gear icon).
+- Moved "Hidden Bonuses" toggle to the new "Gameplay Settings" menu, and made sure this is switched off by default. 
+- Added a brand new "Xtreme Mode" (Skull icon): If you enter an invalid word you score a 0 on the hand immediately. This mode is off by default, but can be switched on for both Daily Draw and Free Play. Impress your friends, live life on the edge, and take Oxford Hold 'em to the XTREME!!!
+- Added visual indicators for active modes (Joker/Skull) to the game board.
 ---
 DATE: February 16th, 2026
 - Added Player Stats menu. 

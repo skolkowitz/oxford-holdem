@@ -16,33 +16,6 @@ function updateMuteUI() {
     btn.style.color = ""; btn.style.opacity = "";
 }
 
-// Toggles the "Hidden Bonuses" (Palindrome) feature
-function toggleHiddenBonuses() {
-    if (gameMode === 'daily') return;
-    userHiddenBonusPref = !userHiddenBonusPref;
-    hiddenBonusesActive = userHiddenBonusPref;
-    localStorage.setItem('oxford_hidden_bonuses', userHiddenBonusPref);
-    updateBonusUI();
-    updateRulesUI();
-    if (phaseIndex === 5) handleTyping();
-    SoundManager.play('chip');
-}
-
-function updateBonusUI() {
-    const btn = document.getElementById('bonus-btn');
-    if (!btn) return;
-    if (gameMode === 'daily') {
-        btn.style.display = 'none';
-    } else {
-        btn.style.display = 'inline-flex';
-        // Clear legacy inline styles
-        btn.style.opacity = ""; btn.style.filter = "";
-        
-        if (!hiddenBonusesActive) btn.classList.add('crossed-out');
-        else btn.classList.remove('crossed-out');
-    }
-}
-
 /* --- FIREBASE LEADERBOARD MANAGER --- */
 // Handles all interactions with Firestore for the Daily Leaderboard
 const LeaderboardManager = {
@@ -192,17 +165,15 @@ function initSeed(mode) {
     gameMode = mode;
     if (mode === 'daily') {
         const d = new Date();
-        const seedStr = d.getUTCFullYear() + "" + (d.getUTCMonth()+1).toString().padStart(2,'0') + "" + d.getUTCDate().toString().padStart(2,'0');
-        randomFunc = mulberry32(parseInt(seedStr));
-        document.getElementById('mode-indicator').innerText = "DAILY: " + seedStr;
-        document.getElementById('mode-indicator').style.background = "var(--mode-daily)";
+        currentDailyDateStr = d.getUTCFullYear() + "" + (d.getUTCMonth()+1).toString().padStart(2,'0') + "" + d.getUTCDate().toString().padStart(2,'0');
+        randomFunc = mulberry32(parseInt(currentDailyDateStr));
         document.getElementById('leaderboard-btn').style.display = "inline-flex";
     } else {
+        currentDailyDateStr = "";
         randomFunc = Math.random;
-        document.getElementById('mode-indicator').innerText = "FREE PLAY";
-        document.getElementById('mode-indicator').style.background = "var(--mode-free)";
         document.getElementById('leaderboard-btn').style.display = "none";
     }
+    renderModeIndicator();
 }
 
 /* --- AUDIO --- */
@@ -256,7 +227,10 @@ let handAnims = [], boardAnims = [];
 let currentDeckSort = { field: 'left', dir: 'desc' };
 const ENABLE_VARIABLE_HOLE_CARDS = true;
 let userHiddenBonusPref = localStorage.getItem('oxford_hidden_bonuses') === 'true';
+let currentDailyDateStr = "";
+let userXtremeModePref = localStorage.getItem('oxford_xtreme_mode') === 'true';
 let hiddenBonusesActive = userHiddenBonusPref;
+let xtremeModeActive = userXtremeModePref;
 let isDevMode = localStorage.getItem('oxford_dev_mode') === 'true';
 let forceJoker = false;
 let forceDoubleJoker = false;
@@ -311,7 +285,7 @@ async function initGame() {
         boardDiv.setAttribute('data-listening', 'true');
     }
 
-    updateBonusUI();
+    renderModeIndicator();
     updateRulesUI();
     showAnnouncement();
 }
@@ -359,9 +333,9 @@ function updateRulesUI() {
     scoringText += '<div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; font-size: 0.9rem; color: #555;">';
     if (gameMode !== 'daily') {
         if (!hiddenBonusesActive) {
-            scoringText += '<p style="margin:5px 0;">Tap the Joker Button 🃏 to turn on "Hidden Bonuses".</p>';
+            scoringText += '<p style="margin:5px 0;">Tap the Gear Button ⚙️ to turn on "Hidden Bonuses".</p>';
         } else {
-            scoringText += '<p style="margin:5px 0;">Keep your eye out for hidden bonuses! Tap the Joker Button 🃏 to disable them and play in "Classic mode".</p>';
+            scoringText += '<p style="margin:5px 0;">Keep your eye out for hidden bonuses! Tap the Gear Button ⚙️ to disable them and play in "Classic mode".</p>';
             scoringText += '<button class="action-btn" onclick="document.getElementById(\'rules-modal\').style.display=\'none\'; document.getElementById(\'hidden-bonuses-modal\').style.display=\'flex\'" style="width:100%; margin-top:15px; background: #9c27b0; color: white; font-size:0.9rem; padding: 10px; box-shadow: 0 4px 0 #7b1fa2;">Hidden bonuses...?</button>';
         }
     }
@@ -663,7 +637,8 @@ function startGame(mode) {
     } else {
         hiddenBonusesActive = userHiddenBonusPref;
     }
-    updateBonusUI();
+    xtremeModeActive = userXtremeModePref;
+    renderModeIndicator();
     nextPhase();
 }
 
@@ -741,7 +716,7 @@ function nextPhase() {
             isReplayMode = false;
         }
         
-        updateReplayIndicator();
+        renderModeIndicator();
         
         handAnims = [0,1,2,3,4];
         if (ENABLE_VARIABLE_HOLE_CARDS) {
@@ -1083,19 +1058,35 @@ async function calculateFinalScore() {
     const btn = document.getElementById('main-btn');
     let word = "";
     let userScore = 0;
+    let valid = true;
 
     if (btn.innerText === "Go Bust") {
         word = "BUST";
         SoundManager.play('error');
+        valid = false;
     } else {
         const wordInput = document.getElementById('word-input');
         word = wordInput.value.toUpperCase().trim();
         if (word.length < 3) return;
         const pool = [...hand, ...board];
-        if (!canFormWord(word, pool)) { markInvalid("Missing letters!"); return; }
-        if (!dictionary.includes(word)) { markInvalid("Not in dictionary!"); return; }
-        userScore = calculateScoreWithMultipliers(word);
-        SoundManager.play('success');
+        
+        let errorMsg = "";
+        if (!canFormWord(word, pool)) { valid = false; errorMsg = "Missing letters!"; }
+        else if (!dictionary.includes(word)) { valid = false; errorMsg = "Not in dictionary!"; }
+
+        if (!valid) {
+            if (xtremeModeActive) {
+                userScore = 0;
+                SoundManager.play('error');
+                // Proceed with score 0
+            } else {
+                markInvalid(errorMsg); 
+                return;
+            }
+        } else {
+            userScore = calculateScoreWithMultipliers(word);
+            SoundManager.play('success');
+        }
         wordInput.blur();
     }
     
@@ -1104,7 +1095,7 @@ async function calculateFinalScore() {
     const best = findBestPossibleScore();
     
     if (!isReplayMode) {
-        updateLocalStats(userScore, word, best.score, gameMode);
+        updateLocalStats(userScore, word, best.score, gameMode, valid);
         if (gameMode === 'daily') {
             localStorage.setItem('oxford_last_daily_played', today);
             localStorage.setItem('oxford_daily_score', userScore);
@@ -1140,7 +1131,10 @@ async function calculateFinalScore() {
     let oracleHTML = `🔮 ${best.word}`;
     if (hiddenBonusesActive && isPalindrome(best.word)) oracleHTML += ' 🏎️';
     oracleHTML += ` (${best.score} pts)`;
-    if (isReplayMode) {
+    
+    if (!valid && xtremeModeActive) {
+        oracleHTML += `<div style="font-family: 'Georgia', serif; font-style: italic; font-size: 0.9rem; color: #d32f2f; margin-top: 8px; font-weight: normal;">"The Oracle frowns upon your gibberish."</div>`;
+    } else if (isReplayMode) {
         const phrases = [
             "This feels familiar...",
             "Wow, deja vu!",
@@ -1232,7 +1226,7 @@ function replayCurrentHand() {
     resetUI();
     
     isReplayMode = true;
-    updateReplayIndicator();
+    renderModeIndicator();
     
     // Restore State
     deck = [...lastHandState.deck];
@@ -1264,22 +1258,29 @@ function replayCurrentHand() {
     render(false, true);
 }
 
-function updateReplayIndicator() {
+function renderModeIndicator() {
     const el = document.getElementById('mode-indicator');
     if (!el) return;
     
+    let text = "";
+    let bg = "";
+    
+    if (gameMode === 'daily') {
+        text = "DAILY: " + currentDailyDateStr;
+        bg = "var(--mode-daily)";
+    } else {
+        text = "FREE PLAY";
+        bg = "var(--mode-free)";
+    }
+
     const statsBtn = document.getElementById('stats-btn');
     const statIds = ['daily-total', 'high-score', 'last-score'];
-    
-    let text = el.innerText.replace(' ⏳ REPLAY', '');
     
     if (isReplayMode) {
         text += ' ⏳ REPLAY';
         el.style.border = "1px solid #FFD700";
         el.style.boxShadow = "0 0 5px #FFD700";
-        
         if (statsBtn) statsBtn.innerText = '🧊';
-        
         statIds.forEach(id => {
             const elem = document.getElementById(id);
             if (elem) {
@@ -1290,9 +1291,7 @@ function updateReplayIndicator() {
     } else {
         el.style.border = "none";
         el.style.boxShadow = "none";
-        
         if (statsBtn) statsBtn.innerText = '🔥';
-        
         statIds.forEach(id => {
             const elem = document.getElementById(id);
             if (elem) {
@@ -1301,7 +1300,13 @@ function updateReplayIndicator() {
             }
         });
     }
+
+    // Append Icons
+    if (hiddenBonusesActive) text += " 🃏";
+    if (xtremeModeActive) text += " 💀";
+
     el.innerText = text;
+    el.style.background = bg;
 }
 
 async function shareResult() {
@@ -1718,12 +1723,12 @@ function injectStatsUI() {
         statsBtn.onclick = showStats;
         musicBtn.parentNode.insertBefore(statsBtn, musicBtn.nextSibling);
         
-        const bonusBtn = document.createElement('button');
-        bonusBtn.id = 'bonus-btn';
-        bonusBtn.innerText = '🃏';
-        bonusBtn.className = 'menu-btn';
-        bonusBtn.onclick = toggleHiddenBonuses;
-        musicBtn.parentNode.insertBefore(bonusBtn, statsBtn.nextSibling);
+        const settingsBtn = document.createElement('button');
+        settingsBtn.id = 'settings-btn';
+        settingsBtn.innerText = '⚙️';
+        settingsBtn.className = 'menu-btn';
+        settingsBtn.onclick = showSettings;
+        musicBtn.parentNode.insertBefore(settingsBtn, statsBtn.nextSibling);
         
         // Apply style to all buttons in the header container
         const siblings = musicBtn.parentNode.children;
@@ -1763,12 +1768,86 @@ function injectStatsUI() {
     document.body.appendChild(modal);
 }
 
-function updateLocalStats(score, word, maxPossible, mode) {
+function showSettings() {
+    // Create modal if it doesn't exist
+    if (!document.getElementById('settings-modal')) {
+        const modal = document.createElement('div');
+        modal.id = 'settings-modal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        modal.onclick = (e) => { if(e.target===modal) modal.style.display='none'; };
+        
+        modal.innerHTML = `<div class="modal-box" style="text-align:left;">
+            <div class="close-btn" onclick="document.getElementById('settings-modal').style.display='none'">&times;</div>
+            <h2 style="color: #333; margin-top: 0; text-align:center;">Gameplay Settings</h2>
+            <div id="settings-content"></div>
+            <button class="action-btn" onclick="document.getElementById('settings-modal').style.display='none'" style="width:100%; margin-top:20px; background: #555; color: white;">Close</button>
+        </div>`;
+        document.body.appendChild(modal);
+    }
+
+    const content = document.getElementById('settings-content');
+    
+    const toggleStyle = "display:flex; justify-content:space-between; align-items:center; padding:15px; background:#f5f5f5; border-radius:10px; margin-bottom:10px; border:1px solid #eee;";
+    const labelStyle = "font-weight:bold; color:#333; font-size:1rem;";
+    const descStyle = "font-size:0.8rem; color:#666; margin-top:4px;";
+    
+    const getToggle = (active, icon, onclick, disabled=false) => {
+        const border = active ? '#4CAF50' : '#ccc';
+        const opacity = disabled ? '0.5' : '1';
+        const cursor = disabled ? 'not-allowed' : 'pointer';
+        const crossed = !active ? 'crossed-out' : '';
+        return `<button onclick="${onclick}" class="menu-btn ${crossed}" style="width:50px; height:50px; font-size:1.8rem; border:2px solid ${border}; color:#333; opacity:${opacity}; cursor:${cursor}; margin:0;">${icon}</button>`;
+    };
+
+    let html = '';
+
+    // Hidden Bonuses Toggle
+    if (gameMode === 'daily') {
+        html += `<div style="${toggleStyle}">
+            <div><div style="${labelStyle}">Hidden Bonuses 🃏</div><div style="${descStyle}">Disabled for Daily Draw.</div></div>
+            ${getToggle(false, '🃏', '', true)}
+        </div>`;
+    } else {
+        html += `<div style="${toggleStyle}">
+            <div><div style="${labelStyle}">Hidden Bonuses 🃏</div><div style="${descStyle}">Enable palindromes & secret scores.</div></div>
+            ${getToggle(userHiddenBonusPref, '🃏', 'toggleSetting(\'bonus\')')}
+        </div>`;
+    }
+
+    // Xtreme Mode Toggle
+    html += `<div style="${toggleStyle}">
+        <div><div style="${labelStyle}">Xtreme Mode 💀</div><div style="${descStyle}">Invalid words score 0 immediately.</div></div>
+        ${getToggle(userXtremeModePref, '💀', 'toggleSetting(\'xtreme\')')}
+    </div>`;
+
+    content.innerHTML = html;
+    document.getElementById('settings-modal').style.display = 'flex';
+}
+
+function toggleSetting(type) {
+    if (type === 'bonus') {
+        userHiddenBonusPref = !userHiddenBonusPref;
+        hiddenBonusesActive = userHiddenBonusPref;
+        localStorage.setItem('oxford_hidden_bonuses', userHiddenBonusPref);
+    } else if (type === 'xtreme') {
+        userXtremeModePref = !userXtremeModePref;
+        xtremeModeActive = userXtremeModePref;
+        localStorage.setItem('oxford_xtreme_mode', userXtremeModePref);
+    }
+    renderModeIndicator();
+    updateRulesUI();
+    if (phaseIndex === 5) handleTyping();
+    SoundManager.play('chip');
+    showSettings(); // Re-render
+}
+
+function updateLocalStats(score, word, maxPossible, mode, isValid = true) {
     let hands = parseInt(localStorage.getItem('oxford_stat_hands') || 0) + 1;
     localStorage.setItem('oxford_stat_hands', hands);
 
     let lowest = localStorage.getItem('oxford_stat_lowest');
-    if (lowest === null || score < parseInt(lowest)) {
+    if (isValid && (lowest === null || score < parseInt(lowest))) {
         localStorage.setItem('oxford_stat_lowest', score);
         localStorage.setItem('oxford_stat_lowest_word', word);
     }
