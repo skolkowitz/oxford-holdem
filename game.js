@@ -2172,7 +2172,7 @@ function parseDiaryText(text) {
 // Shows a one-time announcement (Legacy)
 function showAnnouncement() {
     // --- ANNOUNCEMENT CONFIG ---
-    const active = true; // Toggle to false to disable
+    const active = false; // Toggle to false to disable
     const id = 'oxford_announcement_racecar'; // Unique ID for localStorage
     const htmlContent = `
         <p><strong>Dear Oxford Hold 'Em community,</strong></p>

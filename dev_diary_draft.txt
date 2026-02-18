@@ -5,6 +5,7 @@ DATE: February 18th, 2026
 - Added visual indicators for active modes (Joker/Skull) on the game board.
 - Improved Settings UI with clearer toggle states.
 - Fixed bug where submitting an invalid word in Xtreme Mode caused a crash.
+- Removed the "Race Car" apology announcement.
 ---
 DATE: May 24th, 2024
 Visual updates and polish:
